@@ -1,0 +1,41 @@
+beacon:
+  default-range: 100
+  max-range: 100
+  tick-interval: 40
+
+  particles:
+    enabled: true
+    interval-ticks: 20
+    radius-points: 96
+    type: VILLAGER_HAPPY
+
+  power:
+    enabled: true
+    max-layers: 4
+    blocks:
+      IRON_BLOCK: 1
+      GOLD_BLOCK: 1
+      COPPER_BLOCK: 1
+      EMERALD_BLOCK: 2
+      DIAMOND_BLOCK: 3
+      NETHERITE_BLOCK: 4
+
+protection:
+  owner-only-interact: true
+  owner-only-break: true
+  protect-base-blocks: true
+
+vanilla-beacon:
+  disable-vanilla: false
+  disable-recipe: false
+
+recipe:
+  enabled: true
+  shape:
+    - "DDD"
+    - "DBD"
+    - "OOO"
+  ingredients:
+    B: BEACON
+    D: DIAMOND_BLOCK
+    O: OBSIDIAN

@@ -1,0 +1,14 @@
+prefix: "&b[DynaBeacon]&r "
+
+messages:
+  no-permission: "&cNo tienes permiso para hacer eso."
+  reload: "&aConfiguración recargada."
+  only-players: "&cEste comando solo puede usarlo un jugador."
+  beacon-registered: "&aBeacon registrado correctamente."
+  beacon-removed: "&cBeacon eliminado."
+  menu-opened: "&aMenú abierto."
+materials:
+  DIAMOND: "diamantes"
+  EMERALD: "esmeraldas"
+  EXP_LEVEL: "niveles de experiencia"
+  VAULT_MONEY: "DynaYen"

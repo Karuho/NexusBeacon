@@ -1,0 +1,23 @@
+main-menu:
+  title: "&8DynaBeacon"
+  size: 54
+
+  items:
+    effects:
+      slot: 20
+      material: BEACON
+      name: "&bEfectos"
+      lore:
+        - "&7Gestiona los efectos del beacon."
+
+    settings:
+      slot: 24
+      material: REDSTONE_COMPARATOR
+      name: "&eConfiguración"
+      lore:
+        - "&7Partículas, animaciones e idioma."
+
+    close:
+      slot: 49
+      material: BARRIER
+      name: "&cCerrar"

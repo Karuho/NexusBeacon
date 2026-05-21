@@ -1,0 +1,749 @@
+# (opcional) target: puede ser PLAYERS, MONSTERS, ANIMALS, ALL_ENTITIES
+
+effects:
+  speed:
+    enabled: true
+    display-name: "&bVelocidad"
+    description:
+      - "&7Otorga velocidad dentro del rango."
+    icon: DIAMOND_BOOTS
+    type: POTION
+    potion: SPEED
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  regeneration:
+    enabled: true
+    display-name: "&dRegeneración"
+    description:
+      - "&7Regenera vida dentro del rango."
+    icon: GOLDEN_APPLE
+    type: POTION
+    potion: REGENERATION
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  strength:
+    enabled: true
+    display-name: "&cFuerza"
+    description:
+      - "&7Aumenta el daño dentro del rango."
+    icon: DIAMOND_SWORD
+    type: POTION
+    potion: STRENGTH
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  night_vision:
+    enabled: true
+    display-name: "&9Visión Nocturna"
+    description:
+      - "&7Permite ver claramente en la oscuridad."
+    icon: EYE_OF_ENDER
+    type: POTION
+    potion: NIGHT_VISION
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 300
+    max-level: 1
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  furnace_boost:
+    enabled: true
+    display-name: "&6Furnace Booster"
+    description:
+      - "&7Acelera hornos dentro del rango."
+    icon: FURNACE
+    type: BLOCK_PROCESS_BOOST
+    target-blocks:
+      - FURNACE
+    scan-radius: 16
+    vertical-radius: 16
+    process-time-level-1: 100
+    process-time-level-2: 60
+    process-time-level-3: 20
+    max-blocks-per-tick: 8
+    max-level: 3
+    power-consumption: 4
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  crop_boost:
+    enabled: true
+    display-name: "&aCrecimiento de Cultivos"
+    description:
+      - "&7Acelera el crecimiento de cultivos."
+      - "&7Funciona dentro del rango del beacon."
+    icon: WHEAT
+    type: CROP_BOOST
+    scan-radius: 16
+    max-blocks-per-tick: 16
+    growth-chance-per-level: 15
+    max-level: 3
+    power-consumption: 3
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  spawner_boost:
+    enabled: true
+    display-name: "&5Spawner Booster"
+    description:
+      - "&7Reduce el delay de spawners cercanos."
+      - "&7Funciona dentro del rango del beacon."
+    icon: MOB_SPAWNER
+    type: SPAWNER_BOOST
+    scan-radius: 16
+    vertical-radius: 16
+    delay-reduction-per-level: 80
+    min-delay: 20
+    max-blocks-per-tick: 8
+    max-level: 3
+    power-consumption: 5
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 12
+          exp:
+            type: EXP_LEVEL
+            amount: 30
+          money:
+            type: VAULT_MONEY
+            amount: 7500
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 12
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 20
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 5000
+
+  jump:
+    enabled: true
+    display-name: "&aSalto"
+    description:
+      - "&7Aumenta tu salto dentro del rango."
+    icon: RABBIT_FOOT
+    type: POTION
+    potion: JUMP
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  invisible:
+    enabled: true
+    display-name: "&aInvisible"
+    description:
+      - "&7Hace que seas invisible dentro del rango."
+    icon: FERMENTED_SPIDER_EYE
+    type: POTION
+    target: PLAYERS
+    potion: INVISIBILITY
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  haste:
+    enabled: true
+    display-name: "&aVelocidad de Minado"
+    description:
+      - "&7Aumenta la velocidad de minado dentro del rango."
+    icon: DIAMOND_PICKAXE
+    type: POTION
+    potion: FAST_DIGGING
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  luck:
+    enabled: true
+    display-name: "&aSuerte"
+    description:
+      - "&7Aumenta la suerte dentro del rango."
+    icon: GOLDEN_CARROT
+    type: POTION
+    potion: LUCK
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  water_breathing:
+    enabled: true
+    display-name: "&aRespiración Acuática"
+    description:
+      - "&7Permite respirar bajo el agua dentro del rango."
+    icon: TURTLE_HELMET
+    type: POTION
+    potion: WATER_BREATHING
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  poison:
+    enabled: true
+    display-name: "&2Veneno"
+    description:
+      - "&7Envenena monstruos dentro del rango."
+    icon: SPIDER_EYE
+    type: POTION
+    potion: POISON
+    target: MONSTERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 2
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  resistance:
+    enabled: true
+    display-name: "&eResistencia"
+    description:
+      - "&7Otorga resistencia dentro del rango."
+    icon: SHIELD
+    type: POTION
+    potion: DAMAGE_RESISTANCE
+    target: PLAYERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 3
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+  slowdown:
+    enabled: true
+    display-name: "&8Ralentización"
+    description:
+      - "&7Ralentiza monstruos dentro del rango."
+    icon: COBWEB
+    type: POTION
+    potion: SLOW
+    target: MONSTERS
+    amplifier-per-level: 1
+    duration-ticks: 100
+    max-level: 3
+    power-consumption: 3
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 8
+          exp:
+            type: EXP_LEVEL
+            amount: 20
+          money:
+            type: VAULT_MONEY
+            amount: 5000
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 8
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 15
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 3000
+
+# Usar solo en +1.14. Eliminar o comentar en legacy.
+  modern_furnace_boost:
+    enabled: true
+    display-name: "&bHornos Modernos"
+    description:
+      - "&7Acelera altos hornos y ahumadores."
+    icon: BLAST_FURNACE
+    type: BLOCK_PROCESS_BOOST
+    target-blocks:
+      - BLAST_FURNACE
+      - SMOKER
+    scan-radius: 16
+    vertical-radius: 16
+    process-time-level-1: 80
+    process-time-level-2: 50
+    process-time-level-3: 25
+    max-blocks-per-tick: 8
+    max-level: 3
+    power-consumption: 4
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 10
+          exp:
+            type: EXP_LEVEL
+            amount: 25
+          money:
+            type: VAULT_MONEY
+            amount: 6500
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 10
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 18
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 4000
+
+  burner:
+    enabled: true
+    display-name: "&6Quemador"
+    description:
+      - "&7Prende fuego a mobs hostiles dentro del rango."
+    icon: BLAZE_POWDER
+    type: BURNER
+    fire-ticks-per-level: 60
+    max-level: 3
+    power-consumption: 4
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 10
+          exp:
+            type: EXP_LEVEL
+            amount: 25
+          money:
+            type: VAULT_MONEY
+            amount: 6500
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 10
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 18
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 4000
+
+  damage_field:
+    enabled: true
+    display-name: "&cCampo de Daño"
+    description:
+      - "&7Daña mobs hostiles dentro del rango."
+      - "&7No afecta animales ni jugadores."
+    icon: NETHERITE_SWORD
+    type: DAMAGE_FIELD
+    damage-per-level: 1.0
+    max-level: 3
+    power-consumption: 5
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 12
+          exp:
+            type: EXP_LEVEL
+            amount: 30
+          money:
+            type: VAULT_MONEY
+            amount: 7500
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 12
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 20
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 5000
+
+  gravity_well:
+    enabled: true
+    display-name: "&5Pozo Gravitacional"
+    description:
+      - "&7Atrae mobs hostiles hacia el beacon."
+      - "&7Útil para granjas y control de área."
+    icon: ENDER_PEARL
+    type: GRAVITY_WELL
+    pull-strength-per-level: 0.22
+    vertical-boost: 0.05
+    max-velocity: 1.2
+    max-level: 3
+    power-consumption: 5
+    costs:
+      acquire:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount: 12
+          exp:
+            type: EXP_LEVEL
+            amount: 30
+          money:
+            type: VAULT_MONEY
+            amount: 7500
+      upgrade:
+        options:
+          diamond:
+            type: ITEM
+            material: DIAMOND
+            amount-per-level: 12
+          exp:
+            type: EXP_LEVEL
+            amount-per-level: 20
+          money:
+            type: VAULT_MONEY
+            amount-per-level: 5000

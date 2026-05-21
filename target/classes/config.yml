@@ -1,0 +1,8 @@
+language: es_cl
+
+debug: false
+
+settings:
+  require-permission: true
+  permission-use: dynabeacon.use
+  shift-click-menu: true
