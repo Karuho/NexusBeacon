@@ -150,6 +150,12 @@ public class BeaconGuiListener implements Listener {
 
             if (event.getClick() == ClickType.RIGHT) {
                 int currentLevel = beacon.getEffectLevel(clickedEffect.getId());
+                int nextLevel = currentLevel + 1;
+
+                if (!cl.dynasty.dynabeacon.effects.EffectLevelUtil.isLevelEnabled(plugin, clickedEffect, nextLevel)) {
+                    player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cEse nivel está desactivado."));
+                    return;
+                }
 
                 if (currentLevel >= clickedEffect.getMaxLevel()) {
                     player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &eEste efecto ya está al nivel máximo."));
@@ -216,6 +222,11 @@ public class BeaconGuiListener implements Listener {
 
             int currentLevel = beacon.getEffectLevel(effect.getId());
             int nextLevel = currentLevel + 1;
+
+            if (!cl.dynasty.dynabeacon.effects.EffectLevelUtil.isLevelEnabled(plugin, effect, nextLevel)) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cEse nivel está desactivado."));
+                return;
+            }
 
             if (!plugin.getPaymentManager().payOption(player, effect, action, optionKey, nextLevel)) {
                 return;

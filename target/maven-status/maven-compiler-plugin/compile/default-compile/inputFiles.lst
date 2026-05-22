@@ -35,6 +35,7 @@
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/gui/BeaconGuiManager.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/util/ColorUtil.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/api/VersionAdapter.java
+/var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/listener/FurnaceBoostListener.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/config/ConfigManager.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/effects/EffectRegistry.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/effects/BeaconEffect.java

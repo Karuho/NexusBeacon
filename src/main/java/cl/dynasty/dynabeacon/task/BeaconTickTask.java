@@ -24,11 +24,6 @@ public class BeaconTickTask extends BukkitRunnable {
                     continue;
                 }
 
-                plugin.getLogger().info("[DynaBeacon DEBUG] Tick effect="
-                        + effect.getId()
-                        + " type=" + effect.getType()
-                        + " beacon=" + beacon.getId());
-
                 plugin.getEffectExecutorRegistry().tick(beacon, effect);
             }
         }

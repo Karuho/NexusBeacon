@@ -70,13 +70,22 @@ public class BeaconGuiManager {
         int slot = 10;
 
         for (BeaconEffect effect : plugin.getEffectRegistry().getEffects()) {
+            if (!cl.dynasty.dynabeacon.effects.EffectLevelUtil.isLevelEnabled(plugin, effect, 1)) {
+                continue;
+            }
             boolean purchased = beacon.hasEffect(effect.getId());
             boolean active = beacon.isEffectActive(effect.getId());
             int level = beacon.getEffectLevel(effect.getId());
 
             int availablePower = plugin.getBeaconPowerManager().getAvailablePower(beacon);
             int usedPower = plugin.getBeaconPowerManager().getUsedPower(beacon);
-            int effectPower = effect.getPowerConsumption() * Math.max(1, level);
+            int displayLevel = Math.max(1, level);
+            int effectPower = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelInt(
+                    plugin,
+                    effect,
+                    displayLevel,
+                    "power-consumption",
+                    effect.getPowerConsumption() * displayLevel);
 
             String rightClickText;
 
@@ -178,11 +187,12 @@ public class BeaconGuiManager {
                 "",
                 "&eClick para confirmar."));
 
-        inventory.setItem(13, createItem(plugin.getVersionAdapter().material("EXPERIENCE_BOTTLE"), "&aPagar con experiencia",
-                plugin.getPaymentManager().getOptionText(effect, action, "exp",
-                        beacon.getEffectLevel(effect.getId()) + 1),
-                "",
-                "&eClick para confirmar."));
+        inventory.setItem(13,
+                createItem(plugin.getVersionAdapter().material("EXPERIENCE_BOTTLE"), "&aPagar con experiencia",
+                        plugin.getPaymentManager().getOptionText(effect, action, "exp",
+                                beacon.getEffectLevel(effect.getId()) + 1),
+                        "",
+                        "&eClick para confirmar."));
 
         inventory.setItem(15, createItem(plugin.getVersionAdapter().material("SUNFLOWER"), "&6Pagar con dinero",
                 plugin.getPaymentManager().getOptionText(effect, action, "money",

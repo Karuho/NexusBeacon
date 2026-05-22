@@ -59,7 +59,7 @@ public class PaymentManager {
     }
 
     public String getOptionText(BeaconEffect effect, String action, String optionKey, int level) {
-        ConfigurationSection section = getOption(effect, action, optionKey);
+        ConfigurationSection section = getLevelOption(effect, action, optionKey, level);
 
         if (section == null) {
             return ColorUtil.color("&cOpción no configurada.");
@@ -85,7 +85,7 @@ public class PaymentManager {
     }
 
     public boolean payOption(Player player, BeaconEffect effect, String action, String optionKey, int level) {
-        ConfigurationSection section = getOption(effect, action, optionKey);
+        ConfigurationSection section = getLevelOption(effect, action, optionKey, level);
 
         if (section == null) {
             player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cEsa opción de pago no está configurada."));
@@ -99,6 +99,21 @@ public class PaymentManager {
         return plugin.getConfigManager()
                 .getEffectsConfig()
                 .getConfigurationSection("effects." + effect.getId() + ".costs." + action + ".options." + optionKey);
+    }
+
+    private ConfigurationSection getLevelOption(BeaconEffect effect, String action, String optionKey, int level) {
+        ConfigurationSection levelOption = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId()
+                        + ".levels." + level
+                        + ".costs." + action
+                        + ".options." + optionKey);
+
+        if (levelOption != null) {
+            return levelOption;
+        }
+
+        return getOption(effect, action, optionKey);
     }
 
     private boolean paySection(Player player, ConfigurationSection section, int level) {

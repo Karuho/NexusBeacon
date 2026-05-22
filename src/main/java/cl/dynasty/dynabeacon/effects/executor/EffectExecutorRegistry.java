@@ -20,7 +20,6 @@ public class EffectExecutorRegistry {
         executors.clear();
 
         register(new PotionEffectExecutor());
-        register(new BlockProcessBoostExecutor(plugin));
         register(new CropBoostExecutor(plugin));
         register(new SpawnerBoostExecutor(plugin));
         register(new BurnerExecutor(plugin));

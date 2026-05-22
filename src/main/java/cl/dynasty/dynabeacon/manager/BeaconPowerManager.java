@@ -1,12 +1,13 @@
 package cl.dynasty.dynabeacon.manager;
 
-import cl.dynasty.dynabeacon.DynaBeaconPlugin;
-import cl.dynasty.dynabeacon.effects.BeaconEffect;
-import cl.dynasty.dynabeacon.model.BeaconData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
 
 public class BeaconPowerManager {
 
@@ -17,7 +18,8 @@ public class BeaconPowerManager {
     }
 
     public int getAvailablePower(BeaconData beacon) {
-        if (beacon == null || beacon.getLocation() == null) return 0;
+        if (beacon == null || beacon.getLocation() == null)
+            return 0;
 
         Location location = beacon.getLocation();
         int maxLayers = plugin.getConfigManager().getBeaconConfig().getInt("beacon.power.max-layers", 4);
@@ -32,8 +34,7 @@ public class BeaconPowerManager {
                     Block block = location.getWorld().getBlockAt(
                             location.getBlockX() + x,
                             y,
-                            location.getBlockZ() + z
-                    );
+                            location.getBlockZ() + z);
 
                     power += getBlockPower(block.getType());
                 }
@@ -50,7 +51,13 @@ public class BeaconPowerManager {
             BeaconEffect effect = plugin.getEffectRegistry().getEffect(effectId);
 
             if (effect != null) {
-                used += effect.getPowerConsumption() * Math.max(1, beacon.getEffectLevel(effectId));
+                int level = Math.max(1, beacon.getEffectLevel(effectId));
+                used += cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelInt(
+                        plugin,
+                        effect,
+                        level,
+                        "power-consumption",
+                        effect.getPowerConsumption() * level);
             }
         }
 
@@ -61,27 +68,37 @@ public class BeaconPowerManager {
         int available = getAvailablePower(beacon);
         int used = getUsedPower(beacon);
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
-        int needed = effect.getPowerConsumption() * level;
+        int needed = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelInt(
+                plugin,
+                effect,
+                level,
+                "power-consumption",
+                effect.getPowerConsumption() * level);
 
         return used + needed <= available;
     }
 
     public BeaconData getBeaconByBaseBlock(Block block) {
-        if (block == null || block.getWorld() == null) return null;
+        if (block == null || block.getWorld() == null)
+            return null;
 
         int maxLayers = plugin.getConfigManager().getBeaconConfig().getInt("beacon.power.max-layers", 4);
 
         for (BeaconData beacon : plugin.getBeaconManager().getBeacons()) {
             Location beaconLocation = beacon.getLocation();
 
-            if (beaconLocation == null || beaconLocation.getWorld() == null) continue;
-            if (!beaconLocation.getWorld().equals(block.getWorld())) continue;
-            if (!beacon.isProtectBaseBlocks()) continue;
+            if (beaconLocation == null || beaconLocation.getWorld() == null)
+                continue;
+            if (!beaconLocation.getWorld().equals(block.getWorld()))
+                continue;
+            if (!beacon.isProtectBaseBlocks())
+                continue;
 
             for (int layer = 1; layer <= maxLayers; layer++) {
                 int y = beaconLocation.getBlockY() - layer;
 
-                if (block.getY() != y) continue;
+                if (block.getY() != y)
+                    continue;
 
                 int dx = Math.abs(block.getX() - beaconLocation.getBlockX());
                 int dz = Math.abs(block.getZ() - beaconLocation.getBlockZ());
@@ -100,9 +117,10 @@ public class BeaconPowerManager {
                 .getBeaconConfig()
                 .getConfigurationSection("beacon.power.blocks");
 
-        if (section == null || material == null) return 0;
+        if (section == null || material == null)
+            return 0;
 
         return section.getInt(material.name(), 0);
     }
-    
+
 }

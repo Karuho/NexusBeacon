@@ -1,17 +1,47 @@
+# ============================================================
+# CONFIGURACIÓN PRINCIPAL DE DYNABEACON
+# ============================================================
+
 beacon:
+  # Rango base del DynaBeacon.
   default-range: 100
+
+  # Rango máximo permitido.
   max-range: 100
+
+  # Frecuencia general de actualización de efectos.
+  # 20 ticks = 1 segundo.
   tick-interval: 40
 
+  # ------------------------------------------------------------
+  # PARTÍCULAS DEL RANGO
+  # ------------------------------------------------------------
   particles:
+    # Activa o desactiva las partículas visuales.
     enabled: true
+
+    # Cada cuántos ticks se dibujan.
     interval-ticks: 20
+
+    # Cantidad de puntos usados para formar el círculo.
+    # Más puntos = círculo más suave, pero más carga visual.
     radius-points: 96
+
+    # Tipo de partícula Bukkit/Paper.
     type: VILLAGER_HAPPY
 
+  # ------------------------------------------------------------
+  # PODER DEL BEACON
+  # ------------------------------------------------------------
   power:
+    # Activa el sistema de poder por pirámide.
     enabled: true
+
+    # Capas máximas válidas de la pirámide.
+    # Vanilla usa hasta 4 capas.
     max-layers: 4
+
+    # Valor de poder por bloque.
     blocks:
       IRON_BLOCK: 1
       GOLD_BLOCK: 1
@@ -20,21 +50,66 @@ beacon:
       DIAMOND_BLOCK: 3
       NETHERITE_BLOCK: 4
 
+# ============================================================
+# PROTECCIÓN
+# ============================================================
 protection:
+  # Solo el dueño o admins pueden interactuar con el DynaBeacon.
   owner-only-interact: true
+
+  # Solo el dueño o admins pueden romper el DynaBeacon.
   owner-only-break: true
+
+  # Protege los bloques minerales usados como base.
   protect-base-blocks: true
 
+# ============================================================
+# BEACON VANILLA
+# ============================================================
 vanilla-beacon:
+  # Si es true, bloquea el uso/colocación de beacons vanilla.
   disable-vanilla: false
+
+  # Si es true, elimina o bloquea la receta vanilla del beacon.
   disable-recipe: false
 
+# ============================================================
+# RENDIMIENTO
+# ============================================================
+performance:
+  spawner-boost:
+    # Radio horizontal para buscar spawners cercanos.
+    # Mantener bajo para proteger TPS.
+    scan-radius: 16
+
+    # Radio vertical para buscar spawners.
+    vertical-radius: 16
+
+    # Máximo de spawners procesados por ejecución.
+    max-blocks-per-tick: 8
+
+    # Si SpawnerMeta está activo, DynaBeacon no modifica spawners.
+    # Evita conflictos con plugins que administran spawners.
+    disable-when-spawnermeta-enabled: true
+
+  crop-boost:
+    scan-radius: 16
+    max-blocks-per-tick: 16
+
+# ============================================================
+# RECETA CUSTOM DEL DYNABEACON
+# ============================================================
 recipe:
+  # Activa o desactiva la receta custom.
   enabled: true
+
+  # Forma de la receta.
   shape:
     - "DDD"
     - "DBD"
     - "OOO"
+
+  # Ingredientes usados en la forma.
   ingredients:
     B: BEACON
     D: DIAMOND_BLOCK

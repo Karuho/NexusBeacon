@@ -1,5 +1,64 @@
-# (opcional) target: puede ser PLAYERS, MONSTERS, ANIMALS, ALL_ENTITIES
+# ============================================================
+# SISTEMA DE COSTOS
+# ============================================================
+# Cada efecto puede usar 2 formatos de costo:
+#
+# 1) FORMATO SIMPLE / GLOBAL
+#    Usa "costs" directamente dentro del efecto.
+#    Sirve cuando quieres un costo base para adquirir y una fórmula
+#    simple para mejorar.
+#
+#    costs:
+#      acquire:       # Nivel 0 -> Nivel 1
+#        options:
+#          diamond:
+#            type: ITEM
+#            material: DIAMOND
+#            amount: 5
+#      upgrade:       # Nivel actual -> Nivel siguiente
+#        options:
+#          diamond:
+#            type: ITEM
+#            material: DIAMOND
+#            amount-per-level: 5
 
+#    Ejemplo:
+#    - Upgrade a nivel 2 = 10 diamantes
+#    - Upgrade a nivel 3 = 15 diamantes
+#
+# 2) FORMATO POR NIVELES (MODO AVANZADO)
+#    Usa "levels.<nivel>.costs".
+#    Sirve cuando cada nivel debe tener un costo exacto distinto.
+#
+#    levels:
+#      1:
+#        costs:
+#          acquire:   # Nivel 0 -> Nivel 1
+#            options:
+#              money:
+#                type: VAULT_MONEY
+#                amount: 1000
+#      2:
+#        costs:
+#          upgrade:   # Nivel 1 -> Nivel 2
+#            options:
+#              money:
+#                type: VAULT_MONEY
+#                amount: 3500
+#      3:
+#        costs:
+#          upgrade:   # Nivel 2 -> Nivel 3
+#            options:
+#              money:
+#                type: VAULT_MONEY
+#                amount: 9000
+#
+# PRIORIDAD:
+# - Si existe levels.<nivel>.costs.<acción>, se usa ese costo.
+# - Si no existe, se usa costs.<acción> global.
+# ============================================================
+
+# Efectos basados en pociones estándar de Minecraft, con personalización de costos y consumo de poder.
 effects:
   speed:
     enabled: true
@@ -156,100 +215,6 @@ effects:
           money:
             type: VAULT_MONEY
             amount-per-level: 3000
-
-  crop_boost:
-    enabled: true
-    display-name: "&aCrecimiento de Cultivos"
-    description:
-      - "&7Acelera el crecimiento de cultivos."
-      - "&7Funciona dentro del rango del beacon."
-    icon: WHEAT
-    type: CROP_BOOST
-    scan-radius: 16
-    max-blocks-per-tick: 16
-    growth-chance-per-level: 15
-    max-level: 3
-    power-consumption: 3
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 8
-          exp:
-            type: EXP_LEVEL
-            amount: 20
-          money:
-            type: VAULT_MONEY
-            amount: 5000
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 8
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 15
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 3000
-
-  spawner_boost:
-    enabled: true
-    type: SPAWNER_BOOST
-    display-name: "&5Potenciador de Spawner"
-    description:
-      - "&7Reduce el delay de los spawners"
-      - "&7dentro del rango del beacon."
-    icon: SPAWNER
-    max-level: 3
-    power-consumption: 2
- 
-    scan-radius: 16
-    vertical-radius: 16
-    max-blocks-per-tick: 16
-    max-scanned-blocks-per-tick: 2000
- 
-    # Delay base del spawner en ticks (vanilla/SM default: 650 ticks = 32.5 seg)
-    # Este valor se usa para calcular el countdown máximo permitido.
-    # Si SM cambia el delay base de tus spawners, ajusta este valor.
-    base-delay-ticks: 650
- 
-    # Reducción en ticks por nivel (60 ticks = 3 segundos)
-    # Nivel 1: -3 seg | Nivel 2: -6 seg | Nivel 3: -9 seg
-    delay-reduction-ticks-per-level: 60
- 
-    # Countdown máximo permitido en ticks (180 = 9 seg)
-    # Con nivel 3: 650 - 180 = 470 ticks (23.5 seg) — nunca baja de 180
-    min-delay-ticks: 180
- 
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 5
-          exp:
-            type: EXP_LEVEL
-            amount: 10
-          money:
-            type: VAULT_MONEY
-            amount: 1000
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 5
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 10
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 1000
 
   jump:
     enabled: true
@@ -562,6 +527,68 @@ effects:
             type: VAULT_MONEY
             amount-per-level: 3000
 
+# Efectos avanzados personalizados (no son pociones estándar)
+  crop_boost:
+    enabled: true
+    display-name: "&aCrecimiento de Cultivos"
+    description:
+      - "&7Acelera el crecimiento de cultivos."
+      - "&7Funciona dentro del rango del beacon."
+    icon: WHEAT
+    type: CROP_BOOST
+    max-level: 3
+    levels:
+      1:
+        enabled: true
+        power-consumption: 3
+        growth-chance: 10
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      2:
+        enabled: true
+        power-consumption: 5
+        growth-chance: 20
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      3:
+        enabled: true
+        power-consumption: 7
+        growth-chance: 35
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
 
   burner:
     enabled: true
@@ -570,34 +597,59 @@ effects:
       - "&7Prende fuego a mobs hostiles dentro del rango."
     icon: BLAZE_POWDER
     type: BURNER
-    fire-ticks-per-level: 60
     max-level: 3
-    power-consumption: 4
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 10
-          exp:
-            type: EXP_LEVEL
-            amount: 25
-          money:
-            type: VAULT_MONEY
-            amount: 6500
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 10
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 18
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 4000
+    levels:
+      1:
+        enabled: true
+        power-consumption: 4
+        fire-ticks: 60
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      2:
+        enabled: true
+        power-consumption: 6
+        fire-ticks: 100
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 10
+              exp:
+                type: EXP_LEVEL
+                amount: 20
+              money:
+                type: VAULT_MONEY
+                amount: 2500
+      3:
+        enabled: true
+        power-consumption: 8
+        fire-ticks: 140
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 20
+              exp:
+                type: EXP_LEVEL
+                amount: 40
+              money:
+                type: VAULT_MONEY
+                amount: 5000
 
   damage_field:
     enabled: true
@@ -607,34 +659,60 @@ effects:
       - "&7No afecta animales ni jugadores."
     icon: NETHERITE_SWORD
     type: DAMAGE_FIELD
-    damage-per-level: 1.0
     max-level: 3
-    power-consumption: 5
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 12
-          exp:
-            type: EXP_LEVEL
-            amount: 30
-          money:
-            type: VAULT_MONEY
-            amount: 7500
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 12
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 20
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 5000
+
+    levels:
+      1:
+        enabled: true
+        power-consumption: 3
+        damage: 1.0
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 10
+              exp:
+                type: EXP_LEVEL
+                amount: 25
+              money:
+                type: VAULT_MONEY
+                amount: 6500
+      2:
+        enabled: true
+        power-consumption: 5
+        damage: 2.0
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 10
+              exp:
+                type: EXP_LEVEL
+                amount: 25
+              money:
+                type: VAULT_MONEY
+                amount: 6500
+      3:
+        enabled: true
+        power-consumption: 7
+        damage: 3.0
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 10
+              exp:
+                type: EXP_LEVEL
+                amount: 25
+              money:
+                type: VAULT_MONEY
+                amount: 6500
 
   gravity_well:
     enabled: true
@@ -644,81 +722,135 @@ effects:
       - "&7Útil para granjas y control de área."
     icon: ENDER_PEARL
     type: GRAVITY_WELL
-    pull-strength-per-level: 0.22
-    vertical-boost: 0.05
-    max-velocity: 1.2
     max-level: 3
-    power-consumption: 5
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 12
-          exp:
-            type: EXP_LEVEL
-            amount: 30
-          money:
-            type: VAULT_MONEY
-            amount: 7500
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 12
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 20
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 5000
-
+    levels:
+      1:
+        enabled: true
+        power-consumption: 3
+        pull-strength: 0.16
+        vertical-boost: 0.03
+        max-velocity: 0.7
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      2:
+        enabled: true
+        power-consumption: 5
+        pull-strength: 0.22
+        vertical-boost: 0.04
+        max-velocity: 0.95
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      3:
+        enabled: true
+        power-consumption: 7
+        pull-strength: 0.30
+        vertical-boost: 0.05
+        max-velocity: 1.2
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
 
   furnace_boost:
     enabled: true
     display-name: "&6Furnace Booster"
-    description:
-      - "&7Acelera hornos dentro del rango."
     icon: FURNACE
     type: BLOCK_PROCESS_BOOST
-    max-level: 3
-    power-consumption: 2
-    scan-radius: 16
-    vertical-radius: 16
-    max-blocks-per-tick: 32
-    max-scanned-blocks-per-tick: 2000
     target-blocks:
       - FURNACE
-    furnace-time-level-1: 160
-    furnace-time-level-2: 120
-    furnace-time-level-3: 80
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 5
-          exp:
-            type: EXP_LEVEL
-            amount: 10
-          money:
-            type: VAULT_MONEY
-            amount: 1000
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 5
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 10
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 1000
+    max-level: 3
+    levels:
+      1:
+        enabled: true
+        description:
+          - "&7Acelera hornos levemente."
+        power-consumption: 4
+        speed-up-time: 8
+        fuel-speed-up-time: 8
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      2:
+        enabled: true
+        description:
+          - "&7Acelera hornos moderadamente."
+        power-consumption: 6
+        speed-up-time: 16
+        fuel-speed-up-time: 16
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 12
+              exp:
+                type: EXP_LEVEL
+                amount: 25
+              money:
+                type: VAULT_MONEY
+                amount: 3500
+      3:
+        enabled: true
+        description:
+          - "&7Acelera hornos significativamente."
+        power-consumption: 8
+        speed-up-time: 24
+        fuel-speed-up-time: 24
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 24
+              exp:
+                type: EXP_LEVEL
+                amount: 45
+              money:
+                type: VAULT_MONEY
+                amount: 3500
 
   modern_furnace_boost:
     enabled: true
@@ -727,47 +859,136 @@ effects:
       - "&7Acelera altos hornos y ahumadores."
     icon: BLAST_FURNACE
     type: BLOCK_PROCESS_BOOST
-    max-level: 3
-    power-consumption: 2
- 
-    scan-radius: 16
-    vertical-radius: 16
-    max-blocks-per-tick: 32
-    max-scanned-blocks-per-tick: 2000
- 
-    # Bloques objetivo
     target-blocks:
       - BLAST_FURNACE
       - SMOKER
- 
-    # Tiempos para hornos modernos (BlastFurnace / Smoker, vanilla = 100 ticks = 5 seg)
-    # Nivel 1: 80 ticks (4 seg) | Nivel 2: 60 ticks (3 seg) | Nivel 3: 40 ticks (2 seg)
-    modern-furnace-time-level-1: 80
-    modern-furnace-time-level-2: 60
-    modern-furnace-time-level-3: 40
- 
-    costs:
-      acquire:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount: 5
-          exp:
-            type: EXP_LEVEL
-            amount: 10
-          money:
-            type: VAULT_MONEY
-            amount: 1000
-      upgrade:
-        options:
-          diamond:
-            type: ITEM
-            material: DIAMOND
-            amount-per-level: 5
-          exp:
-            type: EXP_LEVEL
-            amount-per-level: 10
-          money:
-            type: VAULT_MONEY
-            amount-per-level: 1000
+    levels:
+      1:
+        enabled: true
+        description:
+          - "&7Acelera hornos levemente."
+        power-consumption: 4
+        speed-up-time: 8
+        fuel-speed-up-time: 8
+        costs:
+          acquire:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 5
+              exp:
+                type: EXP_LEVEL
+                amount: 10
+              money:
+                type: VAULT_MONEY
+                amount: 1000
+      2:
+        enabled: true
+        description:
+          - "&7Acelera hornos moderadamente."
+        power-consumption: 6
+        speed-up-time: 16
+        fuel-speed-up-time: 16
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 12
+              exp:
+                type: EXP_LEVEL
+                amount: 25
+              money:
+                type: VAULT_MONEY
+                amount: 3500
+      3:
+        enabled: true
+        description:
+          - "&7Acelera hornos significativamente."
+        power-consumption: 8
+        speed-up-time: 24
+        fuel-speed-up-time: 24
+        costs:
+          upgrade:
+            options:
+              diamond:
+                type: ITEM
+                material: DIAMOND
+                amount: 24
+              exp:
+                type: EXP_LEVEL
+                amount: 45
+              money:
+                type: VAULT_MONEY
+
+  spawner_boost:
+    enabled: true
+    display-name: "&5Spawner Booster"
+    description:
+      - "&7Reduce el delay de spawners cercanos."
+      - "&7Funciona dentro del rango del beacon."
+    icon: SPAWNER
+    type: SPAWNER_BOOST
+    max-level: 5
+    levels:
+      1:
+        enabled: true
+        description:
+          - "&7Reduce levemente el tiempo de generación."
+        power-consumption: 1
+        speed-up-percentage: 10
+        cooldown-ticks: 160
+        costs:
+          acquire:
+            options:
+              money:
+                type: VAULT_MONEY
+                amount: 25000
+      2:
+        enabled: true
+        description:
+          - "&7Reduce moderadamente el tiempo de generación."
+        power-consumption: 2
+        speed-up-percentage: 20
+        cooldown-ticks: 140
+        costs:
+          upgrade:
+            options:
+              money:
+                type: VAULT_MONEY
+                amount: 60000
+      3:
+        enabled: true
+        power-consumption: 3
+        speed-up-percentage: 30
+        cooldown-ticks: 120
+        costs:
+          upgrade:
+            options:
+              money:
+                type: VAULT_MONEY
+                amount: 150000
+      4:
+        enabled: true
+        power-consumption: 4
+        speed-up-percentage: 40
+        cooldown-ticks: 100
+        costs:
+          upgrade:
+            options:
+              money:
+                type: VAULT_MONEY
+                amount: 400000
+      5:
+        enabled: true
+        power-consumption: 5
+        speed-up-percentage: 50
+        cooldown-ticks: 80
+        costs:
+          upgrade:
+            options:
+              money:
+                type: VAULT_MONEY
+                amount: 1000000

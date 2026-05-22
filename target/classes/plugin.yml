@@ -1,5 +1,5 @@
 name: DynaBeacon
-version: 4.3.3
+version: 4.5.0
 main: cl.dynasty.dynabeacon.DynaBeaconPlugin
 api-version: '1.21'
 author: Karuho

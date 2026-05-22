@@ -6,7 +6,7 @@
 
     <groupId>cl.dynasty</groupId>
     <artifactId>DynaBeacon</artifactId>
-    <version>4.3.3</version>
+    <version>4.5.0</version>
     <packaging>jar</packaging>
 
     <name>DynaBeacon</name>

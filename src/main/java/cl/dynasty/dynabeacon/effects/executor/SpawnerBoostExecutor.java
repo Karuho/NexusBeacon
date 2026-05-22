@@ -1,18 +1,24 @@
 package cl.dynasty.dynabeacon.effects.executor;
 
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.effects.EffectLevelUtil;
+import cl.dynasty.dynabeacon.model.BeaconData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.configuration.ConfigurationSection;
 
-import cl.dynasty.dynabeacon.DynaBeaconPlugin;
-import cl.dynasty.dynabeacon.effects.BeaconEffect;
-import cl.dynasty.dynabeacon.model.BeaconData;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class SpawnerBoostExecutor implements EffectExecutor {
 
     private final DynaBeaconPlugin plugin;
+    private final Random random = new Random();
+    private final Map<Location, Long> cooldowns = new HashMap<Location, Long>();
 
     public SpawnerBoostExecutor(DynaBeaconPlugin plugin) {
         this.plugin = plugin;
@@ -26,94 +32,106 @@ public class SpawnerBoostExecutor implements EffectExecutor {
     @Override
     public void tick(BeaconData beacon, BeaconEffect effect) {
         Location center = beacon.getLocation();
-        if (center == null || center.getWorld() == null)
+
+        if (center == null || center.getWorld() == null) {
             return;
+        }
 
         ConfigurationSection section = plugin.getConfigManager()
                 .getEffectsConfig()
                 .getConfigurationSection("effects." + effect.getId());
 
-        if (section == null)
+        if (section == null) {
             return;
+        }
 
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
-        int radius = section.getInt("scan-radius", 16);
-        int verticalRadius = section.getInt("vertical-radius", radius);
-        int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
-        int maxBlocks = section.getInt("max-blocks-per-tick", 16);
 
-        // Delay base del spawner en ticks. Con SM instalado, SM controla este valor
-        // internamente. Le pasamos el base para calcular el tope máximo del countdown.
-        // Vanilla / SM default: 650 ticks (32.5 seg)
-        int baseDelayTicks = section.getInt("base-delay-ticks", 650);
+        int radius = plugin.getConfigManager().getBeaconConfig()
+                .getInt("performance.spawner-boost.scan-radius", 16);
 
-        // Reducción en ticks por nivel (60 ticks = 3 segundos por nivel)
-        int reductionPerLevel = section.getInt("delay-reduction-ticks-per-level", 60);
-        int totalReduction = reductionPerLevel * level;
+        int verticalRadius = plugin.getConfigManager().getBeaconConfig()
+                .getInt("performance.spawner-boost.vertical-radius", radius);
 
-        // Delay mínimo permitido en ticks (180 = 9 seg, así nivel 3 baja máximo 9 seg)
-        int minDelayTicks = section.getInt("min-delay-ticks", 180);
+        int maxProcessed = plugin.getConfigManager().getBeaconConfig()
+                .getInt("performance.spawner-boost.max-blocks-per-tick", 8);
 
-        // El countdown máximo que permitimos: base - reducción, sin bajar del mínimo
-        int targetMaxTicks = Math.max(minDelayTicks, baseDelayTicks - totalReduction);
+        double speedUpPercentage = EffectLevelUtil.getLevelDouble(
+                plugin,
+                effect,
+                level,
+                "speed-up-percentage",
+                section.getDouble("speed-up-percentage-per-level", 15.0D) * level);
 
-        int scanned = 0;
-        int processed = 0;
+        double speedUpFactor = Math.min(0.95D, speedUpPercentage / 100.0D);
+
+        int cooldownTicks = EffectLevelUtil.getLevelInt(
+                plugin,
+                effect,
+                level,
+                "cooldown-ticks",
+                section.getInt("cooldown-ticks", 200));
+        long now = System.currentTimeMillis();
 
         Material spawnerMaterial = plugin.getVersionAdapter().material("SPAWNER");
+
+        int processed = 0;
 
         for (int x = -radius; x <= radius; x++) {
             for (int y = -verticalRadius; y <= verticalRadius; y++) {
                 for (int z = -radius; z <= radius; z++) {
-
-                    if (processed >= maxBlocks)
+                    if (processed >= maxProcessed) {
+                        cleanupCooldowns(now);
                         return;
-
-                    if (++scanned >= maxScannedBlocks)
-                        return;
+                    }
 
                     Block block = center.getWorld().getBlockAt(
                             center.getBlockX() + x,
                             center.getBlockY() + y,
                             center.getBlockZ() + z);
 
-                    if (block.getType() != spawnerMaterial)
+                    if (block.getType() != spawnerMaterial) {
                         continue;
-
-                    // --- Integración SpawnerMeta ---
-                    // Recortamos el countdown actual al máximo deseado.
-                    // Si SM no está o falla, usamos el fallback vanilla.
-                    if (plugin.getSpawnerMetaHook() != null && plugin.getSpawnerMetaHook().isEnabled()) {
-                        boolean handled = plugin.getSpawnerMetaHook().setReducedDelay(block, targetMaxTicks);
-                        if (handled) {
-                            processed++;
-                            continue;
-                        }
                     }
 
-                    // --- Fallback: Vanilla CreatureSpawner ---
-                    if (!(block.getState() instanceof CreatureSpawner))
+                    if (!(block.getState() instanceof CreatureSpawner)) {
                         continue;
+                    }
 
                     CreatureSpawner spawner = (CreatureSpawner) block.getState();
 
-                    // Para vanilla seteamos min/max spawn delay del spawner directamente.
-                    // Solo actualizamos si el delay actual es mayor al objetivo para no
-                    // pisar configuraciones de otros plugins que ya lo bajaron más.
-                    if (spawner.getMinSpawnDelay() > targetMaxTicks) {
-                        spawner.setMinSpawnDelay(targetMaxTicks);
-                        spawner.setMaxSpawnDelay(Math.max(targetMaxTicks, targetMaxTicks + 20));
-                        spawner.update(true);
+                    boolean disableWithSpawnerMeta = plugin.getConfigManager().getBeaconConfig()
+                            .getBoolean("performance.spawner-boost.disable-when-spawnermeta-enabled", true);
 
-                        plugin.getLogger().fine("[DynaBeacon] Spawner vanilla actualizado: delay="
-                                + targetMaxTicks + " ticks (nivel " + level + ") en "
-                                + block.getWorld().getName()
-                                + " " + block.getX() + "," + block.getY() + "," + block.getZ());
+                    if (disableWithSpawnerMeta
+                            && plugin.getServer().getPluginManager().isPluginEnabled("SpawnerMeta")) {
+                        continue;
                     }
 
+                    Long cooldownUntil = cooldowns.get(block.getLocation());
+                    if (cooldownUntil != null && now < cooldownUntil) {
+                        continue;
+                    }
+
+                    int minDelay = Math.max(1, spawner.getMinSpawnDelay());
+                    int maxDelay = Math.max(minDelay + 1, spawner.getMaxSpawnDelay());
+
+                    int baseDelay = random.nextInt(maxDelay - minDelay) + minDelay;
+                    int boostedDelay = Math.max(1, (int) Math.round(baseDelay * (1.0D - speedUpFactor)));
+
+                    spawner.setDelay(boostedDelay);
+                    spawner.update(true);
+
+                    cooldowns.put(block.getLocation(), now + (cooldownTicks * 50L));
                     processed++;
                 }
             }
         }
+
+        cleanupCooldowns(now);
+    }
+
+    private void cleanupCooldowns(long now) {
+        cooldowns.entrySet().removeIf(entry -> entry.getValue() < now);
     }
 }

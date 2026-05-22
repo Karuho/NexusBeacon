@@ -1,8 +1,5 @@
 package cl.dynasty.dynabeacon.listener;
 
-import cl.dynasty.dynabeacon.DynaBeaconPlugin;
-import cl.dynasty.dynabeacon.effects.BeaconEffect;
-import cl.dynasty.dynabeacon.model.BeaconData;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Furnace;
@@ -11,6 +8,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
 
 public class FurnaceBoostListener implements Listener {
 
@@ -23,7 +24,8 @@ public class FurnaceBoostListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onFurnaceBurn(FurnaceBurnEvent event) {
         FurnaceBoostData boost = getBestBoost(event.getBlock());
-        if (boost == null) return;
+        if (boost == null)
+            return;
 
         int reduction = (int) (event.getBurnTime() * (boost.fuelBoostPercent / 100.0D));
         int newBurnTime = Math.max(1, event.getBurnTime() - reduction);
@@ -34,21 +36,23 @@ public class FurnaceBoostListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
         FurnaceBoostData boost = getBestBoost(event.getBlock());
-        if (boost == null) return;
+        if (boost == null)
+            return;
 
         Block block = event.getBlock();
 
         plugin.getServer().getScheduler().runTask(plugin, new Runnable() {
             @Override
             public void run() {
-                if (!(block.getState() instanceof Furnace)) return;
+                if (!(block.getState() instanceof Furnace))
+                    return;
 
                 Furnace furnace = (Furnace) block.getState();
 
-                if (furnace.getInventory().getSmelting() == null) return;
+                if (furnace.getInventory().getSmelting() == null)
+                    return;
 
-                int total = furnace.getCookTimeTotal();
-                if (total <= 0) total = 200;
+                int total = block.getType() == Material.FURNACE ? 200 : 100;
 
                 int add = (int) (total * (boost.cookBoostPercent / 100.0D));
                 int next = Math.min(total, furnace.getCookTime() + add);
@@ -63,27 +67,45 @@ public class FurnaceBoostListener implements Listener {
         FurnaceBoostData best = null;
 
         for (BeaconData beacon : plugin.getBeaconManager().getBeacons()) {
-            if (beacon.getLocation() == null || beacon.getLocation().getWorld() == null) continue;
-            if (!beacon.getLocation().getWorld().equals(block.getWorld())) continue;
+            if (beacon.getLocation() == null || beacon.getLocation().getWorld() == null)
+                continue;
+            if (!beacon.getLocation().getWorld().equals(block.getWorld()))
+                continue;
 
-            if (!isInInfiniteCylinder(beacon, block)) continue;
+            if (!isInInfiniteCylinder(beacon, block))
+                continue;
 
             for (String effectId : beacon.getActiveEffects()) {
                 BeaconEffect effect = plugin.getEffectRegistry().getEffect(effectId);
-                if (effect == null) continue;
-                if (!effect.getType().equalsIgnoreCase("BLOCK_PROCESS_BOOST")) continue;
+                if (effect == null)
+                    continue;
+                if (!effect.getType().equalsIgnoreCase("BLOCK_PROCESS_BOOST"))
+                    continue;
 
                 ConfigurationSection section = plugin.getConfigManager()
                         .getEffectsConfig()
                         .getConfigurationSection("effects." + effect.getId());
 
-                if (section == null) continue;
-                if (!isTargetBlock(block.getType(), section)) continue;
+                if (section == null)
+                    continue;
+                if (!isTargetBlock(block.getType(), section))
+                    continue;
 
                 int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
 
-                double cookPercent = section.getDouble("speed-up-time-per-level", 15.0D) * level;
-                double fuelPercent = section.getDouble("fuel-speed-up-time-per-level", cookPercent) * level;
+                double cookPercent = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelDouble(
+                        plugin,
+                        effect,
+                        level,
+                        "speed-up-time",
+                        section.getDouble("speed-up-time-per-level", 15.0D) * level);
+
+                double fuelPercent = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelDouble(
+                        plugin,
+                        effect,
+                        level,
+                        "fuel-speed-up-time",
+                        section.getDouble("fuel-speed-up-time-per-level", cookPercent) * level);
 
                 FurnaceBoostData data = new FurnaceBoostData(cookPercent, fuelPercent);
 
@@ -131,4 +153,5 @@ public class FurnaceBoostListener implements Listener {
             this.fuelBoostPercent = fuelBoostPercent;
         }
     }
+
 }
