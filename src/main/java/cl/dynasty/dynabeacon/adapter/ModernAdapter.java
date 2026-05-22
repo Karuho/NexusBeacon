@@ -9,79 +9,33 @@ import cl.dynasty.dynabeacon.api.VersionAdapter;
 public class ModernAdapter implements VersionAdapter {
 
     @Override
-    public Material material(String modernName, String legacyName) {
-        Material material = safeMaterial(modernName);
-
-        if (material == null) {
-            material = safeMaterial(legacyName);
+    public Material material(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return Material.STONE;
         }
-
-        return material != null ? material : Material.STONE;
-    }
-
-    private Material safeMaterial(String name) {
-        if (name == null || name.trim().isEmpty())
-            return null;
 
         String normalized = name.toUpperCase()
                 .replace("MINECRAFT:", "")
                 .replace(" ", "_")
                 .replace("-", "_");
 
-        if (normalized.equals("WEB"))
-            normalized = "COBWEB";
-        if (normalized.equals("TURTLE_SHELL"))
-            normalized = "TURTLE_HELMET";
+        Material material = Material.matchMaterial(normalized);
 
-        try {
-            java.lang.reflect.Method method = Material.class.getMethod("matchMaterial", String.class, boolean.class);
-            Object result = method.invoke(null, normalized, false);
-            if (result instanceof Material)
-                return (Material) result;
-        } catch (Exception ignored) {
-        }
-
-        try {
-            Material material = Material.matchMaterial(normalized);
-            if (material != null)
-                return material;
-        } catch (Exception ignored) {
-        }
-
-        try {
-            return Material.valueOf(normalized);
-        } catch (Exception ignored) {
-        }
-
-        return null;
+        return material != null ? material : Material.STONE;
     }
 
     @Override
-    public PotionEffectType potion(String modernName, String legacyName) {
-        PotionEffectType type = safePotion(modernName);
-
-        if (type == null) {
-            type = safePotion(legacyName);
-        }
-
-        return type;
-    }
-
-    private PotionEffectType safePotion(String name) {
+    public PotionEffectType potion(String name) {
         if (name == null || name.trim().isEmpty()) {
             return null;
         }
 
-        try {
-            return PotionEffectType.getByName(name.toUpperCase());
-        } catch (Exception exception) {
-            return null;
-        }
-    }
+        String normalized = name.toUpperCase()
+                .replace("MINECRAFT:", "")
+                .replace(" ", "_")
+                .replace("-", "_");
 
-    @Override
-    public boolean isModern() {
-        return true;
+        return PotionEffectType.getByName(normalized);
     }
 
     @Override

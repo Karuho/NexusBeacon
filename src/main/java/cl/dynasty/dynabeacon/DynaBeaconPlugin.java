@@ -4,7 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import cl.dynasty.dynabeacon.adapter.LegacyAdapter;
 import cl.dynasty.dynabeacon.adapter.ModernAdapter;
 import cl.dynasty.dynabeacon.adapter.ModernItemDataAdapter;
 import cl.dynasty.dynabeacon.api.ItemDataAdapter;
@@ -117,8 +116,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        setupVersionAdapter();
-
+        versionAdapter = new ModernAdapter();
         configManager = new ConfigManager(this);
         storageManager = new StorageManager(this);
         beaconManager = new BeaconManager(this);
@@ -160,7 +158,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
 
         getLogger().info("DynaBeacon activado correctamente.");
         getLogger().info("Versión Bukkit detectada: " + Bukkit.getBukkitVersion());
-        getLogger().info("Adapter activo: " + (versionAdapter.isModern() ? "ModernAdapter" : "LegacyAdapter"));
+        getLogger().info("Adapter activo: ModernAdapter");
     }
 
     @Override
@@ -175,20 +173,6 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         beaconManager.load();
     }
 
-    private void setupVersionAdapter() {
-        String version = Bukkit.getBukkitVersion();
-
-        if (version.startsWith("1.8")
-                || version.startsWith("1.9")
-                || version.startsWith("1.10")
-                || version.startsWith("1.11")
-                || version.startsWith("1.12")) {
-            versionAdapter = new LegacyAdapter();
-            return;
-        }
-
-        versionAdapter = new ModernAdapter();
-    }
 
     private void setupEconomy() {
         if (Bukkit.getPluginManager().getPlugin("Vault") == null) {

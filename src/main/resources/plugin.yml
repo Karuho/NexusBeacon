@@ -1,6 +1,7 @@
 name: DynaBeacon
 version: 4.3.3
 main: cl.dynasty.dynabeacon.DynaBeaconPlugin
+api-version: '1.21'
 author: Karuho
 description: Sistema propio de beacons avanzados para Dynacraft.
 softdepend: [Vault, SpawnerMeta, Towny, WorldGuard, PlotSquared, GriefPrevention, WorldEdit]

@@ -5,11 +5,9 @@ import org.bukkit.potion.PotionEffectType;
 
 public interface VersionAdapter {
 
-    Material material(String modernName, String legacyName);
+    Material material(String name);
 
-    PotionEffectType potion(String modernName, String legacyName);
-
-    boolean isModern();
+    PotionEffectType potion(String name);
 
     String getServerVersion();
 }

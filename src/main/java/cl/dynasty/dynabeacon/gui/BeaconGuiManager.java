@@ -52,7 +52,7 @@ public class BeaconGuiManager {
                 "&7Click para gestionar efectos."));
 
         inventory.setItem(24, createItem(
-                plugin.getVersionAdapter().material("COMPARATOR", "REDSTONE_COMPARATOR"),
+                plugin.getVersionAdapter().material("COMPARATOR"),
                 "&eConfiguración",
                 "&7Partículas, animaciones e idioma."));
 
@@ -178,13 +178,13 @@ public class BeaconGuiManager {
                 "",
                 "&eClick para confirmar."));
 
-        inventory.setItem(13, createItem(Material.EXP_BOTTLE, "&aPagar con experiencia",
+        inventory.setItem(13, createItem(plugin.getVersionAdapter().material("EXPERIENCE_BOTTLE"), "&aPagar con experiencia",
                 plugin.getPaymentManager().getOptionText(effect, action, "exp",
                         beacon.getEffectLevel(effect.getId()) + 1),
                 "",
                 "&eClick para confirmar."));
 
-        inventory.setItem(15, createItem(Material.DOUBLE_PLANT, "&6Pagar con dinero",
+        inventory.setItem(15, createItem(plugin.getVersionAdapter().material("SUNFLOWER"), "&6Pagar con dinero",
                 plugin.getPaymentManager().getOptionText(effect, action, "money",
                         beacon.getEffectLevel(effect.getId()) + 1),
                 "",
@@ -240,7 +240,7 @@ public class BeaconGuiManager {
             String name = trusted.getName() != null ? trusted.getName() : uuid.toString();
 
             inventory.setItem(slot, createItem(
-                    Material.SKULL_ITEM,
+                    plugin.getVersionAdapter().material("PLAYER_HEAD"),
                     "&a" + name,
                     "&7Jugador confiado.",
                     "&cClick para quitar trust."));

@@ -122,7 +122,7 @@ public class PaymentManager {
 
         if (type.equalsIgnoreCase("ITEM")) {
             String materialName = section.getString("material", "DIAMOND");
-            Material material = plugin.getVersionAdapter().material(materialName, materialName);
+            Material material = plugin.getVersionAdapter().material(materialName);
 
             if (!hasItem(player, material, amount)) {
                 player.sendMessage(ColorUtil.color(
@@ -195,7 +195,7 @@ public class PaymentManager {
             String materialName = section.getString("material", "DIAMOND");
             int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
 
-            Material material = plugin.getVersionAdapter().material(materialName, materialName);
+            Material material = plugin.getVersionAdapter().material(materialName);
 
             if (!hasItem(player, material, amount)) {
                 player.sendMessage(

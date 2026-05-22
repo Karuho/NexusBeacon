@@ -39,4 +39,3 @@
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/effects/EffectRegistry.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/effects/BeaconEffect.java
 /var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/hooks/SpawnerMetaHook.java
-/var/www/DynaBeacon/src/main/java/cl/dynasty/dynabeacon/adapter/LegacyAdapter.java

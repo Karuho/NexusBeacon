@@ -46,6 +46,10 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
         int verticalRadius = section.getInt("vertical-radius", radius);
         int maxBlocksPerTick = section.getInt("max-blocks-per-tick", 32);
 
+        // NUEVO
+        int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
+        int scanned = 0;
+
         int processTimeLevel1 = section.getInt("process-time-level-1", 120);
         int processTimeLevel2 = section.getInt("process-time-level-2", 80);
         int processTimeLevel3 = section.getInt("process-time-level-3", 40);
@@ -66,12 +70,33 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
             targetBlocks.add("FURNACE");
         }
 
+        plugin.getLogger().info("[DynaBeacon DEBUG] BlockProcess scan effect="
+                + effect.getId()
+                + " center=" + center.getWorld().getName()
+                + ";" + center.getBlockX()
+                + ";" + center.getBlockY()
+                + ";" + center.getBlockZ()
+                + " radius=" + radius
+                + " vertical=" + verticalRadius
+                + " targets=" + targetBlocks);
+
+        for (String target : targetBlocks) {
+            Material resolved = plugin.getVersionAdapter().material(target);
+            plugin.getLogger().info("[DynaBeacon DEBUG] Target material " + target + " -> " + resolved);
+        }
+
         int processed = 0;
 
         for (int x = -radius; x <= radius; x++) {
             for (int y = -verticalRadius; y <= verticalRadius; y++) {
                 for (int z = -radius; z <= radius; z++) {
                     if (processed >= maxBlocksPerTick) {
+                        return;
+                    }
+
+                    scanned++;
+
+                    if (scanned >= maxScannedBlocks) {
                         return;
                     }
 
@@ -131,7 +156,7 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
 
     private boolean isTargetBlock(Material material, java.util.List<String> targetBlocks) {
         for (String target : targetBlocks) {
-            Material targetMaterial = plugin.getVersionAdapter().material(target, target);
+            Material targetMaterial = plugin.getVersionAdapter().material(target);
 
             if (targetMaterial == material) {
                 return true;

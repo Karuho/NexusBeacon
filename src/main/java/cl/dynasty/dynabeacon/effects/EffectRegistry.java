@@ -36,7 +36,7 @@ public class EffectRegistry {
             List<String> description = section.getStringList(id + ".description");
 
             String iconName = section.getString(id + ".icon", "BEACON");
-            Material icon = plugin.getVersionAdapter().material(iconName, iconName);
+            Material icon = plugin.getVersionAdapter().material(iconName);
 
             int durationTicks = section.getInt(id + ".duration-ticks", 100);
             int maxLevel = section.getInt(id + ".max-level", 1);
@@ -44,8 +44,7 @@ public class EffectRegistry {
 
             if (type.equalsIgnoreCase("POTION")) {
                 String potionName = section.getString(id + ".potion", "");
-                PotionEffectType potionType = plugin.getVersionAdapter().potion(potionName,
-                        legacyPotionName(potionName));
+                PotionEffectType potionType = plugin.getVersionAdapter().potion(potionName);
 
                 if (potionType == null) {
                     plugin.getLogger().warning("Poción inválida para efecto: " + id);

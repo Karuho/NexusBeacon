@@ -48,7 +48,7 @@ public class CustomRecipeManager {
         if (ingredients != null) {
             for (String key : ingredients.getKeys(false)) {
                 String materialName = ingredients.getString(key);
-                Material material = plugin.getVersionAdapter().material(materialName, materialName);
+                Material material = plugin.getVersionAdapter().material(materialName);
 
                 if (material != null) {
                     recipe.setIngredient(key.charAt(0), material);
