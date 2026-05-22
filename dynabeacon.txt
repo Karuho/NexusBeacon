@@ -1,0 +1,3828 @@
+=== src/main/java/cl/dynasty/dynabeacon/task/BeaconTickTask.java ===
+package cl.dynasty.dynabeacon.task;
+
+import org.bukkit.scheduler.BukkitRunnable;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class BeaconTickTask extends BukkitRunnable {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BeaconTickTask(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void run() {
+        for (BeaconData beacon : plugin.getBeaconManager().getBeacons()) {
+            for (String effectId : beacon.getActiveEffects()) {
+                BeaconEffect effect = plugin.getEffectRegistry().getEffect(effectId);
+
+                if (effect == null) {
+                    continue;
+                }
+
+                plugin.getLogger().info("[DynaBeacon DEBUG] Tick effect="
+                        + effect.getId()
+                        + " type=" + effect.getType()
+                        + " beacon=" + beacon.getId());
+
+                plugin.getEffectExecutorRegistry().tick(beacon, effect);
+            }
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/task/BeaconParticleTask.java ===
+package cl.dynasty.dynabeacon.task;
+
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.model.PlayerSettings;
+
+public class BeaconParticleTask extends BukkitRunnable {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BeaconParticleTask(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public void run() {
+        if (!plugin.getConfigManager().getBeaconConfig().getBoolean("beacon.particles.enabled", true)) {
+            return;
+        }
+
+        int points = plugin.getConfigManager().getBeaconConfig().getInt("beacon.particles.radius-points", 128);
+
+        for (BeaconData beacon : plugin.getBeaconManager().getBeacons()) {
+            Location center = beacon.getLocation();
+
+            if (center == null || center.getWorld() == null) {
+                continue;
+            }
+
+            int range = beacon.getRange();
+
+            for (Player player : center.getWorld().getPlayers()) {
+                PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
+
+                if (!settings.isShowParticle()) {
+                    continue;
+                }
+
+                if (player.getLocation().distanceSquared(center) > (range + 48) * (range + 48)) {
+                    continue;
+                }
+
+                drawCircle(player, center, range, points);
+            }
+        }
+    }
+
+    private void drawCircle(Player player, Location center, int radius, int points) {
+        String particleName = plugin.getPlayerSettingsManager()
+                .get(player.getUniqueId())
+                .getParticleType();
+
+        org.bukkit.Particle particle;
+
+        try {
+            particle = org.bukkit.Particle.valueOf(particleName.toUpperCase());
+        } catch (Exception exception) {
+            particle = org.bukkit.Particle.VILLAGER_HAPPY;
+        }
+
+        for (int i = 0; i < points; i++) {
+            double angle = 2.0D * Math.PI * i / points;
+            double x = center.getBlockX() + 0.5D + Math.cos(angle) * radius;
+            double z = center.getBlockZ() + 0.5D + Math.sin(angle) * radius;
+            double y = center.getBlockY() + 1.0D;
+
+            Location location = new Location(center.getWorld(), x, y, z);
+
+            player.spawnParticle(particle, location, 2, 0.05D, 0.05D, 0.05D, 0.0D);
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/storage/StorageManager.java ===
+package cl.dynasty.dynabeacon.storage;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.LocationUtil;
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+
+import java.util.*;
+
+public class StorageManager {
+
+    private final DynaBeaconPlugin plugin;
+
+    public StorageManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public List<BeaconData> loadBeacons() {
+        List<BeaconData> beacons = new ArrayList<BeaconData>();
+        FileConfiguration storage = plugin.getConfigManager().getStorageConfig();
+
+        ConfigurationSection section = storage.getConfigurationSection("beacons");
+        if (section == null) return beacons;
+
+        for (String id : section.getKeys(false)) {
+            Location location = LocationUtil.deserialize(id);
+            if (location == null) continue;
+
+            String uniqueId = section.getString(id + ".unique-id", UUID.randomUUID().toString());
+
+            UUID owner = null;
+            String ownerRaw = section.getString(id + ".owner", null);
+            try {
+                if (ownerRaw != null && !ownerRaw.isEmpty()) owner = UUID.fromString(ownerRaw);
+            } catch (IllegalArgumentException ignored) {}
+
+            int range = section.getInt(id + ".range", 100);
+            int level = section.getInt(id + ".level", 1);
+
+            Map<String, Integer> effects = new HashMap<String, Integer>();
+            ConfigurationSection effectsSection = section.getConfigurationSection(id + ".effects");
+            if (effectsSection != null) {
+                for (String effectId : effectsSection.getKeys(false)) {
+                    effects.put(effectId.toLowerCase(), effectsSection.getInt(effectId, 1));
+                }
+            }
+
+            Set<String> activeEffects = new HashSet<String>();
+            for (String effectId : section.getStringList(id + ".active-effects")) {
+                activeEffects.add(effectId.toLowerCase());
+            }
+
+            Set<UUID> trustedPlayers = new HashSet<UUID>();
+
+            for (String rawUuid : section.getStringList(id + ".trusted")) {
+                try {
+                    trustedPlayers.add(UUID.fromString(rawUuid));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+
+            boolean protectBaseBlocks = section.getBoolean(id + ".protect-base-blocks", true);
+
+            beacons.add(new BeaconData(id, uniqueId, location, owner, range, level, effects, activeEffects, trustedPlayers, protectBaseBlocks));
+        }
+
+        return beacons;
+    }
+
+    public void saveBeacon(BeaconData beacon) {
+        FileConfiguration storage = plugin.getConfigManager().getStorageConfig();
+        String id = beacon.getId();
+
+        List<String> trusted = new ArrayList<String>();
+
+        for (UUID uuid : beacon.getTrustedPlayers()) {
+            trusted.add(uuid.toString());
+        }
+
+        storage.set("beacons." + id + ".trusted", trusted);
+        storage.set("beacons." + id + ".protect-base-blocks", beacon.isProtectBaseBlocks());
+        storage.set("beacons." + id + ".unique-id", beacon.getUniqueId());
+        storage.set("beacons." + id + ".owner", beacon.getOwner() != null ? beacon.getOwner().toString() : "");
+        storage.set("beacons." + id + ".range", beacon.getRange());
+        storage.set("beacons." + id + ".level", beacon.getLevel());
+        storage.set("beacons." + id + ".effects", beacon.getEffectLevels());
+        storage.set("beacons." + id + ".active-effects", new ArrayList<String>(beacon.getActiveEffects()));
+
+        plugin.getConfigManager().saveStorage();
+    }
+
+    public void removeBeacon(String id) {
+        FileConfiguration storage = plugin.getConfigManager().getStorageConfig();
+        storage.set("beacons." + id, null);
+        plugin.getConfigManager().saveStorage();
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/EffectExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public interface EffectExecutor {
+
+    String getType();
+
+    void tick(BeaconData beacon, BeaconEffect effect);
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/PotionEffectExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class PotionEffectExecutor implements EffectExecutor {
+
+    @Override
+    public String getType() {
+        return "POTION";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        effect.tick(beacon);
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/GravityWellExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.util.Vector;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.MobUtil;
+import cl.dynasty.dynabeacon.util.RangeUtil;
+
+public class GravityWellExecutor implements EffectExecutor {
+
+    private final DynaBeaconPlugin plugin;
+
+    public GravityWellExecutor(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getType() {
+        return "GRAVITY_WELL";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        Location center = beacon.getLocation();
+        if (center == null || center.getWorld() == null)
+            return;
+
+        ConfigurationSection section = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId());
+
+        int level = beacon.getEffectLevel(effect.getId());
+        double strength = section != null ? section.getDouble("pull-strength-per-level", 0.08D) * Math.max(1, level)
+                : 0.08D;
+        double verticalBoost = section != null ? section.getDouble("vertical-boost", 0.05D) : 0.05D;
+
+        Location target = center.clone().add(0.5D, 1.0D, 0.5D);
+
+        for (Entity entity : center.getWorld().getEntities()) {
+            if (!(entity instanceof LivingEntity))
+                continue;
+            if (!MobUtil.isHostile(entity))
+                continue;
+            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange()))
+                continue;
+
+            Vector direction = target.toVector().subtract(entity.getLocation().toVector());
+
+            if (direction.lengthSquared() <= 0.01D)
+                continue;
+
+            direction.normalize().multiply(strength);
+            direction.setY(verticalBoost);
+
+            entity.setVelocity(entity.getVelocity().add(direction));
+            org.bukkit.util.Vector velocity = entity.getVelocity().add(direction);
+
+            double maxVelocity = section != null ? section.getDouble("max-velocity", 1.2D) : 1.2D;
+            if (velocity.length() > maxVelocity) {
+                velocity.normalize().multiply(maxVelocity);
+            }
+
+            entity.setVelocity(velocity);
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/EffectExecutorRegistry.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class EffectExecutorRegistry {
+
+    private final DynaBeaconPlugin plugin;
+    private final Map<String, EffectExecutor> executors = new HashMap<String, EffectExecutor>();
+
+    public EffectExecutorRegistry(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void load() {
+        executors.clear();
+
+        register(new PotionEffectExecutor());
+        register(new BlockProcessBoostExecutor(plugin));
+        register(new CropBoostExecutor(plugin));
+        register(new SpawnerBoostExecutor(plugin));
+        register(new BurnerExecutor(plugin));
+        register(new DamageFieldExecutor(plugin));
+        register(new GravityWellExecutor(plugin));
+
+        plugin.getLogger().info("EffectExecutors cargados: " + executors.size());
+    }
+
+    public void register(EffectExecutor executor) {
+        executors.put(executor.getType().toUpperCase(), executor);
+    }
+
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        EffectExecutor executor = executors.get(effect.getType().toUpperCase());
+
+        if (executor == null) {
+            return;
+        }
+
+        executor.tick(beacon, effect);
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/BlockProcessBoostExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import java.lang.reflect.Method;
+
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Furnace;
+import org.bukkit.configuration.ConfigurationSection;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class BlockProcessBoostExecutor implements EffectExecutor {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BlockProcessBoostExecutor(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getType() {
+        return "BLOCK_PROCESS_BOOST";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        Location center = beacon.getLocation();
+
+        if (center == null || center.getWorld() == null) {
+            return;
+        }
+
+        ConfigurationSection section = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId());
+
+        if (section == null) {
+            return;
+        }
+
+        int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
+        int radius = section.getInt("scan-radius", Math.min(beacon.getRange(), 16));
+        int verticalRadius = section.getInt("vertical-radius", radius);
+        int maxBlocksPerTick = section.getInt("max-blocks-per-tick", 32);
+
+        // NUEVO
+        int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
+        int scanned = 0;
+
+        int processTimeLevel1 = section.getInt("process-time-level-1", 120);
+        int processTimeLevel2 = section.getInt("process-time-level-2", 80);
+        int processTimeLevel3 = section.getInt("process-time-level-3", 40);
+
+        int wantedTotalTime = processTimeLevel1;
+
+        if (level >= 2) {
+            wantedTotalTime = processTimeLevel2;
+        }
+
+        if (level >= 3) {
+            wantedTotalTime = processTimeLevel3;
+        }
+
+        java.util.List<String> targetBlocks = section.getStringList("target-blocks");
+
+        if (targetBlocks.isEmpty()) {
+            targetBlocks.add("FURNACE");
+        }
+
+        plugin.getLogger().info("[DynaBeacon DEBUG] BlockProcess scan effect="
+                + effect.getId()
+                + " center=" + center.getWorld().getName()
+                + ";" + center.getBlockX()
+                + ";" + center.getBlockY()
+                + ";" + center.getBlockZ()
+                + " radius=" + radius
+                + " vertical=" + verticalRadius
+                + " targets=" + targetBlocks);
+
+        for (String target : targetBlocks) {
+            Material resolved = plugin.getVersionAdapter().material(target);
+            plugin.getLogger().info("[DynaBeacon DEBUG] Target material " + target + " -> " + resolved);
+        }
+
+        int processed = 0;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -verticalRadius; y <= verticalRadius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    if (processed >= maxBlocksPerTick) {
+                        return;
+                    }
+
+                    scanned++;
+
+                    if (scanned >= maxScannedBlocks) {
+                        return;
+                    }
+
+                    Block block = center.getWorld().getBlockAt(
+                            center.getBlockX() + x,
+                            center.getBlockY() + y,
+                            center.getBlockZ() + z);
+
+                    if (!isTargetBlock(block.getType(), targetBlocks)) {
+                        continue;
+                    }
+
+                    if (!(block.getState() instanceof Furnace)) {
+                        continue;
+                    }
+
+                    Furnace furnace = (Furnace) block.getState();
+                    plugin.getLogger().info("[DynaBeacon DEBUG] Furnace encontrado: "
+                            + block.getType()
+                            + " cook=" + furnace.getCookTime()
+                            + " burn=" + furnace.getBurnTime()
+                            + " level=" + level);
+
+                    if (furnace.getBurnTime() <= 0 && furnace.getCookTime() <= 0) {
+                        continue;
+                    }
+                    setCookTimeTotalIfSupported(furnace, wantedTotalTime);
+
+                    short currentCookTime = furnace.getCookTime();
+
+                    if (currentCookTime < wantedTotalTime - 2) {
+                        furnace.setCookTime((short) Math.min(wantedTotalTime - 2, currentCookTime + 20));
+                    }
+
+                    if (furnace.getBurnTime() < 40) {
+                        furnace.setBurnTime((short) 40);
+                    }
+
+                    furnace.update(true);
+                    plugin.getLogger().info("[DynaBeacon DEBUG] Furnace actualizado: "
+                            + block.getType()
+                            + " cook=" + furnace.getCookTime()
+                            + " burn=" + furnace.getBurnTime());
+                    processed++;
+                }
+            }
+        }
+    }
+
+    private void setCookTimeTotalIfSupported(Furnace furnace, int totalTime) {
+        try {
+            Method method = furnace.getClass().getMethod("setCookTimeTotal", int.class);
+            method.invoke(furnace, totalTime);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private boolean isTargetBlock(Material material, java.util.List<String> targetBlocks) {
+        for (String target : targetBlocks) {
+            Material targetMaterial = plugin.getVersionAdapter().material(target);
+
+            if (targetMaterial == material) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/DamageFieldExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.MobUtil;
+import cl.dynasty.dynabeacon.util.RangeUtil;
+
+public class DamageFieldExecutor implements EffectExecutor {
+
+    private final DynaBeaconPlugin plugin;
+
+    public DamageFieldExecutor(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getType() {
+        return "DAMAGE_FIELD";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        Location center = beacon.getLocation();
+        if (center == null || center.getWorld() == null) return;
+
+        ConfigurationSection section = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId());
+
+        int level = beacon.getEffectLevel(effect.getId());
+        double damage = section != null ? section.getDouble("damage-per-level", 1.0D) * Math.max(1, level) : 1.0D;
+
+        for (Entity entity : center.getWorld().getEntities()) {
+            if (!(entity instanceof LivingEntity)) continue;
+            if (!MobUtil.isHostile(entity)) continue;
+            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange())) continue;
+
+            ((LivingEntity) entity).damage(damage);
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/CropBoostExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.material.Crops;
+import org.bukkit.material.MaterialData;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class CropBoostExecutor implements EffectExecutor {
+
+    private final DynaBeaconPlugin plugin;
+
+    public CropBoostExecutor(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getType() {
+        return "CROP_BOOST";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        Location center = beacon.getLocation();
+        if (center == null || center.getWorld() == null)
+            return;
+
+        int level = beacon.getEffectLevel(effect.getId());
+        int radius = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getInt("effects." + effect.getId() + ".scan-radius", Math.min(beacon.getRange(), 16));
+
+        int maxBlocks = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getInt("effects." + effect.getId() + ".max-blocks-per-tick", 32);
+
+        int chance = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getInt("effects." + effect.getId() + ".growth-chance-per-level", 15) * Math.max(1, level);
+
+        int processed = 0;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                for (int y = -8; y <= 8; y++) {
+                    if (processed >= maxBlocks)
+                        return;
+
+                    if (Math.random() * 100.0D > chance)
+                        continue;
+
+                    Block block = center.getWorld().getBlockAt(
+                            center.getBlockX() + x,
+                            center.getBlockY() + y,
+                            center.getBlockZ() + z);
+
+                    if (!isLegacyCrop(block))
+                        continue;
+
+                    BlockState state = block.getState();
+                    MaterialData data = state.getData();
+
+                    if (!(data instanceof Crops))
+                        continue;
+
+                    Crops crops = (Crops) data;
+
+                    if (crops.getState() == org.bukkit.CropState.RIPE)
+                        continue;
+
+                    org.bukkit.CropState current = crops.getState();
+                    org.bukkit.CropState[] states = org.bukkit.CropState.values();
+                    int nextOrdinal = Math.min(current.ordinal() + 1, org.bukkit.CropState.RIPE.ordinal());
+
+                    crops.setState(states[nextOrdinal]);
+                    state.setData(crops);
+                    state.update(true);
+
+                    processed++;
+                }
+            }
+        }
+    }
+
+    private boolean isLegacyCrop(Block block) {
+        Material type = block.getType();
+
+        return type == Material.CROPS
+                || type == Material.CARROT
+                || type == Material.POTATO
+                || type == Material.NETHER_WARTS;
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/BurnerExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.MobUtil;
+import cl.dynasty.dynabeacon.util.RangeUtil;
+
+public class BurnerExecutor implements EffectExecutor {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BurnerExecutor(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getType() {
+        return "BURNER";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        Location center = beacon.getLocation();
+        if (center == null || center.getWorld() == null) return;
+
+        ConfigurationSection section = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId());
+
+        int level = beacon.getEffectLevel(effect.getId());
+        int fireTicks = section != null ? section.getInt("fire-ticks-per-level", 60) * Math.max(1, level) : 60;
+
+        for (Entity entity : center.getWorld().getEntities()) {
+            if (!(entity instanceof LivingEntity)) continue;
+            if (!MobUtil.isHostile(entity)) continue;
+            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange())) continue;
+
+            entity.setFireTicks(fireTicks);
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/FurnaceBoostExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class FurnaceBoostExecutor implements EffectExecutor {
+
+    @Override
+    public String getType() {
+        return "FURNACE_BOOST";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        // Próximo bloque: acelerar hornos dentro del rango.
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/executor/SpawnerBoostExecutor.java ===
+package cl.dynasty.dynabeacon.effects.executor;
+
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.CreatureSpawner;
+import org.bukkit.configuration.ConfigurationSection;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class SpawnerBoostExecutor implements EffectExecutor {
+
+    private final DynaBeaconPlugin plugin;
+
+    public SpawnerBoostExecutor(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public String getType() {
+        return "SPAWNER_BOOST";
+    }
+
+    @Override
+    public void tick(BeaconData beacon, BeaconEffect effect) {
+        Location center = beacon.getLocation();
+        if (center == null || center.getWorld() == null)
+            return;
+
+        ConfigurationSection section = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId());
+
+        int level = beacon.getEffectLevel(effect.getId());
+        int radius = section != null ? section.getInt("scan-radius", 16) : 16;
+        int verticalRadius = section != null ? section.getInt("vertical-radius", radius) : radius;
+
+        int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
+        int scanned = 0;
+
+        int reduction = section != null ? section.getInt("delay-reduction-per-level", 20) * Math.max(1, level) : 20;
+        int minDelay = section != null ? section.getInt("min-delay", 40) : 40;
+        int maxBlocks = section != null ? section.getInt("max-blocks-per-tick", 16) : 16;
+
+        int processed = 0;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -verticalRadius; y <= verticalRadius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    if (processed >= maxBlocks)
+                        return;
+
+                    scanned++;
+
+                    if (scanned >= maxScannedBlocks) {
+                        return;
+                    }
+
+                    Block block = center.getWorld().getBlockAt(
+                            center.getBlockX() + x,
+                            center.getBlockY() + y,
+                            center.getBlockZ() + z);
+
+                    Material spawnerMaterial = plugin.getVersionAdapter().material("SPAWNER");
+
+                    plugin.getLogger().info("[DynaBeacon DEBUG] Spawner scan center="
+                            + center.getWorld().getName()
+                            + ";" + center.getBlockX()
+                            + ";" + center.getBlockY()
+                            + ";" + center.getBlockZ()
+                            + " radius=" + radius
+                            + " vertical=" + verticalRadius
+                            + " material=" + spawnerMaterial);
+
+                    if (block.getType() != spawnerMaterial) {
+                        continue;
+                    }
+
+                    if (plugin.getSpawnerMetaHook() != null && plugin.getSpawnerMetaHook().isEnabled()) {
+                        boolean handled = plugin.getSpawnerMetaHook().reduceTicks(block, reduction, minDelay);
+
+                        if (handled) {
+                            processed++;
+                            continue;
+                        }
+                    }
+
+                    if (!(block.getState() instanceof CreatureSpawner)) {
+                        continue;
+                    }
+
+                    CreatureSpawner spawner = (CreatureSpawner) block.getState();
+
+                    int newDelay = Math.max(minDelay, spawner.getDelay() - reduction);
+                    spawner.setDelay(newDelay);
+                    spawner.setMinSpawnDelay(Math.max(minDelay, spawner.getMinSpawnDelay() - reduction));
+                    spawner.setMaxSpawnDelay(Math.max(minDelay + 20, spawner.getMaxSpawnDelay() - reduction));
+
+                    spawner.update(true);
+                    processed++;
+                }
+            }
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/ConfiguredBeaconEffect.java ===
+package cl.dynasty.dynabeacon.effects;
+
+import java.util.List;
+
+import org.bukkit.Material;
+
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public class ConfiguredBeaconEffect implements BeaconEffect {
+
+    private final String id;
+    private final String type;
+    private final String displayName;
+    private final List<String> description;
+    private final Material icon;
+    private final int maxLevel;
+    private final int powerConsumption;
+
+    public ConfiguredBeaconEffect(String id, String type, String displayName, List<String> description,
+                                  Material icon, int maxLevel, int powerConsumption) {
+        this.id = id;
+        this.type = type;
+        this.displayName = displayName;
+        this.description = description;
+        this.icon = icon;
+        this.maxLevel = maxLevel;
+        this.powerConsumption = powerConsumption;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @Override
+    public List<String> getDescription() {
+        return description;
+    }
+
+    @Override
+    public Material getIcon() {
+        return icon;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return maxLevel;
+    }
+
+    @Override
+    public int getPowerConsumption() {
+        return powerConsumption;
+    }
+
+    @Override
+    public void tick(BeaconData beacon) {
+        // Lo ejecuta EffectExecutorRegistry según getType().
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/PotionBeaconEffect.java ===
+package cl.dynasty.dynabeacon.effects;
+
+import java.util.List;
+
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.RangeUtil;
+
+public class PotionBeaconEffect implements BeaconEffect {
+
+    private final String id;
+    private final String displayName;
+    private final List<String> description;
+    private final Material icon;
+    private final PotionEffectType potionType;
+    private final String target;
+    private final int amplifierPerLevel;
+    private final int durationTicks;
+    private final int maxLevel;
+    private final int powerConsumption;
+
+    public PotionBeaconEffect(
+            String id,
+            String displayName,
+            List<String> description,
+            Material icon,
+            PotionEffectType potionType,
+            String target,
+            int amplifierPerLevel,
+            int durationTicks,
+            int maxLevel,
+            int powerConsumption) {
+        this.id = id;
+        this.displayName = displayName;
+        this.description = description;
+        this.icon = icon;
+        this.potionType = potionType;
+        this.target = target != null ? target : "PLAYERS";
+        this.amplifierPerLevel = amplifierPerLevel;
+        this.durationTicks = durationTicks;
+        this.maxLevel = maxLevel;
+        this.powerConsumption = powerConsumption;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getType() {
+        return "POTION";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @Override
+    public List<String> getDescription() {
+        return description;
+    }
+
+    @Override
+    public Material getIcon() {
+        return icon;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return maxLevel;
+    }
+
+    @Override
+    public int getPowerConsumption() {
+        return powerConsumption;
+    }
+
+    @Override
+    public void tick(BeaconData beacon) {
+        if (beacon == null || beacon.getLocation() == null || beacon.getLocation().getWorld() == null) {
+            return;
+        }
+
+        int level = beacon.getEffectLevel(id);
+
+        if (level <= 0) {
+            return;
+        }
+
+        int amplifier = Math.max(0, (level * amplifierPerLevel) - 1);
+        Location center = beacon.getLocation();
+        int range = beacon.getRange();
+
+        for (Entity entity : center.getWorld().getEntities()) {
+            if (!(entity instanceof LivingEntity)) {
+                continue;
+            }
+
+            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, range)) {
+                continue;
+            }
+
+            LivingEntity living = (LivingEntity) entity;
+
+            if (!matchesTarget(living)) {
+                continue;
+            }
+
+            living.addPotionEffect(new PotionEffect(potionType, durationTicks, amplifier, true, true), true);
+        }
+    }
+
+    private boolean matchesTarget(LivingEntity entity) {
+        if (target.equalsIgnoreCase("ALL_ENTITIES")) {
+            return true;
+        }
+
+        if (target.equalsIgnoreCase("PLAYERS")) {
+            return entity instanceof Player;
+        }
+
+        if (target.equalsIgnoreCase("MONSTERS")) {
+            return entity instanceof Monster;
+        }
+
+        if (target.equalsIgnoreCase("ANIMALS")) {
+            return entity instanceof Animals;
+        }
+
+        return entity instanceof Player;
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/EffectRegistry.java ===
+package cl.dynasty.dynabeacon.effects;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.potion.PotionEffectType;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class EffectRegistry {
+
+    private final DynaBeaconPlugin plugin;
+    private final Map<String, BeaconEffect> effects = new HashMap<String, BeaconEffect>();
+
+    public EffectRegistry(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void load() {
+        effects.clear();
+
+        ConfigurationSection section = plugin.getConfigManager().getEffectsConfig().getConfigurationSection("effects");
+        if (section == null)
+            return;
+
+        for (String id : section.getKeys(false)) {
+            if (!section.getBoolean(id + ".enabled", true))
+                continue;
+
+            String type = section.getString(id + ".type", "POTION");
+
+            String displayName = section.getString(id + ".display-name", id);
+            List<String> description = section.getStringList(id + ".description");
+
+            String iconName = section.getString(id + ".icon", "BEACON");
+            Material icon = plugin.getVersionAdapter().material(iconName);
+
+            int durationTicks = section.getInt(id + ".duration-ticks", 100);
+            int maxLevel = section.getInt(id + ".max-level", 1);
+            int powerConsumption = section.getInt(id + ".power-consumption", 1);
+
+            if (type.equalsIgnoreCase("POTION")) {
+                String potionName = section.getString(id + ".potion", "");
+                PotionEffectType potionType = plugin.getVersionAdapter().potion(potionName);
+
+                if (potionType == null) {
+                    plugin.getLogger().warning("Poción inválida para efecto: " + id);
+                    continue;
+                }
+
+                String target = section.getString(id + ".target", "PLAYERS");
+                int amplifierPerLevel = section.getInt(id + ".amplifier-per-level", 1);
+
+                effects.put(id.toLowerCase(), new PotionBeaconEffect(
+                        id.toLowerCase(),
+                        displayName,
+                        description,
+                        icon,
+                        potionType,
+                        target,
+                        amplifierPerLevel,
+                        durationTicks,
+                        maxLevel,
+                        powerConsumption));
+
+                continue;
+            }
+
+            effects.put(id.toLowerCase(), new ConfiguredBeaconEffect(
+                    id.toLowerCase(),
+                    type.toUpperCase(),
+                    displayName,
+                    description,
+                    icon,
+                    maxLevel,
+                    powerConsumption));
+        }
+
+        plugin.getLogger().info("Efectos cargados: " + effects.size());
+    }
+
+    private String legacyPotionName(String modernName) {
+        if (modernName == null)
+            return "";
+
+        if (modernName.equalsIgnoreCase("STRENGTH"))
+            return "INCREASE_DAMAGE";
+        if (modernName.equalsIgnoreCase("HASTE"))
+            return "FAST_DIGGING";
+
+        return modernName;
+    }
+
+    public BeaconEffect getEffect(String id) {
+        if (id == null)
+            return null;
+        return effects.get(id.toLowerCase());
+    }
+
+    public Collection<BeaconEffect> getEffects() {
+        return effects.values();
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/effects/BeaconEffect.java ===
+package cl.dynasty.dynabeacon.effects;
+
+import java.util.List;
+
+import org.bukkit.Material;
+
+import cl.dynasty.dynabeacon.model.BeaconData;
+
+public interface BeaconEffect {
+
+    String getId();
+
+    String getType();
+
+    String getDisplayName();
+
+    List<String> getDescription();
+
+    Material getIcon();
+
+    int getMaxLevel();
+
+    int getPowerConsumption();
+
+    void tick(BeaconData beacon);
+}=== src/main/java/cl/dynasty/dynabeacon/util/LocationUtil.java ===
+package cl.dynasty.dynabeacon.util;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+
+public final class LocationUtil {
+
+    private LocationUtil() {
+    }
+
+    public static String serialize(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return "";
+        }
+
+        return location.getWorld().getName()
+                + ";" + location.getBlockX()
+                + ";" + location.getBlockY()
+                + ";" + location.getBlockZ();
+    }
+
+    public static Location deserialize(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] parts = value.split(";");
+
+        if (parts.length != 4) {
+            return null;
+        }
+
+        World world = Bukkit.getWorld(parts[0]);
+
+        if (world == null) {
+            return null;
+        }
+
+        try {
+            int x = Integer.parseInt(parts[1]);
+            int y = Integer.parseInt(parts[2]);
+            int z = Integer.parseInt(parts[3]);
+
+            return new Location(world, x, y, z);
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/util/RangeUtil.java ===
+package cl.dynasty.dynabeacon.util;
+
+import org.bukkit.Location;
+
+public final class RangeUtil {
+
+    private RangeUtil() {
+    }
+
+    public static boolean isInsideHorizontalRange(Location location, Location center, int range) {
+        if (location == null || center == null) return false;
+        if (location.getWorld() == null || center.getWorld() == null) return false;
+        if (!location.getWorld().equals(center.getWorld())) return false;
+
+        double dx = location.getX() - center.getX();
+        double dz = location.getZ() - center.getZ();
+
+        return (dx * dx) + (dz * dz) <= range * range;
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/util/MobUtil.java ===
+package cl.dynasty.dynabeacon.util;
+
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
+
+public final class MobUtil {
+
+    private MobUtil() {
+    }
+
+    public static boolean isHostile(Entity entity) {
+        if (!(entity instanceof LivingEntity)) return false;
+        if (entity instanceof Monster) return true;
+
+        String type = entity.getType().name();
+
+        return type.equalsIgnoreCase("PHANTOM")
+                || type.equalsIgnoreCase("SLIME")
+                || type.equalsIgnoreCase("MAGMA_CUBE")
+                || type.equalsIgnoreCase("GHAST")
+                || type.equalsIgnoreCase("SHULKER");
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/util/ColorUtil.java ===
+package cl.dynasty.dynabeacon.util;
+
+import org.bukkit.ChatColor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class ColorUtil {
+
+    private ColorUtil() {
+    }
+
+    public static String color(String text) {
+        if (text == null) return "";
+        return ChatColor.translateAlternateColorCodes('&', text);
+    }
+
+    public static List<String> color(List<String> lines) {
+        List<String> colored = new ArrayList<String>();
+
+        if (lines == null) {
+            return colored;
+        }
+
+        for (String line : lines) {
+            colored.add(color(line));
+        }
+
+        return colored;
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/manager/PaymentManager.java ===
+package cl.dynasty.dynabeacon.manager;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+public class PaymentManager {
+
+    private final DynaBeaconPlugin plugin;
+
+    public PaymentManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public boolean payAcquire(Player player, BeaconEffect effect) {
+        return pay(player, effect, "acquire", 1);
+    }
+
+    public boolean payUpgrade(Player player, BeaconEffect effect, int nextLevel) {
+        return pay(player, effect, "upgrade", nextLevel);
+    }
+
+    public String getCostText(BeaconEffect effect, String path, int level) {
+        ConfigurationSection options = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId() + ".costs." + path + ".options");
+
+        if (options == null)
+            return "&7Costo: &aGratis";
+
+        java.util.List<String> parts = new java.util.ArrayList<String>();
+
+        for (String key : options.getKeys(false)) {
+            ConfigurationSection option = options.getConfigurationSection(key);
+            if (option == null)
+                continue;
+
+            String type = option.getString("type", "NONE");
+            int amount = option.getInt("amount", option.getInt("amount-per-level", 0) * level);
+
+            if (type.equalsIgnoreCase("ITEM")) {
+                String materialName = option.getString("material", "DIAMOND");
+                parts.add(amount + "x " + getMaterialName(materialName));
+            } else if (type.equalsIgnoreCase("EXP_LEVEL")) {
+                parts.add(amount + " EXP");
+            } else if (type.equalsIgnoreCase("VAULT_MONEY")) {
+                parts.add("$" + amount);
+            }
+        }
+
+        if (parts.isEmpty())
+            return "&7Costo: &aGratis";
+
+        return "&7Costo: &e" + join(parts, " &7/ &e");
+    }
+
+    public String getOptionText(BeaconEffect effect, String action, String optionKey, int level) {
+        ConfigurationSection section = getOption(effect, action, optionKey);
+
+        if (section == null) {
+            return ColorUtil.color("&cOpción no configurada.");
+        }
+
+        String type = section.getString("type", "NONE");
+        int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
+
+        if (type.equalsIgnoreCase("ITEM")) {
+            String materialName = section.getString("material", "DIAMOND");
+            return ColorUtil.color("&7Costo: &b" + amount + "x " + getMaterialName(materialName));
+        }
+
+        if (type.equalsIgnoreCase("EXP_LEVEL")) {
+            return ColorUtil.color("&7Costo: &a" + amount + " niveles EXP");
+        }
+
+        if (type.equalsIgnoreCase("VAULT_MONEY")) {
+            return ColorUtil.color("&7Costo: &6$" + amount);
+        }
+
+        return ColorUtil.color("&7Costo: &aGratis");
+    }
+
+    public boolean payOption(Player player, BeaconEffect effect, String action, String optionKey, int level) {
+        ConfigurationSection section = getOption(effect, action, optionKey);
+
+        if (section == null) {
+            player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cEsa opción de pago no está configurada."));
+            return false;
+        }
+
+        return paySection(player, section, level);
+    }
+
+    private ConfigurationSection getOption(BeaconEffect effect, String action, String optionKey) {
+        return plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId() + ".costs." + action + ".options." + optionKey);
+    }
+
+    private boolean paySection(Player player, ConfigurationSection section, int level) {
+        String type = section.getString("type", "NONE");
+        int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
+
+        if (type.equalsIgnoreCase("NONE")) {
+            return true;
+        }
+
+        if (type.equalsIgnoreCase("EXP_LEVEL")) {
+            if (player.getLevel() < amount) {
+                player.sendMessage(
+                        ColorUtil.color("&b[DynaBeacon]&r &cNecesitas &f" + amount + " &cniveles de experiencia."));
+                return false;
+            }
+
+            player.setLevel(player.getLevel() - amount);
+            return true;
+        }
+
+        if (type.equalsIgnoreCase("ITEM")) {
+            String materialName = section.getString("material", "DIAMOND");
+            Material material = plugin.getVersionAdapter().material(materialName);
+
+            if (!hasItem(player, material, amount)) {
+                player.sendMessage(ColorUtil.color(
+                        "&b[DynaBeacon]&r &cNecesitas &f" + amount + "x " + getMaterialName(materialName) + "&c."));
+                return false;
+            }
+
+            removeItem(player, material, amount);
+            return true;
+        }
+
+        if (type.equalsIgnoreCase("VAULT_MONEY")) {
+            if (plugin.getEconomy() == null) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cLa economía Vault no está disponible."));
+                return false;
+            }
+
+            if (!plugin.getEconomy().has(player, amount)) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNecesitas &f$" + amount + "&c."));
+                return false;
+            }
+
+            plugin.getEconomy().withdrawPlayer(player, amount);
+            return true;
+        }
+
+        return false;
+    }
+
+    private String join(java.util.List<String> list, String separator) {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0)
+                builder.append(separator);
+            builder.append(list.get(i));
+        }
+
+        return builder.toString();
+    }
+
+    private boolean pay(Player player, BeaconEffect effect, String path, int level) {
+        ConfigurationSection section = plugin.getConfigManager()
+                .getEffectsConfig()
+                .getConfigurationSection("effects." + effect.getId() + ".costs." + path);
+
+        if (section == null) {
+            return true;
+        }
+
+        String type = section.getString("type", "NONE");
+
+        if (type.equalsIgnoreCase("NONE")) {
+            return true;
+        }
+
+        if (type.equalsIgnoreCase("EXP_LEVEL")) {
+            int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
+
+            if (player.getLevel() < amount) {
+                player.sendMessage("§b[DynaBeacon] §cNecesitas §f" + amount + " §cniveles de experiencia.");
+                return false;
+            }
+
+            player.setLevel(player.getLevel() - amount);
+            return true;
+        }
+
+        if (type.equalsIgnoreCase("ITEM")) {
+            String materialName = section.getString("material", "DIAMOND");
+            int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
+
+            Material material = plugin.getVersionAdapter().material(materialName);
+
+            if (!hasItem(player, material, amount)) {
+                player.sendMessage(
+                        "§b[DynaBeacon] §cNecesitas §f" + amount + "x " + getMaterialName(materialName) + "§c.");
+                return false;
+            }
+
+            removeItem(player, material, amount);
+            return true;
+        }
+
+        return true;
+    }
+
+    private boolean hasItem(Player player, Material material, int amount) {
+        if (amount <= 0)
+            return true;
+
+        return player.getInventory().containsAtLeast(new ItemStack(material), amount);
+    }
+
+    private void removeItem(Player player, Material material, int amount) {
+        if (amount <= 0)
+            return;
+
+        player.getInventory().removeItem(new ItemStack(material, amount));
+        player.updateInventory();
+    }
+
+    private String getMaterialName(String material) {
+        return plugin.getConfigManager()
+                .getLanguageConfig()
+                .getString("materials." + material.toUpperCase(), material);
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/manager/BeaconManager.java ===
+package cl.dynasty.dynabeacon.manager;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.LocationUtil;
+import org.bukkit.Location;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.Map;
+import java.util.UUID;
+public class BeaconManager {
+
+    private final DynaBeaconPlugin plugin;
+    private final Map<String, BeaconData> beacons = new HashMap<String, BeaconData>();
+
+    public BeaconManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void load() {
+        beacons.clear();
+
+        for (BeaconData beacon : plugin.getStorageManager().loadBeacons()) {
+            beacons.put(beacon.getId(), beacon);
+        }
+
+        plugin.getLogger().info("Beacons cargados: " + beacons.size());
+    }
+
+    public BeaconData registerBeacon(Location location, UUID owner) {
+        String id = LocationUtil.serialize(location);
+        String uniqueId = UUID.randomUUID().toString();
+
+        int range = plugin.getConfigManager().getBeaconConfig().getInt("beacon.default-range", 100);
+
+        BeaconData beacon = new BeaconData(id, uniqueId, location, owner, range, 1, null, null, null, true);
+        beacons.put(id, beacon);
+        plugin.getStorageManager().saveBeacon(beacon);
+
+        return beacon;
+    }
+
+    public BeaconData registerBeacon(Location location, UUID owner, String uniqueId,
+                                    Map<String, Integer> effects,
+                                    java.util.Set<String> activeEffects) {
+        String id = LocationUtil.serialize(location);
+
+        int range = plugin.getConfigManager().getBeaconConfig().getInt("beacon.default-range", 100);
+
+        BeaconData beacon = new BeaconData(id, uniqueId, location, owner, range, 1, effects, activeEffects, null, true);
+        beacons.put(id, beacon);
+        plugin.getStorageManager().saveBeacon(beacon);
+
+        return beacon;
+    }
+   
+
+    public void removeBeacon(Location location) {
+        String id = LocationUtil.serialize(location);
+        beacons.remove(id);
+        plugin.getStorageManager().removeBeacon(id);
+    }
+
+    public BeaconData getBeacon(Location location) {
+        return beacons.get(LocationUtil.serialize(location));
+    }
+
+    public BeaconData getBeaconById(String id) {
+        return beacons.get(id);
+    }
+
+    public Collection<BeaconData> getBeacons() {
+        return beacons.values();
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/manager/CustomRecipeManager.java ===
+package cl.dynasty.dynabeacon.manager;
+
+import java.util.Iterator;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.ShapedRecipe;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+
+public class CustomRecipeManager {
+
+    private final DynaBeaconPlugin plugin;
+
+    public CustomRecipeManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void load() {
+        removeVanillaBeaconRecipe();
+
+        if (!plugin.getConfigManager().getBeaconConfig().getBoolean("recipe.enabled", true)) {
+            return;
+        }
+
+        ItemStack result = plugin.getCustomBeaconItemManager().createBeaconItem(1);
+        ShapedRecipe recipe;
+
+        try {
+            org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "dynabeacon");
+            recipe = new ShapedRecipe(key, result);
+        } catch (Throwable throwable) {
+            recipe = new ShapedRecipe(result); // fallback legacy
+        }
+
+        recipe.shape(
+                plugin.getConfigManager().getBeaconConfig().getString("recipe.shape.0", "DND"),
+                plugin.getConfigManager().getBeaconConfig().getString("recipe.shape.1", "DBD"),
+                plugin.getConfigManager().getBeaconConfig().getString("recipe.shape.2", "OGO"));
+
+        ConfigurationSection ingredients = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getConfigurationSection("recipe.ingredients");
+
+        if (ingredients != null) {
+            for (String key : ingredients.getKeys(false)) {
+                String materialName = ingredients.getString(key);
+                Material material = plugin.getVersionAdapter().material(materialName);
+
+                if (material != null) {
+                    recipe.setIngredient(key.charAt(0), material);
+                }
+            }
+        }
+
+        Bukkit.addRecipe(recipe);
+        plugin.getLogger().info("Receta custom de DynaBeacon registrada.");
+    }
+
+    public void removeVanillaBeaconRecipe() {
+        if (!plugin.getConfigManager().getBeaconConfig().getBoolean("vanilla-beacon.disable-recipe", false)) {
+            return;
+        }
+
+        Iterator<Recipe> iterator = Bukkit.recipeIterator();
+
+        while (iterator.hasNext()) {
+            Recipe recipe = iterator.next();
+
+            if (recipe != null
+                    && recipe.getResult() != null
+                    && recipe.getResult().getType() == Material.BEACON
+                    && !plugin.getCustomBeaconItemManager().isCustomBeacon(recipe.getResult())) {
+                iterator.remove();
+            }
+        }
+
+        plugin.getLogger().info("Receta vanilla del beacon deshabilitada.");
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/manager/CustomBeaconItemManager.java ===
+package cl.dynasty.dynabeacon.manager;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+
+public class CustomBeaconItemManager {
+
+    private final DynaBeaconPlugin plugin;
+
+    public CustomBeaconItemManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public ItemStack createBeaconItem(int amount) {
+        ItemStack item = new ItemStack(Material.BEACON, amount);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(ColorUtil.color("&bDynaBeacon"));
+            meta.setLore(ColorUtil.color(Arrays.asList(
+                    "&7Beacon avanzado de Dynacraft.",
+                    "&7Colócalo para activar sus mejoras.")));
+            item.setItemMeta(meta);
+        }
+
+        return plugin.getItemDataAdapter().writeBaseMarker(item);
+    }
+
+    public ItemStack createBeaconItemFromData(BeaconData beacon) {
+        if (beacon.getEffectLevels().isEmpty()) {
+            return createBeaconItem(1);
+        }
+
+        ItemStack item = createBeaconItem(1);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta == null)
+            return item;
+
+        List<String> lore = new ArrayList<String>();
+        lore.add(ColorUtil.color("&7Beacon avanzado de Dynacraft."));
+        lore.add(ColorUtil.color("&7Conserva sus efectos y niveles."));
+
+        String ownerName = "Desconocido";
+
+        if (beacon.getOwner() != null && org.bukkit.Bukkit.getOfflinePlayer(beacon.getOwner()).getName() != null) {
+            ownerName = org.bukkit.Bukkit.getOfflinePlayer(beacon.getOwner()).getName();
+        }
+
+        lore.add(ColorUtil.color("&7Dueño: &f" + ownerName));
+        if (beacon.getTrustedPlayers().isEmpty()) {
+            lore.add(ColorUtil.color("&7Confiados: &cNinguno"));
+        } else {
+            lore.add(ColorUtil.color("&7Confiados: &a" + beacon.getTrustedPlayers().size()));
+        }
+        lore.add(ColorUtil.color("&8&m------------------------"));
+        lore.add(ColorUtil.color("&bEfectos almacenados:"));
+
+        for (Map.Entry<String, Integer> entry : beacon.getEffectLevels().entrySet()) {
+            String effectName = entry.getKey();
+
+            if (DynaBeaconPlugin.getInstance().getEffectRegistry().getEffect(entry.getKey()) != null) {
+                effectName = DynaBeaconPlugin.getInstance()
+                        .getEffectRegistry()
+                        .getEffect(entry.getKey())
+                        .getDisplayName();
+            }
+
+            lore.add(ColorUtil.color("&7- " + effectName + " &8| &dNivel " + entry.getValue()
+                    + (beacon.getActiveEffects().contains(entry.getKey()) ? " &aActivo" : " &cInactivo")));
+        }
+
+        lore.add(ColorUtil.color("&8&m------------------------"));
+
+        meta.setLore(lore);
+        item.setItemMeta(meta);
+
+        return plugin.getItemDataAdapter().writeBeaconData(item, beacon);
+    }
+
+    public boolean isCustomBeacon(ItemStack item) {
+        if (plugin.getItemDataAdapter().isCustomBeacon(item)) {
+            return true;
+        }
+
+        if (item == null || item.getType() != Material.BEACON || !item.hasItemMeta())
+            return false;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName())
+            return false;
+
+        String cleanName = ChatColor.stripColor(meta.getDisplayName());
+        return cleanName != null && cleanName.equalsIgnoreCase("DynaBeacon");
+    }
+
+    public String readUniqueId(ItemStack item) {
+        return plugin.getItemDataAdapter().readUniqueId(item);
+    }
+
+    public Map<String, Integer> readEffects(ItemStack item) {
+        return plugin.getItemDataAdapter().readEffects(item);
+    }
+
+    public Set<String> readActiveEffects(ItemStack item) {
+        return plugin.getItemDataAdapter().readActiveEffects(item);
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/manager/PlayerSettingsManager.java ===
+package cl.dynasty.dynabeacon.manager;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.PlayerSettings;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class PlayerSettingsManager {
+
+    private final DynaBeaconPlugin plugin;
+    private final Map<UUID, PlayerSettings> cache = new HashMap<UUID, PlayerSettings>();
+
+    public PlayerSettingsManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public PlayerSettings get(UUID uuid) {
+        if (cache.containsKey(uuid)) {
+            return cache.get(uuid);
+        }
+
+        PlayerSettings settings = load(uuid);
+        cache.put(uuid, settings);
+        return settings;
+    }
+
+    public PlayerSettings load(UUID uuid) {
+        File file = getPlayerFile(uuid);
+
+        if (!file.exists()) {
+            PlayerSettings settings = new PlayerSettings(uuid);
+            save(settings);
+            return settings;
+        }
+
+        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+
+        return new PlayerSettings(
+        uuid,
+        yaml.getBoolean("showParticle", true),
+        yaml.getBoolean("showAnimation", true),
+        yaml.getStringList("beaconInfoList"),
+        yaml.getString("particleType", "VILLAGER_HAPPY")
+);
+    }
+
+    public void save(PlayerSettings settings) {
+        File file = getPlayerFile(settings.getUuid());
+        File folder = file.getParentFile();
+
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+
+        FileConfiguration yaml = new YamlConfiguration();
+
+        yaml.set("showParticle", settings.isShowParticle());
+        yaml.set("showAnimation", settings.isShowAnimation());
+        yaml.set("beaconInfoList", settings.getBeaconInfoList());
+        yaml.set("particleType", settings.getParticleType());
+
+        try {
+            yaml.save(file);
+        } catch (Exception exception) {
+            plugin.getLogger().severe("No se pudo guardar el archivo del jugador " + settings.getUuid());
+            exception.printStackTrace();
+        }
+    }
+
+    private File getPlayerFile(UUID uuid) {
+        return new File(plugin.getDataFolder(), "players/" + uuid.toString() + ".yml");
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/manager/BeaconPowerManager.java ===
+package cl.dynasty.dynabeacon.manager;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
+
+public class BeaconPowerManager {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BeaconPowerManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public int getAvailablePower(BeaconData beacon) {
+        if (beacon == null || beacon.getLocation() == null) return 0;
+
+        Location location = beacon.getLocation();
+        int maxLayers = plugin.getConfigManager().getBeaconConfig().getInt("beacon.power.max-layers", 4);
+
+        int power = 0;
+
+        for (int layer = 1; layer <= maxLayers; layer++) {
+            int y = location.getBlockY() - layer;
+
+            for (int x = -layer; x <= layer; x++) {
+                for (int z = -layer; z <= layer; z++) {
+                    Block block = location.getWorld().getBlockAt(
+                            location.getBlockX() + x,
+                            y,
+                            location.getBlockZ() + z
+                    );
+
+                    power += getBlockPower(block.getType());
+                }
+            }
+        }
+
+        return power;
+    }
+
+    public int getUsedPower(BeaconData beacon) {
+        int used = 0;
+
+        for (String effectId : beacon.getActiveEffects()) {
+            BeaconEffect effect = plugin.getEffectRegistry().getEffect(effectId);
+
+            if (effect != null) {
+                used += effect.getPowerConsumption() * Math.max(1, beacon.getEffectLevel(effectId));
+            }
+        }
+
+        return used;
+    }
+
+    public boolean canActivate(BeaconData beacon, BeaconEffect effect) {
+        int available = getAvailablePower(beacon);
+        int used = getUsedPower(beacon);
+        int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
+        int needed = effect.getPowerConsumption() * level;
+
+        return used + needed <= available;
+    }
+
+    public BeaconData getBeaconByBaseBlock(Block block) {
+        if (block == null || block.getWorld() == null) return null;
+
+        int maxLayers = plugin.getConfigManager().getBeaconConfig().getInt("beacon.power.max-layers", 4);
+
+        for (BeaconData beacon : plugin.getBeaconManager().getBeacons()) {
+            Location beaconLocation = beacon.getLocation();
+
+            if (beaconLocation == null || beaconLocation.getWorld() == null) continue;
+            if (!beaconLocation.getWorld().equals(block.getWorld())) continue;
+            if (!beacon.isProtectBaseBlocks()) continue;
+
+            for (int layer = 1; layer <= maxLayers; layer++) {
+                int y = beaconLocation.getBlockY() - layer;
+
+                if (block.getY() != y) continue;
+
+                int dx = Math.abs(block.getX() - beaconLocation.getBlockX());
+                int dz = Math.abs(block.getZ() - beaconLocation.getBlockZ());
+
+                if (dx <= layer && dz <= layer) {
+                    return beacon;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private int getBlockPower(Material material) {
+        ConfigurationSection section = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getConfigurationSection("beacon.power.blocks");
+
+        if (section == null || material == null) return 0;
+
+        return section.getInt(material.name(), 0);
+    }
+    
+}=== src/main/java/cl/dynasty/dynabeacon/commands/DynaBeaconCommand.java ===
+package cl.dynasty.dynabeacon.commands;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.block.Block;
+import org.bukkit.Material;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class DynaBeaconCommand implements CommandExecutor, TabCompleter {
+
+    private final DynaBeaconPlugin plugin;
+
+    public DynaBeaconCommand(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
+            sendHelp(sender, label);
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("dynabeacon.admin")) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo tienes permiso."));
+                return true;
+            }
+
+            plugin.reloadAll();
+            sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &aConfiguración recargada."));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("give")) {
+            if (!sender.hasPermission("dynabeacon.admin")) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo tienes permiso."));
+                return true;
+            }
+
+            if (args.length < 2) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cUso: /" + label + " give <jugador> [cantidad]"));
+                return true;
+            }
+
+            Player target = Bukkit.getPlayer(args[1]);
+
+            if (target == null) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cJugador no encontrado."));
+                return true;
+            }
+
+            int amount = 1;
+
+            if (args.length >= 3) {
+                try {
+                    amount = Integer.parseInt(args[2]);
+                } catch (NumberFormatException ignored) {
+                    amount = 1;
+                }
+            }
+
+            if (amount < 1)
+                amount = 1;
+            if (amount > 64)
+                amount = 64;
+
+            ItemStack item = plugin.getCustomBeaconItemManager().createBeaconItem(amount);
+            target.getInventory().addItem(item);
+
+            sender.sendMessage(ColorUtil.color(
+                    "&b[DynaBeacon]&r &aEntregaste &f" + amount + " &aDynaBeacon a &f" + target.getName() + "&a."));
+            target.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &aRecibiste un DynaBeacon."));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("trust")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cSolo jugadores."));
+                return true;
+            }
+
+            Player player = (Player) sender;
+
+            if (args.length < 2) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cUso: /" + label + " trust <jugador>"));
+                return true;
+            }
+
+            BeaconData beacon = getTargetBeacon(player);
+
+            if (beacon == null) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cDebes mirar un DynaBeacon."));
+                return true;
+            }
+
+            if (!beacon.canManage(player.getUniqueId()) && !player.hasPermission("dynabeacon.admin")) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo puedes administrar este DynaBeacon."));
+                return true;
+            }
+
+            Player target = Bukkit.getPlayer(args[1]);
+
+            if (target == null) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cJugador no encontrado o no está online."));
+                return true;
+            }
+
+            beacon.addTrusted(target.getUniqueId());
+            plugin.getStorageManager().saveBeacon(beacon);
+
+            player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &aAhora &f" + target.getName() + " &aes confiable."));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("untrust")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cSolo jugadores."));
+                return true;
+            }
+
+            Player player = (Player) sender;
+
+            if (args.length < 2) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cUso: /" + label + " untrust <jugador>"));
+                return true;
+            }
+
+            BeaconData beacon = getTargetBeacon(player);
+
+            if (beacon == null) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cDebes mirar un DynaBeacon."));
+                return true;
+            }
+
+            if (!beacon.canManage(player.getUniqueId()) && !player.hasPermission("dynabeacon.admin")) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo puedes administrar este DynaBeacon."));
+                return true;
+            }
+
+            Player target = Bukkit.getPlayer(args[1]);
+
+            if (target == null) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cJugador no encontrado o no está online."));
+                return true;
+            }
+
+            beacon.removeTrusted(target.getUniqueId());
+            plugin.getStorageManager().saveBeacon(beacon);
+
+            player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cQuitaste trust a &f" + target.getName() + "&c."));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("trusted")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cSolo jugadores."));
+                return true;
+            }
+
+            Player player = (Player) sender;
+            BeaconData beacon = getTargetBeacon(player);
+
+            if (beacon == null) {
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cDebes mirar un DynaBeacon."));
+                return true;
+            }
+
+            player.sendMessage(
+                    ColorUtil.color("&b[DynaBeacon]&r &eJugadores confiables: &f" + beacon.getTrustedPlayers().size()));
+            return true;
+        }
+
+        sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cSubcomando desconocido. Usa &f/" + label + " help&c."));
+        return true;
+    }
+
+    private void sendHelp(CommandSender sender, String label) {
+        sender.sendMessage(ColorUtil.color("&8&m--------------------------------"));
+        sender.sendMessage(ColorUtil.color("&b&lDynaBeacon &7- Comandos"));
+        sender.sendMessage(ColorUtil.color("&f/" + label + " help &7- Muestra esta ayuda."));
+        sender.sendMessage(ColorUtil.color("&f/" + label + " give <jugador> [cantidad] &7- Entrega DynaBeacon."));
+        sender.sendMessage(
+                ColorUtil.color("&f/" + label + " trust <jugador> &7- Confía un jugador en el DynaBeacon que miras."));
+        sender.sendMessage(ColorUtil.color("&f/" + label + " untrust <jugador> &7- Quita trust."));
+        sender.sendMessage(ColorUtil.color("&f/" + label + " trusted &7- Lista jugadores confiables."));
+        sender.sendMessage(ColorUtil.color("&f/" + label + " reload &7- Recarga configuración."));
+        sender.sendMessage(ColorUtil.color("&8&m--------------------------------"));
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> result = new ArrayList<String>();
+
+        if (args.length == 1) {
+            List<String> subcommands = Arrays.asList("help", "give", "reload", "trust", "untrust", "trusted");
+
+            for (String subcommand : subcommands) {
+                if (subcommand.toLowerCase().startsWith(args[0].toLowerCase())) {
+                    result.add(subcommand);
+                }
+            }
+
+            return result;
+        }
+
+        if (args.length == 2 && (args[0].equalsIgnoreCase("give")
+                || args[0].equalsIgnoreCase("trust")
+                || args[0].equalsIgnoreCase("untrust"))) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                    result.add(player.getName());
+                }
+            }
+
+            return result;
+        }
+
+        if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
+            return Arrays.asList("1", "2", "4", "8", "16", "32", "64");
+        }
+
+        return result;
+    }
+
+    private BeaconData getTargetBeacon(Player player) {
+        Block block = player.getTargetBlock(null, 6);
+
+        if (block == null || block.getType() != Material.BEACON) {
+            return null;
+        }
+
+        return plugin.getBeaconManager().getBeacon(block.getLocation());
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/hooks/SpawnerMetaHook.java ===
+package cl.dynasty.dynabeacon.hooks;
+
+import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+
+import mc.rellox.spawnermeta.api.APIInstance;
+import mc.rellox.spawnermeta.api.spawner.IGenerator;
+
+public class SpawnerMetaHook {
+
+    private boolean enabled;
+
+    public void load() {
+        enabled = Bukkit.getPluginManager().getPlugin("SpawnerMeta") != null;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean reduceTicks(Block block, int reduction, int minTicks) {
+        if (!enabled || block == null) {
+            return false;
+        }
+
+        try {
+            IGenerator generator = APIInstance.api().getGenerator(block);
+
+            if (generator == null || !generator.present() || !generator.valid()) {
+                return false;
+            }
+
+            int current = generator.ticks();
+            int next = Math.max(minTicks, current - reduction);
+
+            Bukkit.getLogger().info("[DynaBeacon DEBUG] SpawnerMeta current ticks=" + current
+                    + " reduction=" + reduction
+                    + " next=" + next);
+
+            generator.ticks(next);
+            generator.update();
+
+            Bukkit.getLogger().info("[DynaBeacon DEBUG] SpawnerMeta after ticks=" + generator.ticks());
+
+            return true;
+        } catch (Throwable throwable) {
+            return false;
+        }
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/api/VersionAdapter.java ===
+package cl.dynasty.dynabeacon.api;
+
+import org.bukkit.Material;
+import org.bukkit.potion.PotionEffectType;
+
+public interface VersionAdapter {
+
+    Material material(String name);
+
+    PotionEffectType potion(String name);
+
+    String getServerVersion();
+}=== src/main/java/cl/dynasty/dynabeacon/api/ItemDataAdapter.java ===
+package cl.dynasty.dynabeacon.api;
+
+import cl.dynasty.dynabeacon.model.BeaconData;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.Map;
+import java.util.Set;
+
+public interface ItemDataAdapter {
+
+    ItemStack writeBaseMarker(ItemStack item);
+
+    ItemStack writeBeaconData(ItemStack item, BeaconData beacon);
+
+    boolean isCustomBeacon(ItemStack item);
+
+    String readUniqueId(ItemStack item);
+
+    Map<String, Integer> readEffects(ItemStack item);
+
+    Set<String> readActiveEffects(ItemStack item);
+}=== src/main/java/cl/dynasty/dynabeacon/adapter/ModernItemDataAdapter.java ===
+package cl.dynasty.dynabeacon.adapter;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.api.ItemDataAdapter;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+
+public class ModernItemDataAdapter implements ItemDataAdapter {
+
+    private final DynaBeaconPlugin plugin;
+
+    public ModernItemDataAdapter(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public static boolean isSupported() {
+        try {
+            Class.forName("org.bukkit.persistence.PersistentDataType");
+            Class.forName("org.bukkit.NamespacedKey");
+            ItemMeta.class.getMethod("getPersistentDataContainer");
+            return true;
+        } catch (Exception exception) {
+            return false;
+        }
+    }
+
+    @Override
+    public ItemStack writeBaseMarker(ItemStack item) {
+        set(item, "dynabeacon", "true");
+        return item;
+    }
+
+    @Override
+    public ItemStack writeBeaconData(ItemStack item, BeaconData beacon) {
+        set(item, "dynabeacon", "true");
+        set(item, "uid", beacon.getUniqueId());
+        set(item, "effects", serializeEffects(beacon.getEffectLevels()));
+        set(item, "active", serializeActive(beacon.getActiveEffects()));
+        return item;
+    }
+
+    @Override
+    public boolean isCustomBeacon(ItemStack item) {
+        return "true".equalsIgnoreCase(get(item, "dynabeacon"));
+    }
+
+    @Override
+    public String readUniqueId(ItemStack item) {
+        String value = get(item, "uid");
+        return value != null && !value.isEmpty() ? value : UUID.randomUUID().toString();
+    }
+
+    @Override
+    public Map<String, Integer> readEffects(ItemStack item) {
+        return deserializeEffects(get(item, "effects"));
+    }
+
+    @Override
+    public Set<String> readActiveEffects(ItemStack item) {
+        return deserializeActive(get(item, "active"));
+    }
+
+    private void set(ItemStack item, String keyName, String value) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+
+            Object container = meta.getClass().getMethod("getPersistentDataContainer").invoke(meta);
+            Object key = createKey(keyName);
+            Object stringType = getStringType();
+
+            Method setMethod = findMethod(container.getClass(), "set", 3);
+            setMethod.invoke(container, key, stringType, value);
+
+            item.setItemMeta(meta);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private String get(ItemStack item, String keyName) {
+        try {
+            if (item == null || !item.hasItemMeta()) return null;
+
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+
+            Object container = meta.getClass().getMethod("getPersistentDataContainer").invoke(meta);
+            Object key = createKey(keyName);
+            Object stringType = getStringType();
+
+            Method getMethod = findMethod(container.getClass(), "get", 2);
+            Object value = getMethod.invoke(container, key, stringType);
+
+            return value != null ? value.toString() : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private Object createKey(String keyName) throws Exception {
+        Class<?> keyClass = Class.forName("org.bukkit.NamespacedKey");
+        Constructor<?> constructor = keyClass.getConstructor(org.bukkit.plugin.Plugin.class, String.class);
+        return constructor.newInstance(plugin, keyName);
+    }
+
+    private Object getStringType() throws Exception {
+        Class<?> dataTypeClass = Class.forName("org.bukkit.persistence.PersistentDataType");
+        Field field = dataTypeClass.getField("STRING");
+        return field.get(null);
+    }
+
+    private Method findMethod(Class<?> clazz, String name, int params) {
+        for (Method method : clazz.getMethods()) {
+            if (method.getName().equals(name) && method.getParameterTypes().length == params) {
+                return method;
+            }
+        }
+        throw new IllegalStateException("Método no encontrado: " + name);
+    }
+
+    private String serializeEffects(Map<String, Integer> effects) {
+        StringBuilder builder = new StringBuilder();
+
+        for (Map.Entry<String, Integer> entry : effects.entrySet()) {
+            if (builder.length() > 0) builder.append(";");
+            builder.append(entry.getKey()).append(":").append(entry.getValue());
+        }
+
+        return builder.toString();
+    }
+
+    private Map<String, Integer> deserializeEffects(String raw) {
+        Map<String, Integer> effects = new HashMap<String, Integer>();
+        if (raw == null || raw.isEmpty()) return effects;
+
+        for (String part : raw.split(";")) {
+            String[] split = part.split(":");
+            if (split.length != 2) continue;
+
+            try {
+                effects.put(split[0].toLowerCase(), Integer.parseInt(split[1]));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        return effects;
+    }
+
+    private String serializeActive(Set<String> active) {
+        StringBuilder builder = new StringBuilder();
+
+        for (String effect : active) {
+            if (builder.length() > 0) builder.append(";");
+            builder.append(effect);
+        }
+
+        return builder.toString();
+    }
+
+    private Set<String> deserializeActive(String raw) {
+        Set<String> active = new HashSet<String>();
+        if (raw == null || raw.isEmpty()) return active;
+
+        for (String part : raw.split(";")) {
+            active.add(part.toLowerCase());
+        }
+
+        return active;
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/adapter/ModernAdapter.java ===
+package cl.dynasty.dynabeacon.adapter;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.potion.PotionEffectType;
+
+import cl.dynasty.dynabeacon.api.VersionAdapter;
+
+public class ModernAdapter implements VersionAdapter {
+
+    @Override
+    public Material material(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return Material.STONE;
+        }
+
+        String normalized = name.toUpperCase()
+                .replace("MINECRAFT:", "")
+                .replace(" ", "_")
+                .replace("-", "_");
+
+        Material material = Material.matchMaterial(normalized);
+
+        return material != null ? material : Material.STONE;
+    }
+
+    @Override
+    public PotionEffectType potion(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+
+        String normalized = name.toUpperCase()
+                .replace("MINECRAFT:", "")
+                .replace(" ", "_")
+                .replace("-", "_");
+
+        return PotionEffectType.getByName(normalized);
+    }
+
+    @Override
+    public String getServerVersion() {
+        return Bukkit.getBukkitVersion();
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/model/PlayerSettings.java ===
+package cl.dynasty.dynabeacon.model;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class PlayerSettings {
+
+    private final UUID uuid;
+    private boolean showParticle;
+    private boolean showAnimation;
+    private final List<String> beaconInfoList;
+    private String particleType;
+
+    public PlayerSettings(UUID uuid) {
+        this(uuid, true, true, new ArrayList<String>(), "VILLAGER_HAPPY");
+    }
+
+    public PlayerSettings(UUID uuid, boolean showParticle, boolean showAnimation, List<String> beaconInfoList,
+            String particleType) {
+        this.uuid = uuid;
+        this.showParticle = showParticle;
+        this.showAnimation = showAnimation;
+        this.beaconInfoList = beaconInfoList != null ? beaconInfoList : new ArrayList<String>();
+        this.particleType = particleType != null ? particleType : "VILLAGER_HAPPY";
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public boolean isShowParticle() {
+        return showParticle;
+    }
+
+    public void setShowParticle(boolean showParticle) {
+        this.showParticle = showParticle;
+    }
+
+    public boolean isShowAnimation() {
+        return showAnimation;
+    }
+
+    public void setShowAnimation(boolean showAnimation) {
+        this.showAnimation = showAnimation;
+    }
+
+    public List<String> getBeaconInfoList() {
+        return beaconInfoList;
+    }
+
+    public String getParticleType() {
+        return particleType;
+    }
+
+    public void setParticleType(String particleType) {
+        this.particleType = particleType;
+    }
+
+}=== src/main/java/cl/dynasty/dynabeacon/model/BeaconData.java ===
+package cl.dynasty.dynabeacon.model;
+
+import org.bukkit.Location;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+public class BeaconData {
+
+    private final String id;
+    private final String uniqueId;
+    private final Location location;
+    private final UUID owner;
+    private int range;
+    private int level;
+    private final Map<String, Integer> effectLevels;
+    private final Set<String> activeEffects;
+    private final Set<UUID> trustedPlayers;
+    private boolean protectBaseBlocks;
+
+    public BeaconData(String id, String uniqueId, Location location, UUID owner, int range, int level,
+                    Map<String, Integer> effectLevels, Set<String> activeEffects,
+                    Set<UUID> trustedPlayers, boolean protectBaseBlocks) {
+        this.id = id;
+        this.uniqueId = uniqueId;
+        this.location = location;
+        this.owner = owner;
+        this.range = range;
+        this.level = level;
+        this.effectLevels = effectLevels != null ? effectLevels : new HashMap<String, Integer>();
+        this.activeEffects = activeEffects != null ? activeEffects : new HashSet<String>();
+        this.trustedPlayers = trustedPlayers != null ? trustedPlayers : new HashSet<UUID>();
+        this.protectBaseBlocks = protectBaseBlocks;
+    }
+
+    public String getId() { return id; }
+
+    public String getUniqueId() { return uniqueId; }
+
+    public Location getLocation() { return location; }
+
+    public UUID getOwner() { return owner; }
+
+    public int getRange() { return range; }
+
+    public void setRange(int range) { this.range = range; }
+
+    public int getLevel() { return level; }
+
+    public void setLevel(int level) { this.level = level; }
+
+    public Map<String, Integer> getEffectLevels() { return effectLevels; }
+
+    public Set<String> getActiveEffects() { return activeEffects; }
+
+    public boolean hasEffect(String effectId) {
+        return effectLevels.containsKey(effectId);
+    }
+
+    public boolean isEffectActive(String effectId) {
+        return activeEffects.contains(effectId);
+    }
+
+    public int getEffectLevel(String effectId) {
+        Integer level = effectLevels.get(effectId);
+        return level != null ? level : 0;
+    }
+
+    public void acquireEffect(String effectId) {
+        if (!effectLevels.containsKey(effectId)) {
+            effectLevels.put(effectId, 1);
+        }
+        activeEffects.add(effectId);
+    }
+
+    public void setEffectLevel(String effectId, int level) {
+        if (level <= 0) {
+            effectLevels.remove(effectId);
+            activeEffects.remove(effectId);
+            return;
+        }
+        effectLevels.put(effectId, level);
+    }
+
+    public void setEffectActive(String effectId, boolean active) {
+        if (!hasEffect(effectId)) return;
+
+        if (active) {
+            activeEffects.add(effectId);
+        } else {
+            activeEffects.remove(effectId);
+        }
+    }
+    
+    public Set<UUID> getTrustedPlayers() {
+        return trustedPlayers;
+    }
+
+    public boolean isTrusted(UUID uuid) {
+        return uuid != null && trustedPlayers.contains(uuid);
+    }
+
+    public void addTrusted(UUID uuid) {
+        if (uuid != null) trustedPlayers.add(uuid);
+    }
+
+    public void removeTrusted(UUID uuid) {
+        trustedPlayers.remove(uuid);
+    }
+
+    public boolean isProtectBaseBlocks() {
+        return protectBaseBlocks;
+    }
+
+    public void setProtectBaseBlocks(boolean protectBaseBlocks) {
+        this.protectBaseBlocks = protectBaseBlocks;
+    }
+
+    public boolean canManage(UUID uuid) {
+        if (uuid == null) return false;
+        return owner != null && owner.equals(uuid) || trustedPlayers.contains(uuid);
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/listener/BeaconListener.java ===
+package cl.dynasty.dynabeacon.listener;
+
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+
+public class BeaconListener implements Listener {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BeaconListener(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onBeaconPlace(BlockPlaceEvent event) {
+        Block block = event.getBlock();
+
+        if (block.getType() != Material.BEACON) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        ItemStack item = event.getItemInHand();
+
+        if (!plugin.getCustomBeaconItemManager().isCustomBeacon(item)) {
+            return; // beacon vanilla: no lo tocamos
+        }
+
+        if (!player.hasPermission("dynabeacon.use")) {
+            event.setCancelled(true);
+            player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo tienes permiso para colocar este beacon."));
+            return;
+        }
+
+        String uniqueId = plugin.getCustomBeaconItemManager().readUniqueId(item);
+        java.util.Map<String, Integer> effects = plugin.getCustomBeaconItemManager().readEffects(item);
+        java.util.Set<String> activeEffects = plugin.getCustomBeaconItemManager().readActiveEffects(item);
+
+        plugin.getBeaconManager().registerBeacon(
+                block.getLocation(),
+                player.getUniqueId(),
+                uniqueId,
+                effects,
+                activeEffects);
+
+        player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &aDynaBeacon registrado correctamente."));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onBeaconInteract(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) {
+            return;
+        }
+
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        Block block = event.getClickedBlock();
+
+        if (block.getType() != Material.BEACON) {
+            return;
+        }
+
+        BeaconData beacon = plugin.getBeaconManager().getBeacon(block.getLocation());
+
+        if (beacon == null) {
+            return;
+        }
+
+        if (plugin.getConfigManager().getBeaconConfig().getBoolean("protection.owner-only-interact", true)
+                && !beacon.canManage(event.getPlayer().getUniqueId())
+                && !event.getPlayer().hasPermission("dynabeacon.admin")) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cEste DynaBeacon no te pertenece."));
+            return;
+        }
+
+        event.setCancelled(true);
+        plugin.getBeaconGuiManager().openMainMenu(event.getPlayer(), beacon);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onBeaconBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+
+        if (block.getType() != Material.BEACON) {
+            return;
+        }
+
+        BeaconData beacon = plugin.getBeaconManager().getBeacon(block.getLocation());
+
+        if (beacon == null) {
+            return;
+        }
+
+        if (plugin.getConfigManager().getBeaconConfig().getBoolean("protection.owner-only-break", true)
+                && !beacon.canManage(event.getPlayer().getUniqueId())
+                && !event.getPlayer().hasPermission("dynabeacon.admin")) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(
+                    ColorUtil.color("&b[DynaBeacon]&r &cNo puedes romper un DynaBeacon que no te pertenece."));
+            return;
+        }
+
+        event.setDropItems(false);
+
+        org.bukkit.inventory.ItemStack dropItem = plugin.getCustomBeaconItemManager().createBeaconItemFromData(beacon);
+
+        boolean creativeNoDupe = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getBoolean("beacon-item.creative-no-dupe", true);
+
+        boolean cancelIfFull = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getBoolean("beacon-item.cancel-if-inventory-full", true);
+
+        boolean autoPickup = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getBoolean("beacon-item.auto-pickup", true);
+
+        if (event.getPlayer().getGameMode() == org.bukkit.GameMode.CREATIVE && creativeNoDupe) {
+            plugin.getBeaconManager().removeBeacon(block.getLocation());
+
+            if (event.getPlayer().getInventory().firstEmpty() == -1) {
+                block.getWorld().dropItemNaturally(block.getLocation(), dropItem);
+            } else {
+                event.getPlayer().getInventory().addItem(dropItem);
+            }
+
+            event.getPlayer().sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cDynaBeacon eliminado."));
+            return;
+        }
+
+        if (autoPickup && cancelIfFull && event.getPlayer().getInventory().firstEmpty() == -1) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cTu inventario está lleno."));
+            return;
+        }
+
+        plugin.getBeaconManager().removeBeacon(block.getLocation());
+
+        if (autoPickup) {
+            event.getPlayer().getInventory().addItem(dropItem);
+        } else {
+            block.getWorld().dropItemNaturally(block.getLocation(), dropItem);
+        }
+
+        event.getPlayer().sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cDynaBeacon eliminado."));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onBaseBlockBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+
+        if (block.getType() == Material.BEACON) {
+            return;
+        }
+
+        if (!plugin.getConfigManager().getBeaconConfig().getBoolean("protection.protect-base-blocks", true)) {
+            return;
+        }
+
+        BeaconData beacon = plugin.getBeaconPowerManager().getBeaconByBaseBlock(block);
+
+        if (beacon == null) {
+            return;
+        }
+
+        if (beacon.canManage(event.getPlayer().getUniqueId())
+                || event.getPlayer().hasPermission("dynabeacon.admin")) {
+            return;
+        }
+
+        event.setCancelled(true);
+        event.getPlayer().sendMessage(
+                ColorUtil.color("&b[DynaBeacon]&r &cNo puedes romper bloques de la base de un DynaBeacon ajeno."));
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/listener/VanillaBeaconListener.java ===
+package cl.dynasty.dynabeacon.listener;
+
+import org.bukkit.Material;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+
+public class VanillaBeaconListener implements Listener {
+
+    private final DynaBeaconPlugin plugin;
+
+    public VanillaBeaconListener(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onVanillaBeaconPlace(BlockPlaceEvent event) {
+        if (event.getBlock().getType() != Material.BEACON) {
+            return;
+        }
+
+        if (plugin.getCustomBeaconItemManager().isCustomBeacon(event.getItemInHand())) {
+            return;
+        }
+
+        if (!plugin.getConfigManager().getBeaconConfig().getBoolean("vanilla-beacon.disable-vanilla", false)) {
+            return;
+        }
+
+        event.setCancelled(true);
+        event.getPlayer().sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cLos beacons vanilla están deshabilitados."));
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/listener/BeaconGuiListener.java ===
+package cl.dynasty.dynabeacon.listener;
+
+import java.util.UUID;
+
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.model.PlayerSettings;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+
+public class BeaconGuiListener implements Listener {
+
+    private final DynaBeaconPlugin plugin;
+
+    public BeaconGuiListener(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player))
+            return;
+
+        String title = clean(event.getView().getTitle());
+
+        if (!title.startsWith("DynaBeacon"))
+            return;
+
+        event.setCancelled(true);
+
+        Player player = (Player) event.getWhoClicked();
+        BeaconData beacon = plugin.getBeaconGuiManager().getOpenBeacon(player);
+
+        if (beacon == null) {
+            player.closeInventory();
+            return;
+        }
+
+        int slot = event.getRawSlot();
+
+        if (title.equalsIgnoreCase("DynaBeacon")) {
+            if (slot == 20) {
+                plugin.getBeaconGuiManager().openEffectsMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 24) {
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 49) {
+                player.closeInventory();
+            }
+
+            return;
+        }
+
+        if (title.equalsIgnoreCase("DynaBeacon - Config")) {
+            PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
+
+            if (slot == 20) {
+                settings.setShowParticle(!settings.isShowParticle());
+                plugin.getPlayerSettingsManager().save(settings);
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 22) {
+                cycleParticle(settings);
+                plugin.getPlayerSettingsManager().save(settings);
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 24) {
+                beacon.setProtectBaseBlocks(!beacon.isProtectBaseBlocks());
+                plugin.getStorageManager().saveBeacon(beacon);
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 26) {
+                plugin.getBeaconGuiManager().openTrustMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 49) {
+                plugin.getBeaconGuiManager().openMainMenu(player, beacon);
+                return;
+            }
+
+            return;
+        }
+
+        if (title.equalsIgnoreCase("DynaBeacon - Trust")) {
+            if (slot == 49) {
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+                return;
+            }
+
+            if (slot == 22) {
+                player.closeInventory();
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &eUsa &f/dbeacon trust <jugador>&e."));
+                return;
+            }
+
+            int currentSlot = 10;
+
+            for (UUID uuid : beacon.getTrustedPlayers()) {
+                if (slot == currentSlot) {
+                    beacon.removeTrusted(uuid);
+                    plugin.getStorageManager().saveBeacon(beacon);
+                    plugin.getBeaconGuiManager().openTrustMenu(player, beacon);
+                    player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cJugador eliminado de trust."));
+                    return;
+                }
+
+                currentSlot++;
+
+                if (currentSlot == 17)
+                    currentSlot = 19;
+                if (currentSlot == 26)
+                    currentSlot = 28;
+                if (currentSlot == 35)
+                    break;
+            }
+
+            return;
+        }
+
+        if (title.equalsIgnoreCase("DynaBeacon - Efectos")) {
+            if (slot == 49) {
+                plugin.getBeaconGuiManager().openMainMenu(player, beacon);
+                return;
+            }
+
+            BeaconEffect clickedEffect = getEffectBySlot(slot);
+
+            if (clickedEffect == null)
+                return;
+
+            if (event.getClick() == ClickType.RIGHT) {
+                int currentLevel = beacon.getEffectLevel(clickedEffect.getId());
+
+                if (currentLevel >= clickedEffect.getMaxLevel()) {
+                    player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &eEste efecto ya está al nivel máximo."));
+                    return;
+                }
+
+                String action = currentLevel <= 0 ? "acquire" : "upgrade";
+                plugin.getBeaconGuiManager().openPaymentMenu(player, beacon, clickedEffect, action);
+                return;
+            }
+
+            if (event.getClick() == ClickType.LEFT) {
+                if (!beacon.hasEffect(clickedEffect.getId())) {
+                    player.sendMessage(ColorUtil
+                            .color("&b[DynaBeacon]&r &cPrimero debes adquirir este efecto con click derecho."));
+                    return;
+                }
+
+                boolean newState = !beacon.isEffectActive(clickedEffect.getId());
+
+                if (newState && !plugin.getBeaconPowerManager().canActivate(beacon, clickedEffect)) {
+                    int available = plugin.getBeaconPowerManager().getAvailablePower(beacon);
+                    int used = plugin.getBeaconPowerManager().getUsedPower(beacon);
+                    player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo hay poder suficiente."));
+                    player.sendMessage(ColorUtil.color("&7Poder usado: &f" + used + "&7/&f" + available));
+                    return;
+                }
+
+                beacon.setEffectActive(clickedEffect.getId(), newState);
+                plugin.getStorageManager().saveBeacon(beacon);
+                plugin.getBeaconGuiManager().openEffectsMenu(player, beacon);
+                return;
+            }
+            return;
+        }
+
+        if (title.equalsIgnoreCase("DynaBeacon - Adquirir") || title.equalsIgnoreCase("DynaBeacon - Mejorar")) {
+            if (slot == 22) {
+                plugin.getBeaconGuiManager().openEffectsMenu(player, beacon);
+                return;
+            }
+
+            String optionKey = null;
+
+            if (slot == 11)
+                optionKey = "diamond";
+            if (slot == 13)
+                optionKey = "exp";
+            if (slot == 15)
+                optionKey = "money";
+
+            if (optionKey == null)
+                return;
+
+            String effectId = plugin.getBeaconGuiManager().getPendingEffectId(player);
+            String action = plugin.getBeaconGuiManager().getPendingAction(player);
+
+            BeaconEffect effect = plugin.getEffectRegistry().getEffect(effectId);
+
+            if (effect == null || action == null) {
+                player.closeInventory();
+                return;
+            }
+
+            int currentLevel = beacon.getEffectLevel(effect.getId());
+            int nextLevel = currentLevel + 1;
+
+            if (!plugin.getPaymentManager().payOption(player, effect, action, optionKey, nextLevel)) {
+                return;
+            }
+
+            if (action.equalsIgnoreCase("acquire")) {
+                beacon.acquireEffect(effect.getId());
+                player.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &aEfecto adquirido: " + effect.getDisplayName()));
+            } else {
+                beacon.setEffectLevel(effect.getId(), nextLevel);
+                player.sendMessage(ColorUtil.color(
+                        "&b[DynaBeacon]&r &aEfecto mejorado: " + effect.getDisplayName() + " &7Nivel &f" + nextLevel));
+            }
+
+            plugin.getStorageManager().saveBeacon(beacon);
+            plugin.getBeaconGuiManager().openEffectsMenu(player, beacon);
+            return;
+        }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (clean(event.getView().getTitle()).startsWith("DynaBeacon")) {
+            event.setCancelled(true);
+        }
+    }
+
+    private BeaconEffect getEffectBySlot(int slot) {
+        int currentSlot = 10;
+
+        for (BeaconEffect effect : plugin.getEffectRegistry().getEffects()) {
+            if (slot == currentSlot) {
+                return effect;
+            }
+
+            currentSlot++;
+
+            if (currentSlot == 17)
+                currentSlot = 19;
+            if (currentSlot == 26)
+                currentSlot = 28;
+            if (currentSlot == 35)
+                break;
+        }
+
+        return null;
+    }
+
+    private String clean(String title) {
+        if (title == null)
+            return "";
+        return ChatColor.stripColor(title);
+    }
+
+    private void cycleParticle(PlayerSettings settings) {
+        String current = settings.getParticleType();
+
+        if (current.equalsIgnoreCase("VILLAGER_HAPPY")) {
+            settings.setParticleType("FLAME");
+            return;
+        }
+
+        if (current.equalsIgnoreCase("FLAME")) {
+            settings.setParticleType("CRIT");
+            return;
+        }
+
+        if (current.equalsIgnoreCase("CRIT")) {
+            settings.setParticleType("CLOUD");
+            return;
+        }
+
+        if (current.equalsIgnoreCase("CLOUD")) {
+            settings.setParticleType("PORTAL");
+            return;
+        }
+
+        settings.setParticleType("VILLAGER_HAPPY");
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/gui/BeaconGuiManager.java ===
+package cl.dynasty.dynabeacon.gui;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.model.PlayerSettings;
+import cl.dynasty.dynabeacon.util.ColorUtil;
+
+public class BeaconGuiManager {
+
+    private final DynaBeaconPlugin plugin;
+    private final Map<UUID, String> openBeaconIds = new HashMap<>();
+    private final Map<UUID, String> pendingEffectIds = new HashMap<>();
+    private final Map<UUID, String> pendingActions = new HashMap<>();
+
+    public BeaconGuiManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public BeaconData getOpenBeacon(Player player) {
+        String id = openBeaconIds.get(player.getUniqueId());
+        if (id == null)
+            return null;
+        return plugin.getBeaconManager().getBeaconById(id);
+    }
+
+    public void clear(Player player) {
+        openBeaconIds.remove(player.getUniqueId());
+    }
+
+    public void openMainMenu(Player player, BeaconData beacon) {
+        openBeaconIds.put(player.getUniqueId(), beacon.getId());
+
+        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon"));
+
+        inventory.setItem(20, createItem(Material.BEACON, "&bEfectos",
+                "&7Efectos activos: &f" + beacon.getActiveEffects().size(),
+                "&7Click para gestionar efectos."));
+
+        inventory.setItem(24, createItem(
+                plugin.getVersionAdapter().material("COMPARATOR"),
+                "&eConfiguración",
+                "&7Partículas, animaciones e idioma."));
+
+        inventory.setItem(49, createItem(Material.BARRIER, "&cCerrar",
+                "&7Cerrar este menú."));
+
+        player.openInventory(inventory);
+    }
+
+    public void openEffectsMenu(Player player, BeaconData beacon) {
+        openBeaconIds.put(player.getUniqueId(), beacon.getId());
+
+        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon - Efectos"));
+
+        int slot = 10;
+
+        for (BeaconEffect effect : plugin.getEffectRegistry().getEffects()) {
+            boolean purchased = beacon.hasEffect(effect.getId());
+            boolean active = beacon.isEffectActive(effect.getId());
+            int level = beacon.getEffectLevel(effect.getId());
+
+            int availablePower = plugin.getBeaconPowerManager().getAvailablePower(beacon);
+            int usedPower = plugin.getBeaconPowerManager().getUsedPower(beacon);
+            int effectPower = effect.getPowerConsumption() * Math.max(1, level);
+
+            String rightClickText;
+
+            if (!purchased) {
+                rightClickText = "&aClick derecho: &fAdquirir";
+            } else if (level >= effect.getMaxLevel()) {
+                rightClickText = "&6¡Al máximo!";
+            } else {
+                rightClickText = "&bClick derecho: &fMejorar";
+            }
+
+            inventory.setItem(slot, createItem(
+                    effect.getIcon(),
+                    effect.getDisplayName(),
+                    effect.getDescription(),
+                    purchased ? (active ? "&7Estado: &aActivo" : "&7Estado: &cInactivo") : "&7Estado: &cNo adquirido",
+                    purchased ? "&7Nivel: &f" + level + "&7/&f" + effect.getMaxLevel() : "&7Nivel: &cNo adquirido",
+                    "&7Consumo: &e" + effectPower + " poder",
+                    "&7Poder beacon: &f" + usedPower + "&7/&f" + availablePower,
+                    "",
+                    purchased ? "&eClick izquierdo: &fActivar/Desactivar"
+                            : "&7Compra este efecto desde el menú de pago.",
+                    rightClickText));
+
+            slot++;
+
+            if (slot == 17)
+                slot = 19;
+            if (slot == 26)
+                slot = 28;
+            if (slot == 35)
+                break;
+        }
+
+        inventory.setItem(49, createItem(Material.ARROW, "&eVolver", "&7Volver al menú principal."));
+
+        player.openInventory(inventory);
+    }
+
+    public void openSettingsMenu(Player player, BeaconData beacon) {
+        openBeaconIds.put(player.getUniqueId(), beacon.getId());
+
+        PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
+
+        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon - Config"));
+
+        inventory.setItem(20, createItem(
+                settings.isShowParticle() ? Material.EMERALD_BLOCK : Material.REDSTONE_BLOCK,
+                "&bPartículas",
+                settings.isShowParticle() ? "&7Estado: &aActivadas" : "&7Estado: &cDesactivadas",
+                "&7Click para alternar."));
+
+        inventory.setItem(22, createItem(
+                Material.NETHER_STAR,
+                "&dTipo de partícula",
+                "&7Actual: &f" + settings.getParticleType(),
+                "&7Click para cambiar."));
+
+        inventory.setItem(24, createItem(
+                beacon.isProtectBaseBlocks() ? Material.EMERALD_BLOCK : Material.REDSTONE_BLOCK,
+                "&eProtección de base",
+                beacon.isProtectBaseBlocks() ? "&7Estado: &aActivada" : "&7Estado: &cDesactivada",
+                "&7Protege solo la pirámide válida.",
+                "&7Click para alternar."));
+
+        inventory.setItem(26, createItem(
+                Material.PAPER,
+                "&aJugadores confiables",
+                "&7Jugadores confiados: &f" + beacon.getTrustedPlayers().size(),
+                "&7Click para gestionar."));
+
+        inventory.setItem(49, createItem(Material.ARROW, "&eVolver", "&7Volver al menú principal."));
+
+        player.openInventory(inventory);
+    }
+
+    public String getPendingEffectId(Player player) {
+        return pendingEffectIds.get(player.getUniqueId());
+    }
+
+    public String getPendingAction(Player player) {
+        return pendingActions.get(player.getUniqueId());
+    }
+
+    public void openPaymentMenu(Player player, BeaconData beacon, BeaconEffect effect, String action) {
+        openBeaconIds.put(player.getUniqueId(), beacon.getId());
+        pendingEffectIds.put(player.getUniqueId(), effect.getId());
+        pendingActions.put(player.getUniqueId(), action);
+
+        String title = action.equalsIgnoreCase("acquire")
+                ? "&8DynaBeacon - Adquirir"
+                : "&8DynaBeacon - Mejorar";
+
+        Inventory inventory = Bukkit.createInventory(null, 27, ColorUtil.color(title));
+
+        inventory.setItem(11, createItem(Material.DIAMOND, "&bPagar con ítem",
+                plugin.getPaymentManager().getOptionText(effect, action, "diamond",
+                        beacon.getEffectLevel(effect.getId()) + 1),
+                "",
+                "&eClick para confirmar."));
+
+        inventory.setItem(13, createItem(plugin.getVersionAdapter().material("EXPERIENCE_BOTTLE"), "&aPagar con experiencia",
+                plugin.getPaymentManager().getOptionText(effect, action, "exp",
+                        beacon.getEffectLevel(effect.getId()) + 1),
+                "",
+                "&eClick para confirmar."));
+
+        inventory.setItem(15, createItem(plugin.getVersionAdapter().material("SUNFLOWER"), "&6Pagar con dinero",
+                plugin.getPaymentManager().getOptionText(effect, action, "money",
+                        beacon.getEffectLevel(effect.getId()) + 1),
+                "",
+                "&eClick para confirmar."));
+
+        inventory.setItem(22, createItem(Material.ARROW, "&eVolver", "&7Volver a efectos."));
+
+        player.openInventory(inventory);
+    }
+
+    private ItemStack createItem(Material material, String name, String... lore) {
+        ItemStack item = new ItemStack(material, 1);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(ColorUtil.color(name));
+            meta.setLore(ColorUtil.color(Arrays.asList(lore)));
+
+            meta.addItemFlags(
+                    ItemFlag.HIDE_ATTRIBUTES,
+                    ItemFlag.HIDE_ENCHANTS,
+                    ItemFlag.HIDE_UNBREAKABLE,
+                    ItemFlag.HIDE_POTION_EFFECTS);
+
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
+
+    private ItemStack createItem(Material material, String name, java.util.List<String> description,
+            String... extraLore) {
+        java.util.List<String> lore = new java.util.ArrayList<>();
+
+        if (description != null) {
+            lore.addAll(description);
+        }
+
+        lore.addAll(Arrays.asList(extraLore));
+
+        return createItem(material, name, lore.toArray(new String[0]));
+    }
+
+    public void openTrustMenu(Player player, BeaconData beacon) {
+        openBeaconIds.put(player.getUniqueId(), beacon.getId());
+
+        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon - Trust"));
+
+        int slot = 10;
+
+        for (UUID uuid : beacon.getTrustedPlayers()) {
+            OfflinePlayer trusted = Bukkit.getOfflinePlayer(uuid);
+            String name = trusted.getName() != null ? trusted.getName() : uuid.toString();
+
+            inventory.setItem(slot, createItem(
+                    plugin.getVersionAdapter().material("PLAYER_HEAD"),
+                    "&a" + name,
+                    "&7Jugador confiado.",
+                    "&cClick para quitar trust."));
+
+            slot++;
+
+            if (slot == 17)
+                slot = 19;
+            if (slot == 26)
+                slot = 28;
+            if (slot == 35)
+                break;
+        }
+
+        inventory.setItem(22, createItem(Material.PAPER, "&eAgregar jugador",
+                "&7Usa el comando:",
+                "&f/dbeacon trust <jugador>"));
+
+        inventory.setItem(49, createItem(Material.ARROW, "&eVolver", "&7Volver a configuración."));
+
+        player.openInventory(inventory);
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/DynaBeaconPlugin.java ===
+package cl.dynasty.dynabeacon;
+
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import cl.dynasty.dynabeacon.adapter.ModernAdapter;
+import cl.dynasty.dynabeacon.adapter.ModernItemDataAdapter;
+import cl.dynasty.dynabeacon.api.ItemDataAdapter;
+import cl.dynasty.dynabeacon.api.VersionAdapter;
+import cl.dynasty.dynabeacon.commands.DynaBeaconCommand;
+import cl.dynasty.dynabeacon.config.ConfigManager;
+import cl.dynasty.dynabeacon.effects.EffectRegistry;
+import cl.dynasty.dynabeacon.effects.executor.EffectExecutorRegistry;
+import cl.dynasty.dynabeacon.gui.BeaconGuiManager;
+import cl.dynasty.dynabeacon.hooks.SpawnerMetaHook;
+import cl.dynasty.dynabeacon.listener.BeaconGuiListener;
+import cl.dynasty.dynabeacon.listener.BeaconListener;
+import cl.dynasty.dynabeacon.listener.VanillaBeaconListener;
+import cl.dynasty.dynabeacon.manager.BeaconManager;
+import cl.dynasty.dynabeacon.manager.BeaconPowerManager;
+import cl.dynasty.dynabeacon.manager.CustomBeaconItemManager;
+import cl.dynasty.dynabeacon.manager.CustomRecipeManager;
+import cl.dynasty.dynabeacon.manager.PaymentManager;
+import cl.dynasty.dynabeacon.manager.PlayerSettingsManager;
+import cl.dynasty.dynabeacon.storage.StorageManager;
+import cl.dynasty.dynabeacon.task.BeaconParticleTask;
+import cl.dynasty.dynabeacon.task.BeaconTickTask;
+import net.milkbowl.vault.economy.Economy;
+
+public final class DynaBeaconPlugin extends JavaPlugin {
+
+    private static DynaBeaconPlugin instance;
+
+    private VersionAdapter versionAdapter;
+    private ConfigManager configManager;
+    private StorageManager storageManager;
+    private BeaconManager beaconManager;
+    private PlayerSettingsManager playerSettingsManager;
+    private EffectRegistry effectRegistry;
+    private BeaconGuiManager beaconGuiManager;
+    private CustomBeaconItemManager customBeaconItemManager;
+    private BeaconPowerManager beaconPowerManager;
+    private PaymentManager paymentManager;
+    private ItemDataAdapter itemDataAdapter;
+    private Economy economy;
+    private CustomRecipeManager customRecipeManager;
+    private EffectExecutorRegistry effectExecutorRegistry;
+    private SpawnerMetaHook spawnerMetaHook;
+
+    public static DynaBeaconPlugin getInstance() {
+        return instance;
+    }
+
+    public VersionAdapter getVersionAdapter() {
+        return versionAdapter;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public StorageManager getStorageManager() {
+        return storageManager;
+    }
+
+    public BeaconManager getBeaconManager() {
+        return beaconManager;
+    }
+
+    public PlayerSettingsManager getPlayerSettingsManager() {
+        return playerSettingsManager;
+    }
+
+    public EffectRegistry getEffectRegistry() {
+        return effectRegistry;
+    }
+
+    public BeaconGuiManager getBeaconGuiManager() {
+        return beaconGuiManager;
+    }
+
+    public CustomBeaconItemManager getCustomBeaconItemManager() {
+        return customBeaconItemManager;
+    }
+
+    public BeaconPowerManager getBeaconPowerManager() {
+        return beaconPowerManager;
+    }
+
+    public PaymentManager getPaymentManager() {
+        return paymentManager;
+    }
+
+    public ItemDataAdapter getItemDataAdapter() {
+        return itemDataAdapter;
+    }
+
+    public Economy getEconomy() {
+        return economy;
+    }
+
+    public CustomRecipeManager getCustomRecipeManager() {
+        return customRecipeManager;
+    }
+
+    public EffectExecutorRegistry getEffectExecutorRegistry() {
+        return effectExecutorRegistry;
+    }
+
+    public SpawnerMetaHook getSpawnerMetaHook() {
+        return spawnerMetaHook;
+    }
+
+    @Override
+    public void onEnable() {
+        instance = this;
+
+        versionAdapter = new ModernAdapter();
+        configManager = new ConfigManager(this);
+        storageManager = new StorageManager(this);
+        beaconManager = new BeaconManager(this);
+        playerSettingsManager = new PlayerSettingsManager(this);
+        effectRegistry = new EffectRegistry(this);
+        effectExecutorRegistry = new EffectExecutorRegistry(this);
+        beaconGuiManager = new BeaconGuiManager(this);
+        if (ModernItemDataAdapter.isSupported()) {
+            itemDataAdapter = new ModernItemDataAdapter(this);
+        } else {
+            getLogger().warning("PersistentDataContainer no disponible. DynaBeacon necesita adapter legacy.");
+        }
+        customBeaconItemManager = new CustomBeaconItemManager(this);
+        customRecipeManager = new CustomRecipeManager(this);
+        beaconPowerManager = new BeaconPowerManager(this);
+        setupEconomy();
+        paymentManager = new PaymentManager(this);
+        spawnerMetaHook = new SpawnerMetaHook();
+        spawnerMetaHook.load();
+
+        if (spawnerMetaHook.isEnabled()) {
+            getLogger().info("SpawnerMeta detectado. Hook de spawners activado.");
+        }
+        reloadAll();
+        customRecipeManager.load();
+
+        DynaBeaconCommand command = new DynaBeaconCommand(this);
+        getCommand("dynabeacon").setExecutor(command);
+        getCommand("dynabeacon").setTabCompleter(command);
+        Bukkit.getPluginManager().registerEvents(new BeaconListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new BeaconGuiListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new VanillaBeaconListener(this), this);
+
+        int interval = configManager.getBeaconConfig().getInt("beacon.tick-interval", 40);
+        new BeaconTickTask(this).runTaskTimer(this, interval, interval);
+
+        int particleInterval = configManager.getBeaconConfig().getInt("beacon.particles.interval-ticks", 20);
+        new BeaconParticleTask(this).runTaskTimer(this, particleInterval, particleInterval);
+
+        getLogger().info("DynaBeacon activado correctamente.");
+        getLogger().info("Versión Bukkit detectada: " + Bukkit.getBukkitVersion());
+        getLogger().info("Adapter activo: ModernAdapter");
+    }
+
+    @Override
+    public void onDisable() {
+        getLogger().info("DynaBeacon desactivado correctamente.");
+    }
+
+    public void reloadAll() {
+        configManager.load();
+        effectRegistry.load();
+        effectExecutorRegistry.load();
+        beaconManager.load();
+    }
+
+
+    private void setupEconomy() {
+        if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
+            getLogger().warning("Vault no encontrado. Pagos por dinero desactivados.");
+            return;
+        }
+
+        RegisteredServiceProvider<Economy> provider = getServer().getServicesManager().getRegistration(Economy.class);
+
+        if (provider == null) {
+            getLogger().warning("No se encontró proveedor de economía para Vault.");
+            return;
+        }
+
+        economy = provider.getProvider();
+        getLogger().info("Economía Vault conectada correctamente.");
+    }
+}=== src/main/java/cl/dynasty/dynabeacon/config/ConfigManager.java ===
+package cl.dynasty.dynabeacon.config;
+
+import java.io.File;
+
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+
+public class ConfigManager {
+
+    private final DynaBeaconPlugin plugin;
+
+    private FileConfiguration config;
+    private FileConfiguration beaconConfig;
+    private FileConfiguration effectsConfig;
+    private FileConfiguration guiConfig;
+    private FileConfiguration storageConfig;
+    private FileConfiguration languageConfig;
+
+    private File storageFile;
+
+    public ConfigManager(DynaBeaconPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void load() {
+        plugin.saveDefaultConfig();
+        saveResourceIfMissing("beacon.yml");
+        saveResourceIfMissing("effects.yml");
+        saveResourceIfMissing("gui.yml");
+        saveResourceIfMissing("storage.yml");
+        saveResourceIfMissing("languages/es_cl.yml");
+
+        plugin.reloadConfig();
+        config = plugin.getConfig();
+
+        beaconConfig = loadFile("beacon.yml");
+        effectsConfig = loadFile("effects.yml");
+        guiConfig = loadFile("gui.yml");
+
+        storageFile = new File(plugin.getDataFolder(), "storage.yml");
+        storageConfig = YamlConfiguration.loadConfiguration(storageFile);
+
+        String language = config.getString("language", "es_cl");
+        languageConfig = loadFile("languages/" + language + ".yml");
+    }
+
+    private FileConfiguration loadFile(String path) {
+        File file = new File(plugin.getDataFolder(), path);
+        return YamlConfiguration.loadConfiguration(file);
+    }
+
+    public void saveStorage() {
+        try {
+            storageConfig.save(storageFile);
+        } catch (Exception exception) {
+            plugin.getLogger().severe("No se pudo guardar storage.yml");
+            exception.printStackTrace();
+        }
+    }
+
+    private void saveResourceIfMissing(String path) {
+    java.io.File file = new java.io.File(plugin.getDataFolder(), path);
+
+    if (!file.exists()) {
+        plugin.saveResource(path, false);
+    }
+}
+
+    public FileConfiguration getConfig() {
+        return config;
+    }
+
+    public FileConfiguration getBeaconConfig() {
+        return beaconConfig;
+    }
+
+    public FileConfiguration getEffectsConfig() {
+        return effectsConfig;
+    }
+
+    public FileConfiguration getGuiConfig() {
+        return guiConfig;
+    }
+
+    public FileConfiguration getStorageConfig() {
+        return storageConfig;
+    }
+
+    public FileConfiguration getLanguageConfig() {
+        return languageConfig;
+    }
+}
