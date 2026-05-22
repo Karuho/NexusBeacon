@@ -7,6 +7,7 @@ import org.bukkit.entity.LivingEntity;
 
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.effects.EffectLevelUtil;
 import cl.dynasty.dynabeacon.model.BeaconData;
 import cl.dynasty.dynabeacon.util.MobUtil;
 import cl.dynasty.dynabeacon.util.RangeUtil;
@@ -33,8 +34,9 @@ public class DamageFieldExecutor implements EffectExecutor {
                 .getEffectsConfig()
                 .getConfigurationSection("effects." + effect.getId());
 
-        int level = beacon.getEffectLevel(effect.getId());
-        double damage = section != null ? section.getDouble("damage-per-level", 1.0D) * Math.max(1, level) : 1.0D;
+        int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
+        double damage = EffectLevelUtil.getLevelDouble(plugin, effect, level, "damage",
+        section.getDouble("damage-per-level", 1.0D) * level);
 
         for (Entity entity : center.getWorld().getEntities()) {
             if (!(entity instanceof LivingEntity)) continue;

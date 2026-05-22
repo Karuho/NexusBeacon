@@ -6,7 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Crops;
 import org.bukkit.material.MaterialData;
-
+import cl.dynasty.dynabeacon.effects.EffectLevelUtil;
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.effects.BeaconEffect;
 import cl.dynasty.dynabeacon.model.BeaconData;
@@ -41,7 +41,7 @@ public class CropBoostExecutor implements EffectExecutor {
                 .getBeaconConfig()
                 .getInt("performance.crop-boost.max-blocks-per-tick", 16);
 
-        int chance = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelInt(
+        int chance = EffectLevelUtil.getLevelInt(
                 plugin,
                 effect,
                 level,
