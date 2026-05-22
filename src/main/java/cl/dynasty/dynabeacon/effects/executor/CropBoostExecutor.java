@@ -27,51 +27,64 @@ public class CropBoostExecutor implements EffectExecutor {
     @Override
     public void tick(BeaconData beacon, BeaconEffect effect) {
         Location center = beacon.getLocation();
-        if (center == null || center.getWorld() == null)
+        if (center == null || center.getWorld() == null) {
             return;
+        }
 
-        int level = beacon.getEffectLevel(effect.getId());
+        int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
+
         int radius = plugin.getConfigManager()
-                .getEffectsConfig()
-                .getInt("effects." + effect.getId() + ".scan-radius", Math.min(beacon.getRange(), 16));
+                .getBeaconConfig()
+                .getInt("performance.crop-boost.scan-radius", 16);
 
         int maxBlocks = plugin.getConfigManager()
-                .getEffectsConfig()
-                .getInt("effects." + effect.getId() + ".max-blocks-per-tick", 32);
+                .getBeaconConfig()
+                .getInt("performance.crop-boost.max-blocks-per-tick", 16);
 
-        int chance = plugin.getConfigManager()
-                .getEffectsConfig()
-                .getInt("effects." + effect.getId() + ".growth-chance-per-level", 15) * Math.max(1, level);
+        int chance = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelInt(
+                plugin,
+                effect,
+                level,
+                "growth-chance",
+                plugin.getConfigManager()
+                        .getEffectsConfig()
+                        .getInt("effects." + effect.getId() + ".growth-chance-per-level", 15) * level
+        );
 
         int processed = 0;
 
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                 for (int y = -8; y <= 8; y++) {
-                    if (processed >= maxBlocks)
+                    if (processed >= maxBlocks) {
                         return;
+                    }
 
-                    if (Math.random() * 100.0D > chance)
+                    if (Math.random() * 100.0D > chance) {
                         continue;
+                    }
 
                     Block block = center.getWorld().getBlockAt(
                             center.getBlockX() + x,
                             center.getBlockY() + y,
                             center.getBlockZ() + z);
 
-                    if (!isLegacyCrop(block))
+                    if (!isLegacyCrop(block)) {
                         continue;
+                    }
 
                     BlockState state = block.getState();
                     MaterialData data = state.getData();
 
-                    if (!(data instanceof Crops))
+                    if (!(data instanceof Crops)) {
                         continue;
+                    }
 
                     Crops crops = (Crops) data;
 
-                    if (crops.getState() == org.bukkit.CropState.RIPE)
+                    if (crops.getState() == org.bukkit.CropState.RIPE) {
                         continue;
+                    }
 
                     org.bukkit.CropState current = crops.getState();
                     org.bukkit.CropState[] states = org.bukkit.CropState.values();
