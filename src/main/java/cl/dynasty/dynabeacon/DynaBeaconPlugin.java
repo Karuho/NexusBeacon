@@ -16,6 +16,7 @@ import cl.dynasty.dynabeacon.gui.BeaconGuiManager;
 import cl.dynasty.dynabeacon.hooks.SpawnerMetaHook;
 import cl.dynasty.dynabeacon.listener.BeaconGuiListener;
 import cl.dynasty.dynabeacon.listener.BeaconListener;
+import cl.dynasty.dynabeacon.listener.FurnaceBoostListener;
 import cl.dynasty.dynabeacon.listener.VanillaBeaconListener;
 import cl.dynasty.dynabeacon.manager.BeaconManager;
 import cl.dynasty.dynabeacon.manager.BeaconPowerManager;
@@ -146,6 +147,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         DynaBeaconCommand command = new DynaBeaconCommand(this);
         getCommand("dynabeacon").setExecutor(command);
         getCommand("dynabeacon").setTabCompleter(command);
+        getServer().getPluginManager().registerEvents(new FurnaceBoostListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BeaconListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BeaconGuiListener(this), this);
         Bukkit.getPluginManager().registerEvents(new VanillaBeaconListener(this), this);
