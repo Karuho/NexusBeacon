@@ -9,8 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Map;
-import java.util.UUID;
+
 public class BeaconManager {
 
     private final DynaBeaconPlugin plugin;
@@ -24,6 +23,7 @@ public class BeaconManager {
         beacons.clear();
 
         for (BeaconData beacon : plugin.getStorageManager().loadBeacons()) {
+            beacon.setRange(plugin.getBeaconPowerManager().calculateRange(beacon));
             beacons.put(beacon.getId(), beacon);
         }
 
@@ -37,6 +37,7 @@ public class BeaconManager {
         int range = plugin.getConfigManager().getBeaconConfig().getInt("beacon.default-range", 100);
 
         BeaconData beacon = new BeaconData(id, uniqueId, location, owner, range, 1, null, null, null, true);
+        beacon.setRange(plugin.getBeaconPowerManager().calculateRange(beacon));
         beacons.put(id, beacon);
         plugin.getStorageManager().saveBeacon(beacon);
 
@@ -44,19 +45,19 @@ public class BeaconManager {
     }
 
     public BeaconData registerBeacon(Location location, UUID owner, String uniqueId,
-                                    Map<String, Integer> effects,
-                                    java.util.Set<String> activeEffects) {
+            Map<String, Integer> effects,
+            java.util.Set<String> activeEffects) {
         String id = LocationUtil.serialize(location);
 
         int range = plugin.getConfigManager().getBeaconConfig().getInt("beacon.default-range", 100);
 
         BeaconData beacon = new BeaconData(id, uniqueId, location, owner, range, 1, effects, activeEffects, null, true);
+        beacon.setRange(plugin.getBeaconPowerManager().calculateRange(beacon));
         beacons.put(id, beacon);
         plugin.getStorageManager().saveBeacon(beacon);
 
         return beacon;
     }
-   
 
     public void removeBeacon(Location location) {
         String id = LocationUtil.serialize(location);

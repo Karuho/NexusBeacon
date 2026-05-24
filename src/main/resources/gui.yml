@@ -1,3 +1,11 @@
+titles:
+  main: "&8DynaBeacon"
+  effects: "&8DynaBeacon - Efectos"
+  settings: "&8DynaBeacon - Config"
+  trust: "&8DynaBeacon - Trust"
+  payment-acquire: "&8DynaBeacon - Adquirir"
+  payment-upgrade: "&8DynaBeacon - Mejorar"
+
 main-menu:
   title: "&8DynaBeacon"
   size: 54
@@ -12,7 +20,7 @@ main-menu:
 
     settings:
       slot: 24
-      material: REDSTONE_COMPARATOR
+      material: COMPARATOR
       name: "&eConfiguración"
       lore:
         - "&7Partículas, animaciones e idioma."

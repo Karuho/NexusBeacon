@@ -1,6 +1,9 @@
 package cl.dynasty.dynabeacon;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -24,6 +27,13 @@ import cl.dynasty.dynabeacon.manager.CustomBeaconItemManager;
 import cl.dynasty.dynabeacon.manager.CustomRecipeManager;
 import cl.dynasty.dynabeacon.manager.PaymentManager;
 import cl.dynasty.dynabeacon.manager.PlayerSettingsManager;
+import cl.dynasty.dynabeacon.service.FoliaSchedulerService;
+import cl.dynasty.dynabeacon.service.PaperTeleporterService;
+import cl.dynasty.dynabeacon.service.ParticleService;
+import cl.dynasty.dynabeacon.service.SchedulerService;
+import cl.dynasty.dynabeacon.service.SpigotSchedulerService;
+import cl.dynasty.dynabeacon.service.SpigotTeleporterService;
+import cl.dynasty.dynabeacon.service.TeleporterService;
 import cl.dynasty.dynabeacon.storage.YamlBeaconStorageProvider;
 import cl.dynasty.dynabeacon.task.BeaconParticleTask;
 import cl.dynasty.dynabeacon.task.BeaconTickTask;
@@ -48,6 +58,11 @@ public final class DynaBeaconPlugin extends JavaPlugin {
     private CustomRecipeManager customRecipeManager;
     private EffectExecutorRegistry effectExecutorRegistry;
     private SpawnerMetaHook spawnerMetaHook;
+    private SchedulerService schedulerService;
+    private cl.dynasty.dynabeacon.service.ScheduledTaskHandle beaconTickHandle;
+    private cl.dynasty.dynabeacon.service.ScheduledTaskHandle beaconParticleHandle;
+    private TeleporterService teleporterService;
+    private ParticleService particleService;
 
     public static DynaBeaconPlugin getInstance() {
         return instance;
@@ -113,10 +128,25 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         return spawnerMetaHook;
     }
 
+    public SchedulerService getSchedulerService() {
+        return schedulerService;
+    }
+
+    public TeleporterService getTeleporterService() {
+        return teleporterService;
+    }
+
+    public ParticleService getParticleService() {
+        return particleService;
+    }
+
     @Override
     public void onEnable() {
         instance = this;
 
+        schedulerService = createSchedulerService();
+        teleporterService = createTeleporterService();
+        particleService = new ParticleService();
         versionAdapter = new ModernAdapter();
         configManager = new ConfigManager(this);
         storageManager = new YamlBeaconStorageProvider(this);
@@ -124,6 +154,17 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         playerSettingsManager = new PlayerSettingsManager(this);
         effectRegistry = new EffectRegistry(this);
         effectExecutorRegistry = new EffectExecutorRegistry(this);
+        if (beaconTickHandle != null) {
+            beaconTickHandle.cancel();
+        }
+
+        if (beaconParticleHandle != null) {
+            beaconParticleHandle.cancel();
+        }
+
+        if (storageManager != null) {
+            storageManager.close();
+        }
         beaconGuiManager = new BeaconGuiManager(this);
         if (ModernItemDataAdapter.isSupported()) {
             itemDataAdapter = new ModernItemDataAdapter(this);
@@ -153,10 +194,26 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new VanillaBeaconListener(this), this);
 
         int interval = configManager.getBeaconConfig().getInt("beacon.tick-interval", 40);
-        new BeaconTickTask(this).runTaskTimer(this, interval, interval);
 
         int particleInterval = configManager.getBeaconConfig().getInt("beacon.particles.interval-ticks", 20);
-        new BeaconParticleTask(this).runTaskTimer(this, particleInterval, particleInterval);
+
+        if (beaconTickHandle != null) {
+            beaconTickHandle.cancel();
+        }
+
+        if (beaconParticleHandle != null) {
+            beaconParticleHandle.cancel();
+        }
+
+        beaconTickHandle = schedulerService.runSyncTimer(
+                new BeaconTickTask(this),
+                interval,
+                interval);
+
+        beaconParticleHandle = schedulerService.runSyncTimer(
+                new BeaconParticleTask(this),
+                particleInterval,
+                particleInterval);
 
         getLogger().info("DynaBeacon activado correctamente.");
         getLogger().info("Versión Bukkit detectada: " + Bukkit.getBukkitVersion());
@@ -175,7 +232,6 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         beaconManager.load();
     }
 
-
     private void setupEconomy() {
         if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
             getLogger().warning("Vault no encontrado. Pagos por dinero desactivados.");
@@ -191,5 +247,27 @@ public final class DynaBeaconPlugin extends JavaPlugin {
 
         economy = provider.getProvider();
         getLogger().info("Economía Vault conectada correctamente.");
+    }
+
+    private SchedulerService createSchedulerService() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.scheduler.ScheduledTask");
+            getLogger().info("Scheduler activo: Folia");
+            return new FoliaSchedulerService(this);
+        } catch (ClassNotFoundException exception) {
+            getLogger().info("Scheduler activo: Bukkit/Paper clásico");
+            return new SpigotSchedulerService(this);
+        }
+    }
+
+    private TeleporterService createTeleporterService() {
+        try {
+            Entity.class.getMethod("teleportAsync", Location.class, PlayerTeleportEvent.TeleportCause.class);
+            getLogger().info("Teleporter activo: Paper async");
+            return new PaperTeleporterService(schedulerService);
+        } catch (NoSuchMethodException exception) {
+            getLogger().info("Teleporter activo: Bukkit sync");
+            return new SpigotTeleporterService(schedulerService);
+        }
     }
 }

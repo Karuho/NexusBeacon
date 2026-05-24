@@ -41,7 +41,7 @@ public class FurnaceBoostListener implements Listener {
 
         Block block = event.getBlock();
 
-        plugin.getServer().getScheduler().runTask(plugin, new Runnable() {
+        plugin.getSchedulerService().runSync(new Runnable() {
             @Override
             public void run() {
                 if (!(block.getState() instanceof Furnace))

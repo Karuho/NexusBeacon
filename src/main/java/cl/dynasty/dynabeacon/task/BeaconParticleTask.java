@@ -2,13 +2,12 @@ package cl.dynasty.dynabeacon.task;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.model.BeaconData;
 import cl.dynasty.dynabeacon.model.PlayerSettings;
 
-public class BeaconParticleTask extends BukkitRunnable {
+public class BeaconParticleTask implements Runnable {
 
     private final DynaBeaconPlugin plugin;
 
@@ -54,14 +53,6 @@ public class BeaconParticleTask extends BukkitRunnable {
                 .get(player.getUniqueId())
                 .getParticleType();
 
-        org.bukkit.Particle particle;
-
-        try {
-            particle = org.bukkit.Particle.valueOf(particleName.toUpperCase());
-        } catch (Exception exception) {
-            particle = org.bukkit.Particle.HAPPY_VILLAGER;
-        }
-
         for (int i = 0; i < points; i++) {
             double angle = 2.0D * Math.PI * i / points;
             double x = center.getBlockX() + 0.5D + Math.cos(angle) * radius;
@@ -70,7 +61,15 @@ public class BeaconParticleTask extends BukkitRunnable {
 
             Location location = new Location(center.getWorld(), x, y, z);
 
-            player.spawnParticle(particle, location, 2, 0.05D, 0.05D, 0.05D, 0.0D);
+            plugin.getParticleService().spawn(
+                    player,
+                    particleName,
+                    location,
+                    2,
+                    0.05D,
+                    0.05D,
+                    0.05D,
+                    0.0D);
         }
     }
 }

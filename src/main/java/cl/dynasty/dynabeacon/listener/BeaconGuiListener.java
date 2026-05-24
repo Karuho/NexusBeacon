@@ -2,7 +2,6 @@ package cl.dynasty.dynabeacon.listener;
 
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,6 +11,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.gui.DynaBeaconGuiHolder;
 import cl.dynasty.dynabeacon.model.BeaconData;
 import cl.dynasty.dynabeacon.model.PlayerSettings;
 import cl.dynasty.dynabeacon.util.ColorUtil;
@@ -29,10 +29,12 @@ public class BeaconGuiListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player))
             return;
 
-        String title = clean(event.getView().getTitle());
-
-        if (!title.startsWith("DynaBeacon"))
+        if (!(event.getView().getTopInventory().getHolder() instanceof DynaBeaconGuiHolder)) {
             return;
+        }
+
+        DynaBeaconGuiHolder holder = (DynaBeaconGuiHolder) event.getView().getTopInventory().getHolder();
+        String menuId = holder.getMenuId();
 
         event.setCancelled(true);
 
@@ -46,7 +48,7 @@ public class BeaconGuiListener implements Listener {
 
         int slot = event.getRawSlot();
 
-        if (title.equalsIgnoreCase("DynaBeacon")) {
+        if (menuId.equalsIgnoreCase("main")) {
             if (slot == 20) {
                 plugin.getBeaconGuiManager().openEffectsMenu(player, beacon);
                 return;
@@ -64,7 +66,7 @@ public class BeaconGuiListener implements Listener {
             return;
         }
 
-        if (title.equalsIgnoreCase("DynaBeacon - Config")) {
+        if (menuId.equalsIgnoreCase("settings")) {
             PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
 
             if (slot == 20) {
@@ -101,7 +103,7 @@ public class BeaconGuiListener implements Listener {
             return;
         }
 
-        if (title.equalsIgnoreCase("DynaBeacon - Trust")) {
+        if (menuId.equalsIgnoreCase("trust")) {
             if (slot == 49) {
                 plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
                 return;
@@ -137,7 +139,7 @@ public class BeaconGuiListener implements Listener {
             return;
         }
 
-        if (title.equalsIgnoreCase("DynaBeacon - Efectos")) {
+        if (menuId.equalsIgnoreCase("effects")) {
             if (slot == 49) {
                 plugin.getBeaconGuiManager().openMainMenu(player, beacon);
                 return;
@@ -192,7 +194,7 @@ public class BeaconGuiListener implements Listener {
             return;
         }
 
-        if (title.equalsIgnoreCase("DynaBeacon - Adquirir") || title.equalsIgnoreCase("DynaBeacon - Mejorar")) {
+        if (menuId.equalsIgnoreCase("payment_acquire") || menuId.equalsIgnoreCase("payment_upgrade")) {
             if (slot == 22) {
                 plugin.getBeaconGuiManager().openEffectsMenu(player, beacon);
                 return;
@@ -249,9 +251,9 @@ public class BeaconGuiListener implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (clean(event.getView().getTitle()).startsWith("DynaBeacon")) {
-            event.setCancelled(true);
-        }
+        if (event.getView().getTopInventory().getHolder() instanceof DynaBeaconGuiHolder) {
+    event.setCancelled(true);
+}
     }
 
     private BeaconEffect getEffectBySlot(int slot) {
@@ -277,12 +279,6 @@ public class BeaconGuiListener implements Listener {
         }
 
         return null;
-    }
-
-    private String clean(String title) {
-        if (title == null)
-            return "";
-        return ChatColor.stripColor(title);
     }
 
     private void cycleParticle(PlayerSettings settings) {

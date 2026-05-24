@@ -8,6 +8,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.effects.BeaconEffect;
 import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.range.RangeCalculator;
+import cl.dynasty.dynabeacon.range.RangeCalculatorFactory;
 
 public class BeaconPowerManager {
 
@@ -81,6 +83,26 @@ public class BeaconPowerManager {
         }
 
         return used + needed <= available;
+    }
+
+    public int calculateRange(BeaconData beacon) {
+        int fallbackRange = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getInt("beacon.default-range", 100);
+
+        int maxRange = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getInt("beacon.max-range", fallbackRange);
+
+        int power = getAvailablePower(beacon);
+
+        RangeCalculator calculator = RangeCalculatorFactory.create(
+                plugin.getConfigManager()
+                        .getBeaconConfig()
+                        .getConfigurationSection("beacon.range-calculator"),
+                fallbackRange);
+
+        return Math.min(calculator.calculate(power), maxRange);
     }
 
     public BeaconData getBeaconByBaseBlock(Block block) {

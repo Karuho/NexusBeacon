@@ -1,12 +1,10 @@
 package cl.dynasty.dynabeacon.task;
 
-import org.bukkit.scheduler.BukkitRunnable;
-
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.effects.BeaconEffect;
 import cl.dynasty.dynabeacon.model.BeaconData;
 
-public class BeaconTickTask extends BukkitRunnable {
+public class BeaconTickTask implements Runnable {
 
     private final DynaBeaconPlugin plugin;
 

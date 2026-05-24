@@ -3,16 +3,50 @@
 # ============================================================
 
 beacon:
-  # Rango base del DynaBeacon.
   default-range: 100
+  max-range: 150
 
-  # Rango máximo permitido.
-  max-range: 100
+  range-calculator:
+    enabled: true
 
-  # Frecuencia general de actualización de efectos.
-  # 20 ticks = 1 segundo.
-  tick-interval: 40
+    # Modos:
+    # FIXED       = usa default-range
+    # PERCENTILE  = rango = poder * porcentaje
+    # EXPONENTIAL = rango = poder^exponente
+    # CLASSIFIED  = rango según tabla de poder
+    mode: EXPONENTIAL
 
+    percentile:
+      min-range: 16
+      percentage: 100
+      max-range: 150
+
+    exponential:
+      min-range: 16
+      exponent: 0.9
+      max-range: 150
+
+    classified:
+      0: 16
+      9: 32
+      34: 48
+      83: 64
+      164: 96
+      285: 128
+
+item:
+  material: BEACON
+  display-name: "&b&lDynaBeacon"
+  lore:
+    - "&7Beacon avanzado de Dynasty."
+    - ""
+    - "&8[&b+&8] &7Dueño: &f{owner}"
+    - "&8[&b+&8] &7Rango: &f{range}"
+    - "&8[&b+&8] &7Trust: &f{trusted}"
+    - ""
+    - "&8[&b+&8] &7Efectos:"
+    - "{effect_list}"
+      
   # ------------------------------------------------------------
   # PARTÍCULAS DEL RANGO
   # ------------------------------------------------------------

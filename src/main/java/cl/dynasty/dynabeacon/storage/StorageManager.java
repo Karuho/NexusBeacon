@@ -27,8 +27,8 @@ public class StorageManager {
                 return new MySqlBeaconStorageProvider(plugin);
 
             case "SQLITE":
-                plugin.getLogger().warning("Storage SQLITE aún no está implementado. Usando YAML.");
-                return new YamlBeaconStorageProvider(plugin);
+                plugin.getLogger().info("Storage activo: SQLITE");
+                return new SqliteBeaconStorageProvider(plugin);
 
             case "YAML":
                 plugin.getLogger().info("Storage activo: YAML");

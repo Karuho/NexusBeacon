@@ -82,18 +82,6 @@ public class EffectRegistry {
         plugin.getLogger().info("Efectos cargados: " + effects.size());
     }
 
-    private String legacyPotionName(String modernName) {
-        if (modernName == null)
-            return "";
-
-        if (modernName.equalsIgnoreCase("STRENGTH"))
-            return "INCREASE_DAMAGE";
-        if (modernName.equalsIgnoreCase("HASTE"))
-            return "FAST_DIGGING";
-
-        return modernName;
-    }
-
     public BeaconEffect getEffect(String id) {
         if (id == null)
             return null;

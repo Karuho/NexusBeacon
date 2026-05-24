@@ -26,6 +26,7 @@ public class BeaconGuiManager {
     private final Map<UUID, String> openBeaconIds = new HashMap<>();
     private final Map<UUID, String> pendingEffectIds = new HashMap<>();
     private final Map<UUID, String> pendingActions = new HashMap<>();
+    
 
     public BeaconGuiManager(DynaBeaconPlugin plugin) {
         this.plugin = plugin;
@@ -45,7 +46,7 @@ public class BeaconGuiManager {
     public void openMainMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
-        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon"));
+        Inventory inventory = createGui("main", 54, getGuiTitle("main", "&8DynaBeacon"));
 
         inventory.setItem(20, createItem(Material.BEACON, "&bEfectos",
                 "&7Efectos activos: &f" + beacon.getActiveEffects().size(),
@@ -65,7 +66,7 @@ public class BeaconGuiManager {
     public void openEffectsMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
-        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon - Efectos"));
+        Inventory inventory = createGui("effects", 54, getGuiTitle("effects", "&8DynaBeacon - Efectos"));
 
         int slot = 10;
 
@@ -130,7 +131,7 @@ public class BeaconGuiManager {
 
         PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
 
-        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon - Config"));
+        Inventory inventory = createGui("settings", 54, getGuiTitle("settings", "&8DynaBeacon - Config"));
 
         inventory.setItem(20, createItem(
                 settings.isShowParticle() ? Material.EMERALD_BLOCK : Material.REDSTONE_BLOCK,
@@ -179,7 +180,9 @@ public class BeaconGuiManager {
                 ? "&8DynaBeacon - Adquirir"
                 : "&8DynaBeacon - Mejorar";
 
-        Inventory inventory = Bukkit.createInventory(null, 27, ColorUtil.color(title));
+        Inventory inventory = createGui(action.equalsIgnoreCase("acquire") ? "payment_acquire" : "payment_upgrade",
+        27,
+        getGuiTitle(action.equalsIgnoreCase("acquire") ? "payment-acquire" : "payment-upgrade", title));
 
         inventory.setItem(11, createItem(Material.DIAMOND, "&bPagar con ítem",
                 plugin.getPaymentManager().getOptionText(effect, action, "diamond",
@@ -241,7 +244,7 @@ public class BeaconGuiManager {
     public void openTrustMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
-        Inventory inventory = Bukkit.createInventory(null, 54, ColorUtil.color("&8DynaBeacon - Trust"));
+        Inventory inventory = createGui("trust", 54, getGuiTitle("trust", "&8DynaBeacon - Trust"));
 
         int slot = 10;
 
@@ -273,4 +276,17 @@ public class BeaconGuiManager {
 
         player.openInventory(inventory);
     }
+
+    private Inventory createGui(String menuId, int size, String title) {
+    DynaBeaconGuiHolder holder = new DynaBeaconGuiHolder(menuId);
+    Inventory inventory = Bukkit.createInventory(holder, size, ColorUtil.color(title));
+    holder.setInventory(inventory);
+    return inventory;
+}
+
+private String getGuiTitle(String key, String fallback) {
+    return plugin.getConfigManager()
+            .getGuiConfig()
+            .getString("titles." + key, fallback);
+}
 }

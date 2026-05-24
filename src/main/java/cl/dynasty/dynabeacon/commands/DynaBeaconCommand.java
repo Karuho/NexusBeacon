@@ -1,21 +1,26 @@
 package cl.dynasty.dynabeacon.commands;
 
-import cl.dynasty.dynabeacon.DynaBeaconPlugin;
-import cl.dynasty.dynabeacon.util.ColorUtil;
-import cl.dynasty.dynabeacon.model.BeaconData;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.block.Block;
-import org.bukkit.Material;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import cl.dynasty.dynabeacon.DynaBeaconPlugin;
+import cl.dynasty.dynabeacon.model.BeaconData;
+import cl.dynasty.dynabeacon.storage.BeaconStorageProvider;
+import cl.dynasty.dynabeacon.storage.MySqlBeaconStorageProvider;
+import cl.dynasty.dynabeacon.storage.SqliteBeaconStorageProvider;
+import cl.dynasty.dynabeacon.storage.YamlBeaconStorageProvider;
+import cl.dynasty.dynabeacon.util.ColorUtil;
 
 public class DynaBeaconCommand implements CommandExecutor, TabCompleter {
 
@@ -182,9 +187,58 @@ public class DynaBeaconCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("storage")) {
+            if (!sender.hasPermission("dynabeacon.admin")) {
+                sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cNo tienes permiso."));
+                return true;
+            }
+
+            return handleStorageCommand(sender, label, args);
+        }
+
         sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cSubcomando desconocido. Usa &f/" + label + " help&c."));
         return true;
     }
+
+    private boolean handleStorageCommand(CommandSender sender, String label, String[] args) {
+    if (args.length < 4 || !args[1].equalsIgnoreCase("migrate")) {
+        sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &cUso: /" + label
+                + " storage migrate <YAML|MYSQL|SQLITE> <YAML|MYSQL|SQLITE>"));
+        return true;
+    }
+
+    String from = args[2].toUpperCase();
+    String to = args[3].toUpperCase();
+
+    BeaconStorageProvider source = createStorageProvider(from);
+    BeaconStorageProvider target = createStorageProvider(to);
+
+    List<BeaconData> beacons = source.loadBeacons();
+
+    for (BeaconData beacon : beacons) {
+        target.saveBeacon(beacon);
+    }
+
+    source.close();
+    target.close();
+
+    sender.sendMessage(ColorUtil.color("&b[DynaBeacon]&r &aMigración completada: &f"
+            + from + " &7-> &f" + to + "&7. Beacons: &f" + beacons.size()));
+
+    return true;
+}
+
+private BeaconStorageProvider createStorageProvider(String type) {
+    if (type.equalsIgnoreCase("MYSQL")) {
+        return new MySqlBeaconStorageProvider(plugin);
+    }
+
+    if (type.equalsIgnoreCase("SQLITE")) {
+        return new SqliteBeaconStorageProvider(plugin);
+    }
+
+    return new YamlBeaconStorageProvider(plugin);
+}
 
     private void sendHelp(CommandSender sender, String label) {
         sender.sendMessage(ColorUtil.color("&8&m--------------------------------"));
@@ -195,6 +249,7 @@ public class DynaBeaconCommand implements CommandExecutor, TabCompleter {
                 ColorUtil.color("&f/" + label + " trust <jugador> &7- Confía un jugador en el DynaBeacon que miras."));
         sender.sendMessage(ColorUtil.color("&f/" + label + " untrust <jugador> &7- Quita trust."));
         sender.sendMessage(ColorUtil.color("&f/" + label + " trusted &7- Lista jugadores confiables."));
+        sender.sendMessage(ColorUtil.color("&f/" + label + " storage migrate <origen> <destino> &7- Migra storage."));
         sender.sendMessage(ColorUtil.color("&f/" + label + " reload &7- Recarga configuración."));
         sender.sendMessage(ColorUtil.color("&8&m--------------------------------"));
     }
@@ -204,7 +259,7 @@ public class DynaBeaconCommand implements CommandExecutor, TabCompleter {
         List<String> result = new ArrayList<String>();
 
         if (args.length == 1) {
-            List<String> subcommands = Arrays.asList("help", "give", "reload", "trust", "untrust", "trusted");
+            List<String> subcommands = Arrays.asList("help", "give", "reload", "trust", "untrust", "trusted", "storage");
 
             for (String subcommand : subcommands) {
                 if (subcommand.toLowerCase().startsWith(args[0].toLowerCase())) {
