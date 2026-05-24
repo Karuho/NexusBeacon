@@ -34,7 +34,7 @@ import cl.dynasty.dynabeacon.service.SchedulerService;
 import cl.dynasty.dynabeacon.service.SpigotSchedulerService;
 import cl.dynasty.dynabeacon.service.SpigotTeleporterService;
 import cl.dynasty.dynabeacon.service.TeleporterService;
-import cl.dynasty.dynabeacon.storage.YamlBeaconStorageProvider;
+import cl.dynasty.dynabeacon.storage.StorageManager;
 import cl.dynasty.dynabeacon.task.BeaconParticleTask;
 import cl.dynasty.dynabeacon.task.BeaconTickTask;
 import net.milkbowl.vault.economy.Economy;
@@ -43,9 +43,24 @@ public final class DynaBeaconPlugin extends JavaPlugin {
 
     private static DynaBeaconPlugin instance;
 
+    private void printStartupBanner() {
+        getLogger().info("_______________________________________________________");
+        getLogger().info("");
+        getLogger().info(" ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗");
+        getLogger().info(" ████╗  ██║██╔════╝╚██╗██╔╝██║   ██║██╔════╝");
+        getLogger().info(" ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗");
+        getLogger().info(" ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║");
+        getLogger().info(" ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║");
+        getLogger().info(" ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝");
+        getLogger().info("");
+        getLogger().info(" NexusBeacon v" + getDescription().getVersion());
+        getLogger().info(" Running on " + getServer().getName() + " - " + getServer().getVersion());
+        getLogger().info("_______________________________________________________");
+    }
+
     private VersionAdapter versionAdapter;
     private ConfigManager configManager;
-    private YamlBeaconStorageProvider storageManager;
+    private cl.dynasty.dynabeacon.storage.StorageManager storageManager;
     private BeaconManager beaconManager;
     private PlayerSettingsManager playerSettingsManager;
     private EffectRegistry effectRegistry;
@@ -76,7 +91,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         return configManager;
     }
 
-    public YamlBeaconStorageProvider getStorageManager() {
+    public cl.dynasty.dynabeacon.storage.StorageManager getStorageManager() {
         return storageManager;
     }
 
@@ -144,27 +159,17 @@ public final class DynaBeaconPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
+        printStartupBanner();
         schedulerService = createSchedulerService();
         teleporterService = createTeleporterService();
         particleService = new ParticleService();
         versionAdapter = new ModernAdapter();
         configManager = new ConfigManager(this);
-        storageManager = new YamlBeaconStorageProvider(this);
+        storageManager = new StorageManager(this);
         beaconManager = new BeaconManager(this);
         playerSettingsManager = new PlayerSettingsManager(this);
         effectRegistry = new EffectRegistry(this);
         effectExecutorRegistry = new EffectExecutorRegistry(this);
-        if (beaconTickHandle != null) {
-            beaconTickHandle.cancel();
-        }
-
-        if (beaconParticleHandle != null) {
-            beaconParticleHandle.cancel();
-        }
-
-        if (storageManager != null) {
-            storageManager.close();
-        }
         beaconGuiManager = new BeaconGuiManager(this);
         if (ModernItemDataAdapter.isSupported()) {
             itemDataAdapter = new ModernItemDataAdapter(this);
@@ -222,6 +227,18 @@ public final class DynaBeaconPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (beaconTickHandle != null) {
+            beaconTickHandle.cancel();
+        }
+
+        if (beaconParticleHandle != null) {
+            beaconParticleHandle.cancel();
+        }
+
+        if (storageManager != null) {
+            storageManager.close();
+        }
+
         getLogger().info("DynaBeacon desactivado correctamente.");
     }
 

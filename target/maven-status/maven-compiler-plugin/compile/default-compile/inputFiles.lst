@@ -17,6 +17,7 @@ D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\service\Paper
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\storage\YamlBeaconStorageProvider.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\executor\FurnaceBoostExecutor.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\BeaconEffect.java
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\gui\DynaBeaconGuiHolder.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\range\FixedRangeCalculator.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\api\VersionAdapter.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\executor\EffectExecutor.java
@@ -34,6 +35,7 @@ D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\util\ColorUti
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\range\PercentileRangeCalculator.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\executor\BlockProcessBoostExecutor.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\service\SchedulerService.java
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\service\ParticleService.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\manager\CustomBeaconItemManager.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\listener\VanillaBeaconListener.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\EffectLevelUtil.java

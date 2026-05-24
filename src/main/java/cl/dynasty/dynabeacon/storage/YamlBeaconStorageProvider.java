@@ -104,6 +104,9 @@ public class YamlBeaconStorageProvider implements BeaconStorageProvider {
 
     @Override
     public void close() {
-        plugin.getConfigManager().saveStorage();
+        if (plugin.getConfigManager().getStorageConfig() != null) {
+            plugin.getConfigManager().saveStorage();
+        }
     }
+
 }

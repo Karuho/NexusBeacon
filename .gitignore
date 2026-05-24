@@ -1,0 +1,47 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Server/runtime data
+plugins/
+world/
+world_nether/
+world_the_end/
+server.properties
+bukkit.yml
+spigot.yml
+paper-global.yml
+paper-world-defaults.yml
+purpur.yml
+eula.txt
+
+# NexusBeacon generated configs/data
+storage.yml
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets/env
+.env
+.env.*
+secrets.yml
+credentials.yml
+config.local.yml
