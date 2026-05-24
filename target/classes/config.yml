@@ -6,3 +6,33 @@ settings:
   require-permission: true
   permission-use: dynabeacon.use
   shift-click-menu: true
+
+# ============================================================
+# ALMACENAMIENTO
+# ============================================================
+# Define dónde se guardarán los datos de DynaBeacon.
+#
+# Tipos disponibles:
+# - YAML   : Guarda datos en plugins/DynaBeacon/storage.yml
+# - MYSQL  : Guarda datos en una base de datos MySQL/MariaDB
+# - SQLITE : Guarda datos en un archivo local SQLite
+#
+# Recomendado:
+# - YAML para servidores pequeños o pruebas.
+# - SQLITE para uso local más ordenado sin configurar base externa.
+# - MYSQL para redes, servidores grandes o sincronización externa.
+# ============================================================
+storage:
+  type: YAML
+
+  mysql:
+    host: localhost
+    port: 3306
+    database: dynabeacon
+    username: root
+    password: ""
+    use-ssl: false
+    table-prefix: dynabeacon_
+
+  sqlite:
+    file: storage.db

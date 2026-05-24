@@ -94,6 +94,7 @@ performance:
 
   crop-boost:
     scan-radius: 16
+    vertical-radius: 8
     max-blocks-per-tick: 16
 
 # ============================================================

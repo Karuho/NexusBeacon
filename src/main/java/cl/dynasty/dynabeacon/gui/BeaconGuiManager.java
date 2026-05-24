@@ -217,7 +217,7 @@ public class BeaconGuiManager {
                     ItemFlag.HIDE_ATTRIBUTES,
                     ItemFlag.HIDE_ENCHANTS,
                     ItemFlag.HIDE_UNBREAKABLE,
-                    ItemFlag.HIDE_POTION_EFFECTS);
+                    ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
 
             item.setItemMeta(meta);
         }

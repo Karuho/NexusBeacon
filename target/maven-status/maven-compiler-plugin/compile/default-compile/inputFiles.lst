@@ -19,11 +19,14 @@ D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\manager\Beaco
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\ConfiguredBeaconEffect.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\manager\PlayerSettingsManager.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\hooks\SpawnerMetaHook.java
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\storage\YamlBeaconStorageProvider.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\executor\FurnaceBoostExecutor.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\util\LocationUtil.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\effects\BeaconEffect.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\storage\StorageManager.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\DynaBeaconPlugin.java
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\storage\BeaconStorageProvider.java
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\storage\MySqlBeaconStorageProvider.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\util\MobUtil.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\commands\DynaBeaconCommand.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\dynabeacon\api\VersionAdapter.java

@@ -59,7 +59,7 @@ public class BeaconParticleTask extends BukkitRunnable {
         try {
             particle = org.bukkit.Particle.valueOf(particleName.toUpperCase());
         } catch (Exception exception) {
-            particle = org.bukkit.Particle.VILLAGER_HAPPY;
+            particle = org.bukkit.Particle.HAPPY_VILLAGER;
         }
 
         for (int i = 0; i < points; i++) {

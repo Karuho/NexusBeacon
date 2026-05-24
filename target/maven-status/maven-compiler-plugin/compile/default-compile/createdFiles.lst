@@ -8,6 +8,7 @@ cl\dynasty\dynabeacon\effects\executor\GravityWellExecutor.class
 cl\dynasty\dynabeacon\effects\executor\PotionEffectExecutor.class
 cl\dynasty\dynabeacon\task\BeaconParticleTask.class
 cl\dynasty\dynabeacon\effects\PotionBeaconEffect.class
+cl\dynasty\dynabeacon\storage\YamlBeaconStorageProvider.class
 cl\dynasty\dynabeacon\config\ConfigManager.class
 cl\dynasty\dynabeacon\api\VersionAdapter.class
 cl\dynasty\dynabeacon\effects\executor\BurnerExecutor.class
@@ -25,6 +26,7 @@ cl\dynasty\dynabeacon\effects\executor\EffectExecutor.class
 cl\dynasty\dynabeacon\effects\BeaconEffect.class
 cl\dynasty\dynabeacon\effects\executor\CropBoostExecutor.class
 cl\dynasty\dynabeacon\gui\BeaconGuiManager.class
+cl\dynasty\dynabeacon\storage\MySqlBeaconStorageProvider.class
 cl\dynasty\dynabeacon\api\ItemDataAdapter.class
 cl\dynasty\dynabeacon\manager\CustomRecipeManager.class
 cl\dynasty\dynabeacon\util\ColorUtil.class
@@ -33,6 +35,7 @@ cl\dynasty\dynabeacon\model\PlayerSettings.class
 cl\dynasty\dynabeacon\effects\EffectLevelUtil.class
 cl\dynasty\dynabeacon\effects\executor\DamageFieldExecutor.class
 cl\dynasty\dynabeacon\listener\VanillaBeaconListener.class
+cl\dynasty\dynabeacon\storage\BeaconStorageProvider.class
 cl\dynasty\dynabeacon\effects\executor\FurnaceBoostExecutor.class
 cl\dynasty\dynabeacon\model\BeaconData.class
 cl\dynasty\dynabeacon\DynaBeaconPlugin.class

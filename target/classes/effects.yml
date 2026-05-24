@@ -182,7 +182,7 @@ effects:
     display-name: "&9Visión Nocturna"
     description:
       - "&7Permite ver claramente en la oscuridad."
-    icon: EYE_OF_ENDER
+    icon: ENDER_EYE
     type: POTION
     potion: NIGHT_VISION
     target: PLAYERS
@@ -745,42 +745,44 @@ effects:
                 amount: 1000
       2:
         enabled: true
-        power-consumption: 5
-        pull-strength: 0.22
-        vertical-boost: 0.04
-        max-velocity: 0.95
+        description:
+          - "&7Acelera hornos moderadamente."
+        power-consumption: 6
+        speed-up-time: 16
+        fuel-speed-up-time: 16
         costs:
-          acquire:
+          upgrade:
             options:
               diamond:
                 type: ITEM
                 material: DIAMOND
-                amount: 5
+                amount: 12
               exp:
                 type: EXP_LEVEL
-                amount: 10
+                amount: 25
               money:
                 type: VAULT_MONEY
-                amount: 1000
+                amount: 3500
       3:
         enabled: true
-        power-consumption: 7
-        pull-strength: 0.30
-        vertical-boost: 0.05
-        max-velocity: 1.2
+        description:
+          - "&7Acelera hornos significativamente."
+        power-consumption: 8
+        speed-up-time: 24
+        fuel-speed-up-time: 24
         costs:
-          acquire:
+          upgrade:
             options:
               diamond:
                 type: ITEM
                 material: DIAMOND
-                amount: 5
+                amount: 24
               exp:
                 type: EXP_LEVEL
-                amount: 10
+                amount: 45
               money:
                 type: VAULT_MONEY
-                amount: 1000
+                amount: 3500
 
   furnace_boost:
     enabled: true

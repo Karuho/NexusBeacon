@@ -24,7 +24,7 @@ import cl.dynasty.dynabeacon.manager.CustomBeaconItemManager;
 import cl.dynasty.dynabeacon.manager.CustomRecipeManager;
 import cl.dynasty.dynabeacon.manager.PaymentManager;
 import cl.dynasty.dynabeacon.manager.PlayerSettingsManager;
-import cl.dynasty.dynabeacon.storage.StorageManager;
+import cl.dynasty.dynabeacon.storage.YamlBeaconStorageProvider;
 import cl.dynasty.dynabeacon.task.BeaconParticleTask;
 import cl.dynasty.dynabeacon.task.BeaconTickTask;
 import net.milkbowl.vault.economy.Economy;
@@ -35,7 +35,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
 
     private VersionAdapter versionAdapter;
     private ConfigManager configManager;
-    private StorageManager storageManager;
+    private YamlBeaconStorageProvider storageManager;
     private BeaconManager beaconManager;
     private PlayerSettingsManager playerSettingsManager;
     private EffectRegistry effectRegistry;
@@ -61,7 +61,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
         return configManager;
     }
 
-    public StorageManager getStorageManager() {
+    public YamlBeaconStorageProvider getStorageManager() {
         return storageManager;
     }
 
@@ -119,7 +119,7 @@ public final class DynaBeaconPlugin extends JavaPlugin {
 
         versionAdapter = new ModernAdapter();
         configManager = new ConfigManager(this);
-        storageManager = new StorageManager(this);
+        storageManager = new YamlBeaconStorageProvider(this);
         beaconManager = new BeaconManager(this);
         playerSettingsManager = new PlayerSettingsManager(this);
         effectRegistry = new EffectRegistry(this);

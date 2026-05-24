@@ -1,14 +1,13 @@
 package cl.dynasty.dynabeacon.effects.executor;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.material.Crops;
-import org.bukkit.material.MaterialData;
-import cl.dynasty.dynabeacon.effects.EffectLevelUtil;
+import org.bukkit.block.data.Ageable;
+import org.bukkit.block.data.BlockData;
+
 import cl.dynasty.dynabeacon.DynaBeaconPlugin;
 import cl.dynasty.dynabeacon.effects.BeaconEffect;
+import cl.dynasty.dynabeacon.effects.EffectLevelUtil;
 import cl.dynasty.dynabeacon.model.BeaconData;
 
 public class CropBoostExecutor implements EffectExecutor {
@@ -27,6 +26,7 @@ public class CropBoostExecutor implements EffectExecutor {
     @Override
     public void tick(BeaconData beacon, BeaconEffect effect) {
         Location center = beacon.getLocation();
+
         if (center == null || center.getWorld() == null) {
             return;
         }
@@ -36,6 +36,10 @@ public class CropBoostExecutor implements EffectExecutor {
         int radius = plugin.getConfigManager()
                 .getBeaconConfig()
                 .getInt("performance.crop-boost.scan-radius", 16);
+
+        int verticalRadius = plugin.getConfigManager()
+                .getBeaconConfig()
+                .getInt("performance.crop-boost.vertical-radius", 8);
 
         int maxBlocks = plugin.getConfigManager()
                 .getBeaconConfig()
@@ -48,14 +52,13 @@ public class CropBoostExecutor implements EffectExecutor {
                 "growth-chance",
                 plugin.getConfigManager()
                         .getEffectsConfig()
-                        .getInt("effects." + effect.getId() + ".growth-chance-per-level", 15) * level
-        );
+                        .getInt("effects." + effect.getId() + ".growth-chance-per-level", 15) * level);
 
         int processed = 0;
 
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
-                for (int y = -8; y <= 8; y++) {
+                for (int y = -verticalRadius; y <= verticalRadius; y++) {
                     if (processed >= maxBlocks) {
                         return;
                     }
@@ -69,43 +72,24 @@ public class CropBoostExecutor implements EffectExecutor {
                             center.getBlockY() + y,
                             center.getBlockZ() + z);
 
-                    if (!isLegacyCrop(block)) {
+                    BlockData data = block.getBlockData();
+
+                    if (!(data instanceof Ageable)) {
                         continue;
                     }
 
-                    BlockState state = block.getState();
-                    MaterialData data = state.getData();
+                    Ageable ageable = (Ageable) data;
 
-                    if (!(data instanceof Crops)) {
+                    if (ageable.getAge() >= ageable.getMaximumAge()) {
                         continue;
                     }
 
-                    Crops crops = (Crops) data;
-
-                    if (crops.getState() == org.bukkit.CropState.RIPE) {
-                        continue;
-                    }
-
-                    org.bukkit.CropState current = crops.getState();
-                    org.bukkit.CropState[] states = org.bukkit.CropState.values();
-                    int nextOrdinal = Math.min(current.ordinal() + 1, org.bukkit.CropState.RIPE.ordinal());
-
-                    crops.setState(states[nextOrdinal]);
-                    state.setData(crops);
-                    state.update(true);
+                    ageable.setAge(ageable.getAge() + 1);
+                    block.setBlockData(ageable, true);
 
                     processed++;
                 }
             }
         }
-    }
-
-    private boolean isLegacyCrop(Block block) {
-        Material type = block.getType();
-
-        return type == Material.CROPS
-                || type == Material.CARROT
-                || type == Material.POTATO
-                || type == Material.NETHER_WARTS;
     }
 }

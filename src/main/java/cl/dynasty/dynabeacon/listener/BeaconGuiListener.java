@@ -258,6 +258,10 @@ public class BeaconGuiListener implements Listener {
         int currentSlot = 10;
 
         for (BeaconEffect effect : plugin.getEffectRegistry().getEffects()) {
+            if (!cl.dynasty.dynabeacon.effects.EffectLevelUtil.isLevelEnabled(plugin, effect, 1)) {
+                continue;
+            }
+
             if (slot == currentSlot) {
                 return effect;
             }

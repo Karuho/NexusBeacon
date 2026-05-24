@@ -67,6 +67,7 @@ public class BeaconPowerManager {
     public boolean canActivate(BeaconData beacon, BeaconEffect effect) {
         int available = getAvailablePower(beacon);
         int used = getUsedPower(beacon);
+
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
         int needed = cl.dynasty.dynabeacon.effects.EffectLevelUtil.getLevelInt(
                 plugin,
@@ -74,6 +75,10 @@ public class BeaconPowerManager {
                 level,
                 "power-consumption",
                 effect.getPowerConsumption() * level);
+
+        if (beacon.isEffectActive(effect.getId())) {
+            used -= needed;
+        }
 
         return used + needed <= available;
     }
