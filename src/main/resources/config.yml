@@ -1,19 +1,10 @@
-language: es_cl
-
-debug: false
-
-settings:
-  require-permission: true
-  permission-use: dynabeacon.use
-  shift-click-menu: true
-
 # ============================================================
 # ALMACENAMIENTO
 # ============================================================
-# Define dónde se guardarán los datos de DynaBeacon.
+# Define dónde se guardarán los datos de NexusBeacon.
 #
 # Tipos disponibles:
-# - YAML   : Guarda datos en plugins/DynaBeacon/storage.yml
+# - YAML   : Guarda datos en plugins/NexusBeacon/storage.yml
 # - MYSQL  : Guarda datos en una base de datos MySQL/MariaDB
 # - SQLITE : Guarda datos en un archivo local SQLite
 #
@@ -22,17 +13,33 @@ settings:
 # - SQLITE para uso local más ordenado sin configurar base externa.
 # - MYSQL para redes, servidores grandes o sincronización externa.
 # ============================================================
+# Idioma principal del plugin.
+# Debe existir en plugins/NexusBeacon/languages/<idioma>.yml
+
+language: es_cl
+
+debug: false
+
+settings:
+  require-permission: true
+  permission-use: NexusBeacon.use
+  shift-click-menu: true
+
+gui:
+  refresh-ticks: 20
+  sounds: true
+
 storage:
   type: YAML
 
   mysql:
     host: localhost
     port: 3306
-    database: dynabeacon
+    database: NexusBeacon
     username: root
     password: ""
     use-ssl: false
-    table-prefix: dynabeacon_
+    table-prefix: NexusBeacon_
 
   sqlite:
     file: storage.db

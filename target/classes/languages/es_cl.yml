@@ -1,14 +1,58 @@
-prefix: "&b[DynaBeacon]&r "
+prefix: "&b[NexusBeacon]&r "
 
 messages:
   no-permission: "&cNo tienes permiso para hacer eso."
-  reload: "&aConfiguración recargada."
+  reload: "&aConfiguración recargada correctamente."
   only-players: "&cEste comando solo puede usarlo un jugador."
-  beacon-registered: "&aBeacon registrado correctamente."
-  beacon-removed: "&cBeacon eliminado."
-  menu-opened: "&aMenú abierto."
+  player-not-found: "&cJugador no encontrado."
+  invalid-usage: "&cUso incorrecto del comando."
+  unknown-command: "&cSubcomando desconocido."
+
+  beacon:
+    registered: "&aBeacon registrado correctamente."
+    removed: "&cBeacon eliminado."
+    not-found: "&cNo se encontró este beacon."
+    already-registered: "&eEste beacon ya está registrado."
+    no-access: "&cNo tienes acceso a este beacon."
+    owner-only: "&cSolo el dueño del beacon puede hacer eso."
+    beam-style-changed: "&aEstilo del rayo cambiado a &f%style%&a."
+
+  menu:
+    opened: "&aMenú abierto."
+    closed: "&7Menú cerrado."
+    invalid: "&cEste menú no existe."
+    action-unknown: "&cAcción desconocida: &f%action%"
+
+  payment:
+    vault-unavailable: "&cVault no está disponible."
+    economy-unavailable: "&cNo hay proveedor de economía conectado a Vault."
+    not-enough-money: "&cNo tienes suficiente dinero. Necesitas &f%amount% %currency%&c."
+    not-enough-items: "&cNo tienes suficientes items. Necesitas &f%amount% %material%&c."
+    not-enough-exp: "&cNo tienes suficientes niveles. Necesitas &f%amount% %material%&c."
+    paid: "&aPago realizado correctamente."
+    acquired: "&aBeacon adquirido correctamente."
+    upgraded: "&aBeacon mejorado correctamente."
+
+  storage:
+    loaded: "&aStorage activo: &f%type%"
+    save-error: "&cNo se pudo guardar storage.yml"
+    load-error: "&cNo se pudo cargar el almacenamiento."
+
+  effect:
+    enabled: "&aEfecto activado: &f%effect%&a."
+    disabled: "&cEfecto desactivado: &f%effect%&c."
+    upgraded: "&aEfecto mejorado: &f%effect% &7Nivel &f%level%&a."
+    max-level: "&eEste efecto ya está en su nivel máximo."
+    
 materials:
   DIAMOND: "diamantes"
   EMERALD: "esmeraldas"
   EXP_LEVEL: "niveles de experiencia"
   VAULT_MONEY: "DynaYen"
+
+placeholders:
+  empty: "N/A"
+  enabled: "&aActivado"
+  disabled: "&cDesactivado"
+  yes: "&aSí"
+  no: "&cNo"

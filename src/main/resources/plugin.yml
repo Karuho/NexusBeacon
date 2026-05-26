@@ -1,20 +1,20 @@
-name: DynaBeacon
+name: NexusBeacon
 version: 4.5.0
-main: cl.dynasty.dynabeacon.DynaBeaconPlugin
+main: cl.dynasty.nexusbeacon.NexusBeaconPlugin
 api-version: '1.21'
 author: Karuho
-description: Sistema propio de beacons avanzados para Dynacraft.
-softdepend: [Vault, SpawnerMeta, Towny, WorldGuard, PlotSquared, GriefPrevention, WorldEdit]
+description: Sistema de beacon con efectos personalizables, menús y opciones de pago.
+softdepend: [Vault, PlaceholderAPI, SpawnerMeta, Towny, WorldGuard, PlotSquared, GriefPrevention, WorldEdit]
 folia-supported: true
 
 commands:
-  dynabeacon:
-    description: Comando principal de DynaBeacon.
-    usage: /dynabeacon
-    aliases: [dbeacon, beacon, dynab]
+  NexusBeacon:
+    description: Comando principal de NexusBeacon.
+    usage: /NexusBeacon
+    aliases: [nbeacon, beacon, nb, nbe]
 
 permissions:
-  dynabeacon.admin:
+  NexusBeacon.admin:
     default: op
-  dynabeacon.use:
+  NexusBeacon.use:
     default: true

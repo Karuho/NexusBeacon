@@ -1,31 +1,185 @@
+# =========================================================
+# NexusBeacon GUI Configuration
+# =========================================================
+#
+# Sistema de layouts:
+#
+# Cada línea representa una fila del inventario.
+# Cada carácter representa un item definido en "items".
+#
+# Caracteres especiales:
+#
+#   # = decoración / filler
+#   . = slot vacío
+#
+# Ejemplo:
+#
+# layout:
+#   - "#########"
+#   - "#.......#"
+#   - "#..E.S..#"
+#   - "#.......#"
+#   - "#########"
+#   - "####C####"
+#
+# Significado:
+#
+#   E = botón de efectos
+#   S = botón de configuración
+#   C = botón cerrar
+#
+# =========================================================
+# Acciones disponibles
+# =========================================================
+#
+# close
+#   Cierra el menú actual.
+#
+# open:<menu>
+#   Abre otro menú registrado.
+#
+# Ejemplos:
+#
+# action: "close"
+# action: "open:effects"
+# action: "open:main"
+#
+# %beam_style%          Estilo visual actual del rayo
+# =========================================================
+
 titles:
-  main: "&8DynaBeacon"
-  effects: "&8DynaBeacon - Efectos"
-  settings: "&8DynaBeacon - Config"
-  trust: "&8DynaBeacon - Trust"
-  payment-acquire: "&8DynaBeacon - Adquirir"
-  payment-upgrade: "&8DynaBeacon - Mejorar"
+  main: "&8NexusBeacon"
+  effects: "&8NexusBeacon - Efectos"
+  settings: "&8NexusBeacon - Config"
+  trust: "&8NexusBeacon - Trust"
+  payment-acquire: "&8NexusBeacon - Adquirir"
+  payment-upgrade: "&8NexusBeacon - Mejorar"
+  
+menus:
+  main:
+    title: "&8NexusBeacon"
 
-main-menu:
-  title: "&8DynaBeacon"
-  size: 54
+    layout:
+      - "#########"
+      - "#.......#"
+      - "#..E.S..#"
+      - "#.......#"
+      - "#########"
+      - "####C####"
 
-  items:
-    effects:
-      slot: 20
-      material: BEACON
-      name: "&bEfectos"
-      lore:
-        - "&7Gestiona los efectos del beacon."
+    items:
+      "#":
+        material: BLACK_STAINED_GLASS_PANE
+        name: " "
 
-    settings:
-      slot: 24
-      material: COMPARATOR
-      name: "&eConfiguración"
-      lore:
-        - "&7Partículas, animaciones e idioma."
+      E:
+        material: BEACON
+        name: "&bEfectos"
+        lore:
+          - "&7Efectos activos: &f%active_effects%"
+          - "&eClick para abrir."
+        action: "open:effects"
 
-    close:
-      slot: 49
-      material: BARRIER
-      name: "&cCerrar"
+      S:
+        material: COMPARATOR
+        name: "&eConfiguración"
+        lore:
+          - "&7Configura tu beacon."
+        action: "open:settings"
+
+      C:
+        material: BARRIER
+        name: "&cCerrar"
+        action: "close"
+
+  effects:
+    title: "&8NexusBeacon - Efectos"
+
+    layout:
+      - "#########"
+      - "#EEEEEEE#"
+      - "#EEEEEEE#"
+      - "#EEEEEEE#"
+      - "#########"
+      - "####B####"
+
+    dynamic:
+      E: effects
+
+    items:
+      "#":
+        material: BLACK_STAINED_GLASS_PANE
+        name: " "
+
+      B:
+        material: ARROW
+        name: "&eVolver"
+        action: "open:main"
+
+  settings:
+    title: "&8NexusBeacon - Config"
+
+    layout:
+      - "#########"
+      - "#.......#"
+      - "#...P...#"
+      - "#.......#"
+      - "#########"
+      - "####B####"
+
+    items:
+      "#":
+        material: BLACK_STAINED_GLASS_PANE
+        name: " "
+
+      P:
+        material: REDSTONE
+        name: "&dPartículas"
+        lore:
+          - "&7Configurar partículas."
+        action: "open:beam-style"
+
+      B:
+        material: ARROW
+        name: "&eVolver"
+        action: "open:main"
+
+  beam-style:
+    title: "&8NexusBeacon - Rayos"
+    layout:
+      - "#########"
+      - "#.......#"
+      - "#.A.R.G.P#"
+      - "#.......#"
+      - "#########"
+      - "####B####"
+
+    items:
+      "#":
+        material: BLACK_STAINED_GLASS_PANE
+        name: " "
+
+      A:
+        material: LIGHT_BLUE_DYE
+        name: "&bAqua"
+        action: "beam-style:aqua"
+
+      R:
+        material: RED_DYE
+        name: "&cRojo"
+        action: "beam-style:red"
+
+      G:
+        material: LIME_DYE
+        name: "&aVerde"
+        action: "beam-style:green"
+
+      P:
+        material: PURPLE_DYE
+        name: "&dMorado"
+        action: "beam-style:purple"
+
+      B:
+        material: ARROW
+        name: "&eVolver"
+        action: "open:settings"

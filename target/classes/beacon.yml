@@ -1,10 +1,22 @@
 # ============================================================
-# CONFIGURACIÓN PRINCIPAL DE DYNABEACON
+# CONFIGURACIÓN PRINCIPAL DE NexusBeacon
 # ============================================================
 
 beacon:
-  default-range: 100
+  default-range: 48
   max-range: 150
+
+  particles:
+    # Activa o desactiva las partículas visuales.
+    enabled: true
+
+    # Cada cuántos ticks se dibujan.
+    interval-ticks: 20
+
+    # Cantidad de puntos usados para formar el círculo.
+    # Más puntos = círculo más suave, pero más carga visual.
+    radius-points: 96
+    type: VILLAGER_HAPPY
 
   range-calculator:
     enabled: true
@@ -34,64 +46,108 @@ beacon:
       164: 96
       285: 128
 
-item:
-  material: BEACON
-  display-name: "&b&lDynaBeacon"
-  lore:
-    - "&7Beacon avanzado de Dynasty."
-    - ""
-    - "&8[&b+&8] &7Dueño: &f{owner}"
-    - "&8[&b+&8] &7Rango: &f{range}"
-    - "&8[&b+&8] &7Trust: &f{trusted}"
-    - ""
-    - "&8[&b+&8] &7Efectos:"
-    - "{effect_list}"
-      
-  # ------------------------------------------------------------
-  # PARTÍCULAS DEL RANGO
-  # ------------------------------------------------------------
-  particles:
-    # Activa o desactiva las partículas visuales.
-    enabled: true
-
-    # Cada cuántos ticks se dibujan.
-    interval-ticks: 20
-
-    # Cantidad de puntos usados para formar el círculo.
-    # Más puntos = círculo más suave, pero más carga visual.
-    radius-points: 96
-
-    # Tipo de partícula Bukkit/Paper.
-    type: VILLAGER_HAPPY
-
-  # ------------------------------------------------------------
-  # PODER DEL BEACON
-  # ------------------------------------------------------------
   power:
-    # Activa el sistema de poder por pirámide.
     enabled: true
-
-    # Capas máximas válidas de la pirámide.
-    # Vanilla usa hasta 4 capas.
     max-layers: 4
 
-    # Valor de poder por bloque.
-    blocks:
+    vanilla-blocks:
       IRON_BLOCK: 1
       GOLD_BLOCK: 1
-      COPPER_BLOCK: 1
       EMERALD_BLOCK: 2
       DIAMOND_BLOCK: 3
       NETHERITE_BLOCK: 4
+
+    custom-blocks:
+      COPPER_BLOCK: 1
+      REDSTONE_BLOCK: 1
+      LAPIS_BLOCK: 2
+      AMETHYST_BLOCK: 2
+
+item:
+  material: BEACON
+  display-name: "&b&lNexusBeacon"
+  lore:
+  - ""
+  - "&8[&b+&8] &7Dueño: &f{owner}"
+  - "&8[&b+&8] &7Rango: &f{range} bloques"
+  - "&8[&b+&8] &7Trust: &f{trusted}"
+  - ""
+  - "&8[&b+&8] &7Efectos:"
+  - "{effect_list}"
+
+visual-beam:
+  enabled: true
+
+  # GLOBAL = todos usan el estilo global-style
+  # PLAYER = cada beacon usa su estilo elegido por GUI
+  # PLAYER_OR_GLOBAL = usa estilo del beacon si existe; si no, usa global-style
+  style-mode: PLAYER_OR_GLOBAL
+
+  # AUTO = dibuja rayo visual solo si la base usa materiales custom
+  # ALWAYS = siempre dibuja rayo visual
+  # CUSTOM_ONLY = solo si la base usa materiales custom
+  render-mode: AUTO
+
+  interval-ticks: 4
+  height: 96
+  step: 0.45
+  count: 1
+
+  custom-materials:
+  - COPPER_BLOCK
+  - REDSTONE_BLOCK
+  - LAPIS_BLOCK
+  - AMETHYST_BLOCK
+
+  global-style:
+    particle: DUST
+    color: AQUA
+    size: 1.2
+
+beam-styles:
+  aqua:
+    name: "&bAqua"
+    particle: DUST
+    color: AQUA
+    size: 1.2
+    permission: ""
+
+  red:
+    name: "&cRojo"
+    particle: DUST
+    color: RED
+    size: 1.2
+    permission: ""
+
+  green:
+    name: "&aVerde"
+    particle: DUST
+    color: LIME
+    size: 1.2
+    permission: ""
+
+  purple:
+    name: "&dMorado"
+    particle: DUST
+    color: PURPLE
+    size: 1.2
+    permission: ""
+
+  end_rod:
+    name: "&fEnd Rod"
+    particle: END_ROD
+    color: NONE
+    size: 1.0
+    permission: ""
 
 # ============================================================
 # PROTECCIÓN
 # ============================================================
 protection:
-  # Solo el dueño o admins pueden interactuar con el DynaBeacon.
+  # Solo el dueño o admins pueden interactuar con el NexusBeacon.
   owner-only-interact: true
 
-  # Solo el dueño o admins pueden romper el DynaBeacon.
+  # Solo el dueño o admins pueden romper el NexusBeacon.
   owner-only-break: true
 
   # Protege los bloques minerales usados como base.
@@ -122,7 +178,7 @@ performance:
     # Máximo de spawners procesados por ejecución.
     max-blocks-per-tick: 8
 
-    # Si SpawnerMeta está activo, DynaBeacon no modifica spawners.
+    # Si SpawnerMeta está activo, NexusBeacon no modifica spawners.
     # Evita conflictos con plugins que administran spawners.
     disable-when-spawnermeta-enabled: true
 
@@ -132,7 +188,7 @@ performance:
     max-blocks-per-tick: 16
 
 # ============================================================
-# RECETA CUSTOM DEL DYNABEACON
+# RECETA CUSTOM DEL NexusBeacon
 # ============================================================
 recipe:
   # Activa o desactiva la receta custom.
@@ -140,10 +196,9 @@ recipe:
 
   # Forma de la receta.
   shape:
-    - "DDD"
-    - "DBD"
-    - "OOO"
-
+  - "DDD"
+  - "DBD"
+  - "OOO"
   # Ingredientes usados en la forma.
   ingredients:
     B: BEACON
