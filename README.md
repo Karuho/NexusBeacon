@@ -1,4 +1,7 @@
-# NexusBeacon
-Compatible con Paper/Purpur 1.21+.
-Soporte Folia inicial mediante scheduler regional/global.
-Spigot 1.21+ puede funcionar, pero Paper/Purpur son recomendados.
+## License
+
+NexusBeacon is source-available, but it is not open source.
+
+You may view, study, and modify the code for private use. You may not sell, rent, redistribute, sublicense, publish modified versions, or claim this project or derivative works as your own without explicit written permission from the author.
+
+See [LICENSE](LICENSE) for details.

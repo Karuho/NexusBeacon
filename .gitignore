@@ -1,8 +1,11 @@
-# Maven
+# Maven / build
 target/
+dependency-reduced-pom.xml
+*.class
 *.jar
 *.war
 *.ear
+*.nar
 
 # IDE
 .vscode/
@@ -11,14 +14,24 @@ target/
 .project
 .classpath
 .settings/
+.metadata
+.recommenders
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Temporary files
+tmp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Logs / crash reports
 logs/
 *.log
+hs_err_pid*
 
 # Server/runtime data
 plugins/
@@ -33,13 +46,13 @@ paper-world-defaults.yml
 purpur.yml
 eula.txt
 
-# NexusBeacon generated configs/data
+# NexusBeacon generated data
 storage.yml
 *.db
 *.sqlite
 *.sqlite3
 
-# Secrets/env
+# Secrets / local overrides
 .env
 .env.*
 secrets.yml

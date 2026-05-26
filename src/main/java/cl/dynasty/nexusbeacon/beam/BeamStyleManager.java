@@ -57,11 +57,12 @@ public final class BeamStyleManager {
                     Particle.DUST,
                     Color.AQUA,
                     1.2f,
-                    ""
-            );
+                    "");
         }
 
-        plugin.getLogger().info("BeamStyles cargados: " + styles.size());
+        plugin.getLogger().info(plugin.getLanguageManager().get(
+                "console.beam-styles-loaded",
+                Map.of("amount", String.valueOf(styles.size()))));
     }
 
     public BeamStyle getStyle(String id) {
@@ -97,8 +98,7 @@ public final class BeamStyleManager {
                 particle,
                 color,
                 size,
-                permission
-        );
+                permission);
     }
 
     private Particle parseParticle(String particleName) {
@@ -109,7 +109,9 @@ public final class BeamStyleManager {
         try {
             return Particle.valueOf(particleName.toUpperCase());
         } catch (IllegalArgumentException exception) {
-            plugin.getLogger().warning("Partícula inválida en beacon.yml: " + particleName);
+            plugin.getLogger().warning(plugin.getLanguageManager().get(
+                    "console.invalid-particle",
+                    Map.of("particle", particleName)));
             return Particle.END_ROD;
         }
     }
@@ -135,7 +137,9 @@ public final class BeamStyleManager {
             case "FUCHSIA", "PURPLE", "MAGENTA" -> Color.FUCHSIA;
             case "ORANGE" -> Color.ORANGE;
             default -> {
-                plugin.getLogger().warning("Color inválido en beacon.yml: " + colorName);
+                plugin.getLogger().warning(plugin.getLanguageManager().get(
+                        "console.invalid-color",
+                        Map.of("color", colorName)));
                 yield null;
             }
         };

@@ -41,12 +41,11 @@ public class PlayerSettingsManager {
         FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
 
         return new PlayerSettings(
-        uuid,
-        yaml.getBoolean("showParticle", true),
-        yaml.getBoolean("showAnimation", true),
-        yaml.getStringList("beaconInfoList"),
-        yaml.getString("particleType", "VILLAGER_HAPPY")
-);
+                uuid,
+                yaml.getBoolean("showParticle", true),
+                yaml.getBoolean("showAnimation", true),
+                yaml.getStringList("beaconInfoList"),
+                yaml.getString("particleType", "VILLAGER_HAPPY"));
     }
 
     public void save(PlayerSettings settings) {
@@ -67,7 +66,9 @@ public class PlayerSettingsManager {
         try {
             yaml.save(file);
         } catch (Exception exception) {
-            plugin.getLogger().severe("No se pudo guardar el archivo del jugador " + settings.getUuid());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.player-settings-save-error",
+                    Map.of("uuid", settings.getUuid().toString())));
             exception.printStackTrace();
         }
     }

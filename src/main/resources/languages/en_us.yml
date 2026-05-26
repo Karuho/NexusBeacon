@@ -1,0 +1,93 @@
+prefix: "&b[NexusBeacon]&r "
+
+messages:
+  no-permission: "&cYou do not have permission to do that."
+  reload: "&aConfiguration reloaded successfully."
+  only-players: "&cOnly players can use this command."
+  player-not-found: "&cPlayer not found."
+  invalid-usage: "&cInvalid command usage."
+  unknown-command: "&cUnknown subcommand."
+
+  console:
+    beam-styles-loaded: "BeamStyles loaded: %amount%"
+    invalid-particle: "Invalid particle in beacon.yml: %particle%"
+    invalid-color: "Invalid color in beacon.yml: %color%"
+    mysql-load-error: "Could not load beacons from MySQL: %error%"
+    mysql-save-error: "Could not save beacon to MySQL: %error%"
+    mysql-delete-error: "Could not delete beacon from MySQL: %error%"
+    sqlite-load-error: "Could not load beacons from SQLite: %error%"
+    sqlite-save-error: "Could not save beacon to SQLite: %error%"
+    sqlite-delete-error: "Could not delete beacon from SQLite: %error%"
+    storage-active: "Active storage: %type%"
+    storage-unknown: "Unknown storage: %type%. Using YAML."
+    storage-save-error: "Could not save storage.yml"
+    storage-load-error-mysql: "Could not load beacons from MySQL: %error%"
+    storage-save-error-mysql: "Could not save beacon to MySQL: %error%"
+    storage-delete-error-mysql: "Could not delete beacon from MySQL: %error%"
+    storage-load-error-sqlite: "Could not load beacons from SQLite: %error%"
+    storage-save-error-sqlite: "Could not save beacon to SQLite: %error%"
+    storage-delete-error-sqlite: "Could not delete beacon from SQLite: %error%"
+    cook-time-total-unavailable: "setCookTimeTotal is not available on this server version."
+    cook-time-total-failed: "setCookTimeTotal failed: %error%"
+    effects-loaded: "Effects loaded: %amount%"
+    invalid-potion: "Invalid potion for effect: %effect%"
+    spawnermeta-delay-updated: "SpawnerMeta: delay updated from %current% to %target% ticks"
+    spawnermeta-delay-unchanged: "SpawnerMeta: delay %current% is already <= target %target%, no changes made."
+    gui-menu-missing: "GUI menu does not exist: %menu%"
+    gui-slot-invalid: "Invalid slot in GUI %menu%: %item%"
+    gui-material-invalid: "Invalid material in gui.yml: %material%"
+    gui-action-unknown: "Unknown GUI action: %action%"
+    gui-dynamic-symbol-invalid: "Invalid dynamic GUI symbol: %symbol%"
+    beacons-loaded: "Beacons loaded: %amount%"
+    custom-recipe-registered: "Custom NexusBeacon recipe registered."
+    vanilla-recipe-disabled: "Vanilla beacon recipe disabled."
+    player-settings-save-error: "Could not save player file %uuid%"
+
+  beacon:
+    registered: "&aBeacon registered successfully."
+    removed: "&cBeacon removed."
+    not-found: "&cThis beacon was not found."
+    already-registered: "&eThis beacon is already registered."
+    no-access: "&cYou do not have access to this beacon."
+    owner-only: "&cOnly the beacon owner can do that."
+    beam-style-changed: "&aBeam style changed to &f%style%&a."
+
+  menu:
+    opened: "&aMenu opened."
+    closed: "&7Menu closed."
+    invalid: "&cThis menu does not exist."
+    action-unknown: "&cUnknown action: &f%action%"
+
+  payment:
+    vault-unavailable: "&cVault is not available."
+    economy-unavailable: "&cNo economy provider is connected to Vault."
+    not-enough-money: "&cYou do not have enough money. You need &f%amount% %currency%&c."
+    not-enough-items: "&cYou do not have enough items. You need &f%amount% %material%&c."
+    not-enough-exp: "&cYou do not have enough levels. You need &f%amount% %material%&c."
+    paid: "&aPayment completed successfully."
+    acquired: "&aBeacon acquired successfully."
+    upgraded: "&aBeacon upgraded successfully."
+
+  storage:
+    loaded: "&aActive storage: &f%type%"
+    save-error: "&cCould not save storage.yml"
+    load-error: "&cCould not load storage."
+
+  effect:
+    enabled: "&aEffect enabled: &f%effect%&a."
+    disabled: "&cEffect disabled: &f%effect%&c."
+    upgraded: "&aEffect upgraded: &f%effect% &7Level &f%level%&a."
+    max-level: "&eThis effect is already at max level."
+
+materials:
+  DIAMOND: "diamonds"
+  EMERALD: "emeralds"
+  EXP_LEVEL: "experience levels"
+  VAULT_MONEY: "money"
+
+placeholders:
+  empty: "N/A"
+  enabled: "&aEnabled"
+  disabled: "&cDisabled"
+  yes: "&aYes"
+  no: "&cNo"

@@ -27,7 +27,9 @@ public class BeaconManager {
             beacons.put(beacon.getId(), beacon);
         }
 
-        plugin.getLogger().info("Beacons cargados: " + beacons.size());
+        plugin.getLogger().info(plugin.getLanguageManager().get(
+                "console.beacons-loaded",
+                Map.of("amount", String.valueOf(beacons.size()))));
     }
 
     public BeaconData registerBeacon(Location location, UUID owner) {

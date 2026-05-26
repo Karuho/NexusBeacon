@@ -57,7 +57,7 @@ public class CustomRecipeManager {
         }
 
         Bukkit.addRecipe(recipe);
-        plugin.getLogger().info("Receta custom de NexusBeacon registrada.");
+        plugin.getLogger().info(plugin.getLanguageManager().get("console.custom-recipe-registered"));
     }
 
     public void removeVanillaBeaconRecipe() {
@@ -78,6 +78,6 @@ public class CustomRecipeManager {
             }
         }
 
-        plugin.getLogger().info("Receta vanilla del beacon deshabilitada.");
+        plugin.getLogger().info(plugin.getLanguageManager().get("console.vanilla-recipe-disabled"));
     }
 }

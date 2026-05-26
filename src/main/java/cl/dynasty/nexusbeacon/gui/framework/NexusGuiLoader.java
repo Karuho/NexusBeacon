@@ -26,7 +26,9 @@ public final class NexusGuiLoader {
         ConfigurationSection menuSection = guiConfig.getConfigurationSection("menus." + menuId);
 
         if (menuSection == null) {
-            plugin.getLogger().warning("No existe el menú GUI: " + menuId);
+            plugin.getLogger().warning(plugin.getLanguageManager().get(
+                    "console.gui-menu-missing",
+                    Map.of("menu", menuId)));
             return null;
         }
 
@@ -121,7 +123,11 @@ public final class NexusGuiLoader {
             int slot = itemSection.getInt("slot", -1);
 
             if (slot < 0 || slot >= size) {
-                plugin.getLogger().warning("Slot inválido en GUI " + menu.getId() + ": " + itemKey);
+                plugin.getLogger().warning(plugin.getLanguageManager().get(
+                        "console.gui-slot-invalid",
+                        Map.of(
+                                "menu", menu.getId(),
+                                "item", itemKey)));
                 continue;
             }
 
@@ -148,7 +154,9 @@ public final class NexusGuiLoader {
         Material material = Material.matchMaterial(materialName.toUpperCase());
 
         if (material == null) {
-            plugin.getLogger().warning("Material inválido en gui.yml: " + materialName);
+            plugin.getLogger().warning(plugin.getLanguageManager().get(
+                    "console.gui-material-invalid",
+                    Map.of("material", materialName)));
             return Material.STONE;
         }
 
@@ -231,7 +239,9 @@ public final class NexusGuiLoader {
             };
         }
 
-        return (player, menu, event) -> plugin.getLogger().warning("Acción GUI desconocida: " + actionText);
+        return (player, menu, event) -> plugin.getLogger().warning(plugin.getLanguageManager().get(
+                "console.gui-action-unknown",
+                Map.of("action", actionText)));
     }
 
     private BeaconData getOpenBeacon(Player player) {
@@ -266,7 +276,9 @@ public final class NexusGuiLoader {
 
         for (String symbolKey : dynamicSection.getKeys(false)) {
             if (symbolKey.length() != 1) {
-                plugin.getLogger().warning("Dynamic GUI symbol inválido: " + symbolKey);
+                plugin.getLogger().warning(plugin.getLanguageManager().get(
+                        "console.gui-dynamic-symbol-invalid",
+                        Map.of("symbol", symbolKey)));
                 continue;
             }
 

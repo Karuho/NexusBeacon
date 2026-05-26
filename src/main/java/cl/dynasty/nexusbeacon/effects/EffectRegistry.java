@@ -47,7 +47,9 @@ public class EffectRegistry {
                 PotionEffectType potionType = plugin.getVersionAdapter().potion(potionName);
 
                 if (potionType == null) {
-                    plugin.getLogger().warning("Poción inválida para efecto: " + id);
+                    plugin.getLogger().warning(plugin.getLanguageManager().get(
+                            "console.invalid-potion",
+                            Map.of("effect", id)));
                     continue;
                 }
 
@@ -79,7 +81,9 @@ public class EffectRegistry {
                     powerConsumption));
         }
 
-        plugin.getLogger().info("Efectos cargados: " + effects.size());
+        plugin.getLogger().info(plugin.getLanguageManager().get(
+                "console.effects-loaded",
+                Map.of("amount", String.valueOf(effects.size()))));
     }
 
     public BeaconEffect getEffect(String id) {

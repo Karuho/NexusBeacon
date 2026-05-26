@@ -2,6 +2,7 @@ package cl.dynasty.nexusbeacon.effects.executor;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -45,10 +46,6 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
         int maxBlocksPerTick = section.getInt("max-blocks-per-tick", 32);
         int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
 
-        // Leemos los tiempos objetivo desde el yml.
-        // Si el efecto es furnace_boost solo tendrá furnace-time-level-*.
-        // Si es modern_furnace_boost solo tendrá modern-furnace-time-level-*.
-        // El código elige cuál usar según isModernFurnace(material).
         int furnaceTimeL1 = section.getInt("furnace-time-level-1", 160);
         int furnaceTimeL2 = section.getInt("furnace-time-level-2", 120);
         int furnaceTimeL3 = section.getInt("furnace-time-level-3", 80);
@@ -83,15 +80,11 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
                     if (!isTargetBlock(block.getType(), targetBlocks))
                         continue;
 
-                    // Verificamos instanceof antes del cast
                     if (!(block.getState() instanceof Furnace))
                         continue;
 
                     Furnace furnace = (Furnace) block.getState();
 
-                    // Solo actuamos si el horno tiene combustible activo
-                    // getBurnTime() > 0 significa que hay fuego activo
-                    // getCookTime() >= 0 siempre es true, pero > 0 significa que está cocinando
                     if (furnace.getBurnTime() <= 0)
                         continue;
 
@@ -104,20 +97,8 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
                         wantedTotal = level >= 3 ? furnaceTimeL3 : (level >= 2 ? furnaceTimeL2 : furnaceTimeL1);
                     }
 
-                    // Leemos el cookTimeTotal actual para comparar
                     int currentTotal = getCookTimeTotal(furnace);
 
-                    plugin.getLogger().info("[NexusBeacon] Horno encontrado: "
-                            + block.getType()
-                            + " isModern=" + isModern
-                            + " cookTime=" + furnace.getCookTime()
-                            + " burnTime=" + furnace.getBurnTime()
-                            + " cookTimeTotal(actual)=" + currentTotal
-                            + " wantedTotal=" + wantedTotal
-                            + " nivel=" + level);
-
-                    // Solo modificamos si el tiempo total actual es mayor al objetivo.
-                    // Esto evita escribir en cada tick si ya está al valor correcto.
                     if (currentTotal > wantedTotal) {
                         boolean totalSet = setCookTimeTotal(furnace, wantedTotal);
 
@@ -125,16 +106,9 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
                                 + " -> wantedTotal=" + wantedTotal);
 
                         if (!totalSet) {
-                            // Fallback: avanzamos manualmente el cookTime.
-                            // La lógica correcta es: adelantar el progreso actual
-                            // proporcionalmente al ratio de aceleración deseado.
-                            // Si vanilla tarda 200 y queremos 80, el ratio es 200/80 = 2.5x
-                            // Cada tick del beacon (~40 ticks de juego) avanzamos extra.
                             int vanillaTotal = isModern ? 100 : 200;
                             int ratio = Math.max(1, vanillaTotal / wantedTotal);
                             short currentCook = furnace.getCookTime();
-                            // Avanzamos (ratio - 1) ticks extra por cada tick de juego
-                            // multiplicado por el intervalo del beacon (40 ticks)
                             int advance = (ratio - 1) * 40;
                             short newCook = (short) Math.min(wantedTotal - 1, currentCook + advance);
                             furnace.setCookTime(newCook);
@@ -156,10 +130,6 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
         }
     }
 
-    /**
-     * Lee el cookTimeTotal actual del horno via reflection.
-     * Devuelve el valor vanilla (200 para FURNACE, 100 para modernos) si no existe el método.
-     */
     private int getCookTimeTotal(Furnace furnace) {
         try {
             Method method = furnace.getClass().getMethod("getCookTimeTotal");
@@ -170,20 +140,18 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
         }
     }
 
-    /**
-     * Setea el cookTimeTotal via reflection.
-     * @return true si tuvo éxito, false si el método no existe o falló.
-     */
     private boolean setCookTimeTotal(Furnace furnace, int totalTime) {
         try {
             Method method = furnace.getClass().getMethod("setCookTimeTotal", int.class);
             method.invoke(furnace, totalTime);
             return true;
         } catch (NoSuchMethodException e) {
-            plugin.getLogger().warning("[NexusBeacon] setCookTimeTotal no disponible en esta versión del servidor.");
+            plugin.getLogger().warning(plugin.getLanguageManager().get("console.cook-time-total-unavailable"));
             return false;
         } catch (Exception e) {
-            plugin.getLogger().warning("[NexusBeacon] setCookTimeTotal falló: " + e.getMessage());
+            plugin.getLogger().warning(plugin.getLanguageManager().get(
+                    "console.cook-time-total-failed",
+                    Map.of("error", e.getMessage())));
             return false;
         }
     }

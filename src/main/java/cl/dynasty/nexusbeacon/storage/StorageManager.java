@@ -1,6 +1,7 @@
 package cl.dynasty.nexusbeacon.storage;
 
 import java.util.List;
+import java.util.Map;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.model.BeaconData;
@@ -9,6 +10,7 @@ public class StorageManager {
 
     private final NexusBeaconPlugin plugin;
     private final BeaconStorageProvider provider;
+    private static final String STORAGE_ACTIVE = "console.storage-active";
 
     public StorageManager(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
@@ -21,23 +23,32 @@ public class StorageManager {
                 .getString("storage.type", "YAML")
                 .toUpperCase();
 
-        switch (type) {
-            case "MYSQL":
-                plugin.getLogger().info("Storage activo: MYSQL");
-                return new MySqlBeaconStorageProvider(plugin);
-
-            case "SQLITE":
-                plugin.getLogger().info("Storage activo: SQLITE");
-                return new SqliteBeaconStorageProvider(plugin);
-
-            case "YAML":
-                plugin.getLogger().info("Storage activo: YAML");
-                return new YamlBeaconStorageProvider(plugin);
-
-            default:
-                plugin.getLogger().warning("Storage desconocido: " + type + ". Usando YAML.");
-                return new YamlBeaconStorageProvider(plugin);
-        }
+        return switch (type) {
+            case "MYSQL" -> {
+                plugin.getLanguageManager().get(
+                        STORAGE_ACTIVE,
+                        Map.of("type", "MYSQL"));
+                yield new MySqlBeaconStorageProvider(plugin);
+            }
+            case "SQLITE" -> {
+                plugin.getLanguageManager().get(
+                        STORAGE_ACTIVE,
+                        Map.of("type", "SQLITE"));
+                yield new SqliteBeaconStorageProvider(plugin);
+            }
+            case "YAML" -> {
+                plugin.getLanguageManager().get(
+                        STORAGE_ACTIVE,
+                        Map.of("type", "YAML"));
+                yield new YamlBeaconStorageProvider(plugin);
+            }
+            default -> {
+                plugin.getLanguageManager().get(
+                        STORAGE_ACTIVE,
+                        Map.of("type", type));
+                yield new YamlBeaconStorageProvider(plugin);
+            }
+        };
     }
 
     public List<BeaconData> loadBeacons() {

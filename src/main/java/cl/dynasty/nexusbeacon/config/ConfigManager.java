@@ -55,7 +55,7 @@ public class ConfigManager {
         try {
             storageConfig.save(storageFile);
         } catch (Exception exception) {
-            plugin.getLogger().severe("No se pudo guardar storage.yml");
+            plugin.getLogger().severe(plugin.getLanguageManager().get("console.storage-save-error"));
             exception.printStackTrace();
         }
     }

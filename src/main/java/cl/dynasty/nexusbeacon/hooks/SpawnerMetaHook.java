@@ -1,8 +1,11 @@
 package cl.dynasty.nexusbeacon.hooks;
 
+import java.util.Map;
+
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 
+import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import mc.rellox.spawnermeta.api.APIInstance;
 import mc.rellox.spawnermeta.api.spawner.ICache;
 import mc.rellox.spawnermeta.api.spawner.IGenerator;
@@ -15,7 +18,7 @@ public class SpawnerMetaHook {
     public void load() {
         enabled = Bukkit.getPluginManager().getPlugin("SpawnerMeta") != null;
         if (enabled) {
-            Bukkit.getLogger().info("[NexusBeacon] SpawnerMeta detectado y hook cargado.");
+            Bukkit.getLogger().info("[NexusBeacon] SpawnerMeta detected and hook loaded.");
         }
     }
 
@@ -24,15 +27,9 @@ public class SpawnerMetaHook {
     }
 
     /**
-     * Reduce el delay permanente del spawner en SpawnerMeta.
-     *
-     * ICache.delay() -> delay permanente actual que SM usa para este spawner.
-     * ISpawner.setDelay(int) -> escribe el nuevo delay permanente.
-     * IGenerator.ticks(int) -> recorta el countdown del ciclo actual para efecto inmediato.
-     *
-     * @param block          El bloque spawner
-     * @param targetMaxTicks El delay máximo que queremos permitir (en ticks)
-     * @return true si SM manejó el spawner, false para usar fallback vanilla
+     * @param block
+     * @param targetMaxTicks
+     * @return
      */
     public boolean setReducedDelay(Block block, int targetMaxTicks) {
         if (!enabled || block == null) {
@@ -53,13 +50,6 @@ public class SpawnerMetaHook {
 
             int currentDelay = cache.delay();
 
-            // Log detallado para diagnóstico — nos dice exactamente qué ve SM
-            Bukkit.getLogger().info("[NexusBeacon] SpawnerMeta: spawner en "
-                    + block.getWorld().getName() + " " + block.getX() + "," + block.getY() + "," + block.getZ()
-                    + " | cache.delay()=" + currentDelay
-                    + " | generator.ticks()=" + generator.ticks()
-                    + " | targetMaxTicks=" + targetMaxTicks);
-
             if (currentDelay > targetMaxTicks) {
                 ISpawner spawner = generator.spawner();
                 if (spawner == null) {
@@ -69,17 +59,22 @@ public class SpawnerMetaHook {
                 spawner.setDelay(targetMaxTicks);
                 spawner.update();
 
-                // También recortamos el countdown actual para efecto inmediato
                 if (generator.ticks() > targetMaxTicks) {
                     generator.ticks(targetMaxTicks);
                     generator.update();
                 }
 
-                Bukkit.getLogger().info("[NexusBeacon] SpawnerMeta: delay actualizado "
-                        + currentDelay + " -> " + targetMaxTicks + " ticks");
+                Bukkit.getLogger().info(NexusBeaconPlugin.getInstance().getLanguageManager().get(
+                        "console.spawnermeta-delay-updated",
+                        Map.of(
+                                "current", String.valueOf(currentDelay),
+                                "target", String.valueOf(targetMaxTicks))));
             } else {
-                Bukkit.getLogger().info("[NexusBeacon] SpawnerMeta: delay " + currentDelay
-                        + " ya es <= objetivo " + targetMaxTicks + ", sin cambios.");
+                Bukkit.getLogger().info(NexusBeaconPlugin.getInstance().getLanguageManager().get(
+                        "console.spawnermeta-delay-unchanged",
+                        Map.of(
+                                "current", String.valueOf(currentDelay),
+                                "target", String.valueOf(targetMaxTicks))));
             }
 
             return true;

@@ -57,7 +57,7 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
                 + ");";
 
         try (Connection connection = getConnection();
-             Statement statement = connection.createStatement()) {
+                Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException exception) {
             throw new IllegalStateException("No se pudo preparar SQLite.", exception);
@@ -70,13 +70,14 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
         String sql = "SELECT * FROM NexusBeacon_beacons;";
 
         try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet result = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet result = statement.executeQuery()) {
 
             while (result.next()) {
                 String id = result.getString("id");
                 Location location = LocationUtil.deserialize(id);
-                if (location == null) continue;
+                if (location == null)
+                    continue;
 
                 beacons.add(new BeaconData(
                         id,
@@ -89,12 +90,13 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
                         deserializeStringSet(result.getString("active_effects")),
                         deserializeUuidSet(result.getString("trusted")),
                         result.getInt("protect_base_blocks") == 1,
-                        null
-                ));
+                        null));
             }
 
         } catch (SQLException exception) {
-            plugin.getLogger().severe("No se pudieron cargar beacons desde SQLite: " + exception.getMessage());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.sqlite-load-error",
+                    Map.of("error", exception.getMessage())));
         }
 
         return beacons;
@@ -107,7 +109,7 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
         try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, beacon.getId());
             statement.setString(2, beacon.getUniqueId());
@@ -122,20 +124,25 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
             statement.executeUpdate();
 
         } catch (SQLException exception) {
-            plugin.getLogger().severe("No se pudo guardar beacon en SQLite: " + exception.getMessage());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.sqlite-save-error",
+                    Map.of("error", exception.getMessage())));
         }
     }
 
     @Override
     public void removeBeacon(String id) {
         try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("DELETE FROM NexusBeacon_beacons WHERE id=?;")) {
+                PreparedStatement statement = connection
+                        .prepareStatement("DELETE FROM NexusBeacon_beacons WHERE id=?;")) {
 
             statement.setString(1, id);
             statement.executeUpdate();
 
         } catch (SQLException exception) {
-            plugin.getLogger().severe("No se pudo eliminar beacon en SQLite: " + exception.getMessage());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.sqlite-delete-error",
+                    Map.of("error", exception.getMessage())));
         }
     }
 
@@ -144,7 +151,8 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
     }
 
     private UUID parseUuid(String raw) {
-        if (raw == null || raw.isEmpty()) return null;
+        if (raw == null || raw.isEmpty())
+            return null;
         try {
             return UUID.fromString(raw);
         } catch (IllegalArgumentException exception) {
@@ -155,7 +163,8 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
     private String serializeEffects(Map<String, Integer> effects) {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<String, Integer> entry : effects.entrySet()) {
-            if (builder.length() > 0) builder.append(",");
+            if (builder.length() > 0)
+                builder.append(",");
             builder.append(entry.getKey()).append(":").append(entry.getValue());
         }
         return builder.toString();
@@ -163,11 +172,13 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
 
     private Map<String, Integer> deserializeEffects(String raw) {
         Map<String, Integer> effects = new HashMap<>();
-        if (raw == null || raw.isEmpty()) return effects;
+        if (raw == null || raw.isEmpty())
+            return effects;
 
         for (String part : raw.split(",")) {
             String[] split = part.split(":");
-            if (split.length != 2) continue;
+            if (split.length != 2)
+                continue;
 
             try {
                 effects.put(split[0].toLowerCase(), Integer.parseInt(split[1]));
@@ -184,10 +195,12 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
 
     private Set<String> deserializeStringSet(String raw) {
         Set<String> values = new HashSet<>();
-        if (raw == null || raw.isEmpty()) return values;
+        if (raw == null || raw.isEmpty())
+            return values;
 
         for (String part : raw.split(",")) {
-            if (!part.isEmpty()) values.add(part.toLowerCase());
+            if (!part.isEmpty())
+                values.add(part.toLowerCase());
         }
 
         return values;
@@ -195,17 +208,20 @@ public class SqliteBeaconStorageProvider implements BeaconStorageProvider {
 
     private String serializeUuids(Set<UUID> values) {
         List<String> raw = new ArrayList<>();
-        for (UUID uuid : values) raw.add(uuid.toString());
+        for (UUID uuid : values)
+            raw.add(uuid.toString());
         return String.join(",", raw);
     }
 
     private Set<UUID> deserializeUuidSet(String raw) {
         Set<UUID> values = new HashSet<>();
-        if (raw == null || raw.isEmpty()) return values;
+        if (raw == null || raw.isEmpty())
+            return values;
 
         for (String part : raw.split(",")) {
             UUID uuid = parseUuid(part);
-            if (uuid != null) values.add(uuid);
+            if (uuid != null)
+                values.add(uuid);
         }
 
         return values;

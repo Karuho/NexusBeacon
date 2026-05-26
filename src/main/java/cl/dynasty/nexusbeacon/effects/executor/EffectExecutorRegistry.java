@@ -26,7 +26,7 @@ public class EffectExecutorRegistry {
         register(new DamageFieldExecutor(plugin));
         register(new GravityWellExecutor(plugin));
 
-        plugin.getLogger().info("EffectExecutors cargados: " + executors.size());
+        plugin.getLogger().info("EffectExecutors loaded: " + executors.size());
     }
 
     public void register(EffectExecutor executor) {

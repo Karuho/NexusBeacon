@@ -68,7 +68,7 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
                 + ");";
 
         try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+                Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException exception) {
             throw new IllegalStateException("No se pudo preparar la tabla MySQL de NexusBeacon.", exception);
@@ -82,8 +82,8 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
         String sql = "SELECT * FROM `" + table + "`;";
 
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet result = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet result = statement.executeQuery()) {
 
             while (result.next()) {
                 String id = result.getString("id");
@@ -115,12 +115,13 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
                         activeEffects,
                         trusted,
                         protectBaseBlocks,
-                        null
-                ));
+                        null));
             }
 
         } catch (SQLException exception) {
-            plugin.getLogger().severe("No se pudieron cargar beacons desde MySQL: " + exception.getMessage());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.mysql-load-error",
+                    Map.of("error", exception.getMessage())));
         }
 
         return beacons;
@@ -136,7 +137,7 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
         Location location = beacon.getLocation();
 
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, beacon.getId());
             statement.setString(2, beacon.getUniqueId());
@@ -155,7 +156,9 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
             statement.executeUpdate();
 
         } catch (SQLException exception) {
-            plugin.getLogger().severe("No se pudo guardar beacon en MySQL: " + exception.getMessage());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.mysql-save-error",
+                    Map.of("error", exception.getMessage())));
         }
     }
 
@@ -164,13 +167,15 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
         String sql = "DELETE FROM `" + table + "` WHERE `id`=?;";
 
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, id);
             statement.executeUpdate();
 
         } catch (SQLException exception) {
-            plugin.getLogger().severe("No se pudo eliminar beacon en MySQL: " + exception.getMessage());
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "console.mysql-delete-error",
+                    Map.of("error", exception.getMessage())));
         }
     }
 

@@ -207,7 +207,9 @@ public final class NexusBeaconPlugin extends JavaPlugin {
         if (ModernItemDataAdapter.isSupported()) {
             itemDataAdapter = new ModernItemDataAdapter(this);
         } else {
-            getLogger().warning("PersistentDataContainer no disponible. NexusBeacon necesita adapter legacy.");
+            getLogger().severe(languageManager.get("console.adapter.persistent-data-unavailable"));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
         setupEconomy();
@@ -217,14 +219,13 @@ public final class NexusBeaconPlugin extends JavaPlugin {
         spawnerMetaHook.load();
 
         if (spawnerMetaHook.isEnabled()) {
-            getLogger().info("SpawnerMeta detectado. Hook de spawners activado.");
+            getLogger().info("SpawnerMeta detected. Spawners hook activated.");
         }
 
         reloadAll();
         restartVisualBeamTask();
         registerPlaceholderApi();
         customRecipeManager.load();
-        
 
         NexusBeaconCommand command = new NexusBeaconCommand(this);
         getCommand("NexusBeacon").setExecutor(command);
@@ -259,9 +260,9 @@ public final class NexusBeaconPlugin extends JavaPlugin {
                 particleInterval,
                 particleInterval);
 
-        getLogger().info("NexusBeacon activado correctamente.");
-        getLogger().info("Versión Bukkit detectada: " + Bukkit.getBukkitVersion());
-        getLogger().info("Adapter activo: ModernAdapter");
+        getLogger().info("NexusBeacon successfully activated.");
+        getLogger().info("Bukkit version detected: " + Bukkit.getBukkitVersion());
+        getLogger().info("Active adapter: ModernAdapter");
     }
 
     @Override
@@ -286,7 +287,7 @@ public final class NexusBeaconPlugin extends JavaPlugin {
             storageManager.close();
         }
 
-        getLogger().info("NexusBeacon desactivado correctamente.");
+        getLogger().info("NexusBeacon successfully disabled.");
     }
 
     public void reloadAll() {
@@ -312,33 +313,33 @@ public final class NexusBeaconPlugin extends JavaPlugin {
 
     private void setupEconomy() {
         if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
-            getLogger().warning("Vault no está instalado/cargado. Pagos por dinero desactivados.");
+            getLogger().warning("Vault is not installed/loaded. Money payments disabled.");
             return;
         }
 
         if (!Bukkit.getPluginManager().isPluginEnabled("Vault")) {
-            getLogger().warning("Vault está instalado, pero todavía no está habilitado.");
+            getLogger().warning("Vault is installed, but not yet enabled.");
             return;
         }
 
         RegisteredServiceProvider<Economy> provider = getServer().getServicesManager().getRegistration(Economy.class);
 
         if (provider == null) {
-            getLogger().warning("Vault está activo, pero no hay plugin de economía conectado a Vault.");
+            getLogger().warning("Vault is active, but there is no economy plugin registered with Vault.");
             return;
         }
 
         economy = provider.getProvider();
-        getLogger().info("Economía Vault conectada correctamente: " + economy.getName());
+        getLogger().info("Economy plugin connected to Vault: " + economy.getName());
     }
 
     private SchedulerService createSchedulerService() {
         try {
             Class.forName("io.papermc.paper.threadedregions.scheduler.ScheduledTask");
-            getLogger().info("Scheduler activo: Folia");
+            getLogger().info("Scheduler active: Folia");
             return new FoliaSchedulerService(this);
         } catch (ClassNotFoundException exception) {
-            getLogger().info("Scheduler activo: Bukkit/Paper clásico");
+            getLogger().info("Scheduler active: Bukkit/Paper classic");
             return new SpigotSchedulerService(this);
         }
     }
@@ -346,23 +347,23 @@ public final class NexusBeaconPlugin extends JavaPlugin {
     private TeleporterService createTeleporterService() {
         try {
             Entity.class.getMethod("teleportAsync", Location.class, PlayerTeleportEvent.TeleportCause.class);
-            getLogger().info("Teleporter activo: Paper async");
+            getLogger().info("Teleporter active: Paper async");
             return new PaperTeleporterService(schedulerService);
         } catch (NoSuchMethodException exception) {
-            getLogger().info("Teleporter activo: Bukkit sync");
+            getLogger().info("Teleporter active: Bukkit sync");
             return new SpigotTeleporterService(schedulerService);
         }
     }
 
     private void registerPlaceholderApi() {
         if (!Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            getLogger().info("PlaceholderAPI no encontrado. Placeholders externos desactivados.");
+            getLogger().info("PlaceholderAPI not found. External placeholders disabled.");
             return;
         }
 
         placeholderExpansion = new NexusBeaconPlaceholderExpansion(this);
         placeholderExpansion.register();
 
-        getLogger().info("PlaceholderAPI conectado correctamente.");
+        getLogger().info("PlaceholderAPI successfully registered.");
     }
 }
