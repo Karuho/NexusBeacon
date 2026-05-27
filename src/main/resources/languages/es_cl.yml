@@ -131,6 +131,162 @@ messages:
     not-enough-power: "&cNo hay poder suficiente."
     power-status: "&7Poder usado: &f%used%&7/&f%available%"
     acquired: "&aEfecto adquirido: &f%effect%"
+    speed:
+      name: "&bVelocidad"
+      description:
+        - "&7Otorga velocidad dentro del rango."
+
+    regeneration:
+      name: "&dRegeneración"
+      description:
+         - "&7Regenera vida dentro del rango."
+
+    strength:
+      name: "&cFuerza"
+      description:
+        - "&7Aumenta el daño dentro del rango."
+
+    night_vision:
+      name: "&9Visión Nocturna"
+      description:
+        - "&7Permite ver claramente en la oscuridad."
+
+    jump:
+      name: "&aSalto"
+      description:
+        - "&7Aumenta tu salto dentro del rango."
+
+    invisible:
+      name: "&aInvisible"
+      description:
+        - "&7Hace que seas invisible dentro del rango."
+
+    haste:
+      name: "&aVelocidad de Minado"
+      description:
+        - "&7Aumenta la velocidad de minado dentro del rango."
+
+    luck:
+      name: "&aSuerte"
+      description:
+        - "&7Aumenta la suerte dentro del rango."
+
+    water_breathing:
+      name: "&aRespiración Acuática"
+      description:
+        - "&7Permite respirar bajo el agua dentro del rango."
+
+    poison:
+      name: "&2Veneno"
+      description:
+        - "&7Envenena monstruos dentro del rango."
+
+    resistance:
+      name: "&eResistencia"
+      description:
+        - "&7Otorga resistencia dentro del rango."
+
+    slowdown:
+      name: "&8Ralentización"
+      description:
+        - "&7Ralentiza monstruos dentro del rango."
+
+    crop_boost:
+      name: "&aCrecimiento de Cultivos"
+      description:
+        - "&7Acelera el crecimiento de cultivos."
+        - "&7Funciona dentro del rango del beacon."
+      levels:
+        2:
+          description:
+            - "&7Acelera el crecimiento de cultivos moderadamente."
+            - "&7Funciona dentro del rango del beacon."
+        3:
+          description:
+            - "&7Acelera el crecimiento de cultivos significativamente."
+            - "&7Funciona dentro del rango del beacon."
+
+    burner:
+      name: "&6Quemador"
+      description:
+        - "&7Prende fuego a mobs hostiles dentro del rango."
+      levels:
+        2:
+          description:
+            - "&7Prende fuego a mobs hostiles dentro del rango moderadamente."
+        3:
+          description:
+            - "&7Prende fuego a mobs hostiles dentro del rango significativamente."
+
+    damage_field:
+      name: "&cCampo de Daño"
+      description:
+        - "&7Daña mobs hostiles dentro del rango."
+        - "&7No afecta animales ni jugadores."
+      levels:
+        2:
+          description:
+            - "&7Daña mobs hostiles dentro del rango moderadamente."
+            - "&7No afecta animales ni jugadores."
+        3:
+          description:
+            - "&7Daña mobs hostiles dentro del rango significativamente."
+            - "&7No afecta animales ni jugadores."
+
+    gravity_well:
+      name: "&5Pozo Gravitacional"
+      description:
+        - "&7Atrae mobs hostiles hacia el beacon."
+        - "&7Útil para granjas y control de área."
+      levels:
+        2:
+          description:
+            - "&7Atrae mobs hostiles hacia el beacon moderadamente."
+            - "&7Útil para granjas y control de área."
+        3:
+          description:
+            - "&7Atrae mobs hostiles hacia el beacon significativamente."
+            - "&7Útil para granjas y control de área."
+
+    furnace_boost:
+      name: "&6Furnace Booster"
+      description:
+        - "&7Acelera hornos dentro del rango."
+      levels:
+        2:
+          description:
+            - "&7Acelera hornos moderadamente."
+        3:
+          description:
+            - "&7Acelera hornos significativamente."
+
+    modern_furnace_boost:
+      name: "&bHornos Modernos"
+      description:
+        - "&7Acelera altos hornos y ahumadores."
+
+    spawner_boost:
+      name: "&5Spawner Booster"
+      description:
+        - "&7Reduce el delay de spawners cercanos."
+        - "&7Funciona dentro del rango del beacon."
+      levels:
+        2:
+          description:
+            - "&7Reduce el delay de spawners cercanos levemente."
+            - "&7Funciona dentro del rango del beacon."
+        3:
+          description:
+            - "&7Reduce el delay de spawners cercanos moderadamente."
+            - "&7Funciona dentro del rango del beacon."
+        4:
+          description:
+            - "&7Reduce mucho el delay de spawners cercanos."
+            - "&7Funciona dentro del rango del beacon."
+        5:
+          description:
+            - "&7Reduce el delay de spawners cercanos significativamente."
+            - "&7Funciona dentro del rango del beacon."
 
   trust:
     use-command: "&eUsa &f/nb trust <jugador>&e."

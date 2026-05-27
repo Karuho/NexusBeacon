@@ -1,20 +1,22 @@
 # ============================================================
-# ALMACENAMIENTO
+# STORAGE
 # ============================================================
-# Define dónde se guardarán los datos de NexusBeacon.
+# Defines where NexusBeacon data will be stored.
 #
-# Tipos disponibles:
-# - YAML   : Guarda datos en plugins/NexusBeacon/storage.yml
-# - MYSQL  : Guarda datos en una base de datos MySQL/MariaDB
-# - SQLITE : Guarda datos en un archivo local SQLite
+# Available types:
+# - YAML   : Stores data in plugins/NexusBeacon/storage.yml
+# - MYSQL  : Stores data in a MySQL/MariaDB database
+# - SQLITE : Stores data in a local SQLite file
 #
-# Recomendado:
-# - YAML para servidores pequeños o pruebas.
-# - SQLITE para uso local más ordenado sin configurar base externa.
-# - MYSQL para redes, servidores grandes o sincronización externa.
+# Recommended:
+# - YAML for small servers or testing.
+# - SQLITE for cleaner local storage without external database setup.
+# - MYSQL for networks, large servers, or external synchronization.
 # ============================================================
-# Idioma principal del plugin.
-# Debe existir en plugins/NexusBeacon/languages/<idioma>.yml
+
+# Main plugin language.
+# The file must exist in:
+# plugins/NexusBeacon/languages/<language>.yml
 
 language: es_cl
 

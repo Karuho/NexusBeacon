@@ -32,8 +32,11 @@ public class EffectRegistry {
 
             String type = section.getString(id + ".type", "POTION");
 
-            String displayName = section.getString(id + ".display-name", id);
-            List<String> description = section.getStringList(id + ".description");
+            String displayName = plugin.getLanguageManager().resolveLangValue(
+                    section.getString(id + ".display-name", id));
+
+            List<String> description = plugin.getLanguageManager().resolveLangList(
+                    section.getStringList(id + ".description"));
 
             String iconName = section.getString(id + ".icon", "BEACON");
             Material icon = plugin.getVersionAdapter().material(iconName);

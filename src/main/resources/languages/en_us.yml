@@ -131,6 +131,169 @@ messages:
     not-enough-power: "&cThere is not enough power."
     power-status: "&7Used power: &f%used%&7/&f%available%"
     acquired: "&aEffect acquired: &f%effect%"
+    speed:
+      name: "&bSpeed"
+      description:
+        - "&7Grants speed inside the beacon range."
+        
+    regeneration:
+      name: "&dRegeneration"
+      description:
+         - "&7Regenerates life within range."
+
+    strength:
+      name: "&cStrength"
+      description:
+        - "&7Increases damage within range."
+
+    night_vision:
+      name: "&9Night Vision"
+      description:
+        - "&7Allows you to see clearly in the dark."
+
+    jump:
+      name: "&aJump Boost"
+      description:
+        - "&7Increases your jump height within range."
+
+    invisible:
+      name: "&aInvisibility"
+      description:
+        - "&7Makes you invisible within range."
+
+    haste:
+      name: "&aHaste"
+      description:
+        - "&7Increases mining speed within range."
+
+    luck:
+      name: "&aLuck"
+      description:
+        - "&7Increases luck within range."
+
+    water_breathing:
+      name: "&aWater Breathing"
+      description:
+        - "&7Allows you to breathe underwater within range."
+
+    poison:
+      name: "&2Poison"
+      description:
+        - "&7Poisons monsters within range."
+
+    resistance:
+      name: "&eResistance"
+      description:
+        - "&7Grants resistance within range."
+
+    slowdown:
+      name: "&8Slowness"
+      description:
+        - "&7Slows monsters within range."
+
+    crop_boost:
+      name: "&aCrop Growth"
+      description:
+        - "&7Speeds up crop growth."
+        - "&7Works within the beacon range."
+      levels:
+        2:
+          description:
+            - "&7Speeds up crop growth moderately."
+            - "&7Works within the beacon range."
+        3:
+          description:
+            - "&7Speeds up crop growth significantly."
+            - "&7Works within the beacon range."
+
+    burner:
+      name: "&6Burner"
+      description:
+        - "&7Sets hostile mobs on fire within range."
+      levels:
+        2:
+          description:
+            - "&7Sets hostile mobs on fire within range moderately."
+        3:
+          description:
+            - "&7Sets hostile mobs on fire within range."
+
+    damage_field:
+      name: "&cDamage Field"
+      description:
+        - "&7Damages hostile mobs within range."
+        - "&7Does not affect animals or players."
+      levels:
+        2:
+          description:
+            - "&7Damages hostile mobs within range moderately."
+            - "&7Does not affect animals or players."
+        3:
+          description:
+            - "&7Damages hostile mobs within range significantly."
+            - "&7Does not affect animals or players."
+
+    gravity_well:
+      name: "&5Gravity Well"
+      description:
+        - "&7Pulls hostile mobs toward the beacon."
+        - "&7Useful for farms and area control."
+      levels:
+        2:
+          description:
+            - "&7Pulls hostile mobs toward the beacon moderately."
+            - "&7Useful for farms and area control."
+        3:
+          description:
+            - "&7Pulls hostile mobs toward the beacon significantly."
+            - "&7Useful for farms and area control."
+
+    furnace_boost:
+      name: "&6Furnace Booster"
+      description:
+        - "&7Speeds up furnaces within range."
+      levels:
+        2:
+          description:
+            - "&7Speeds up furnaces moderately."
+        3:
+          description:
+            - "&7Speeds up furnaces significantly."
+
+    modern_furnace_boost:
+      name: "&bModern Furnaces"
+      description:
+        - "&7Speeds up blast furnaces and smokers."
+      levels:
+        2:
+          description:
+            - "&7Speeds up blast furnaces and smokers moderately."
+        3:
+          description:
+            - "&7Speeds up blast furnaces and smokers significantly."
+
+    spawner_boost:
+      name: "&5Spawner Booster"
+      description:
+        - "&7Reduces nearby spawner delay."
+        - "&7Works within the beacon range."
+      levels:
+        2:
+          description:
+            - "&7Reduces nearby spawner delay slightly."
+            - "&7Works within the beacon range."
+        3:
+          description:
+            - "&7It greatly reduces nearby spawner delay."
+            - "&7Works within the beacon range."
+        4:
+          description:
+            - "&7Reduces nearby spawner delay moderately."
+            - "&7Works within the beacon range."
+        5:
+          description:
+            - "&7Reduces nearby spawner delay significantly."
+            - "&7Works within the beacon range."
 
   trust:
     use-command: "&eUse &f/nb trust <player>&e."

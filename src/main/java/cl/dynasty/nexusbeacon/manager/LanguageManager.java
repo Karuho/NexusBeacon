@@ -1,6 +1,7 @@
 package cl.dynasty.nexusbeacon.manager;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -21,6 +22,41 @@ public final class LanguageManager {
 
     public LanguageManager(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    public String resolveLangValue(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        if (value.startsWith("%lang_") && value.endsWith("%")) {
+            String path = value.substring("%lang_".length(), value.length() - 1);
+            return color(languageConfig.getString(path, value));
+        }
+
+        return color(value);
+    }
+
+    public List<String> resolveLangList(List<String> values) {
+        List<String> result = new ArrayList<>();
+
+        for (String value : values) {
+            if (value.startsWith("%lang_") && value.endsWith("%")) {
+                String path = value.substring("%lang_".length(), value.length() - 1);
+
+                if (languageConfig.isList(path)) {
+                    result.addAll(getList(path, Map.of()));
+                } else {
+                    result.add(color(languageConfig.getString(path, value)));
+                }
+
+                continue;
+            }
+
+            result.add(color(value));
+        }
+
+        return result;
     }
 
     public void load() {
@@ -82,27 +118,27 @@ public final class LanguageManager {
     }
 
     public String color(String text) {
-    if (text == null || text.isEmpty()) {
-        return "";
-    }
-
-    Matcher matcher = HEX_PATTERN.matcher(text);
-    StringBuffer buffer = new StringBuffer();
-
-    while (matcher.find()) {
-        String hex = matcher.group(1);
-        StringBuilder replacement = new StringBuilder("§x");
-
-        for (char character : hex.toCharArray()) {
-            replacement.append('§').append(character);
+        if (text == null || text.isEmpty()) {
+            return "";
         }
 
-        matcher.appendReplacement(buffer, replacement.toString());
+        Matcher matcher = HEX_PATTERN.matcher(text);
+        StringBuffer buffer = new StringBuffer();
+
+        while (matcher.find()) {
+            String hex = matcher.group(1);
+            StringBuilder replacement = new StringBuilder("§x");
+
+            for (char character : hex.toCharArray()) {
+                replacement.append('§').append(character);
+            }
+
+            matcher.appendReplacement(buffer, replacement.toString());
+        }
+
+        matcher.appendTail(buffer);
+
+        return ChatColor.translateAlternateColorCodes('&', buffer.toString());
     }
-
-    matcher.appendTail(buffer);
-
-    return ChatColor.translateAlternateColorCodes('&', buffer.toString());
-}
 
 }
