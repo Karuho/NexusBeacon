@@ -12,6 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 
 public class BlockProcessBoostExecutor implements EffectExecutor {
 
@@ -41,8 +42,8 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
 
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
         int radius = Math.min(
-        beacon.getRange(),
-        section.getInt("scan-radius", beacon.getRange()));
+                beacon.getRange(),
+                section.getInt("scan-radius", beacon.getRange()));
         int verticalRadius = section.getInt("vertical-radius", radius);
         int maxBlocksPerTick = section.getInt("max-blocks-per-tick", 32);
         int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
@@ -51,6 +52,17 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
         if (targetBlocks.isEmpty()) {
             targetBlocks = java.util.Arrays.asList("FURNACE");
         }
+
+        DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId() + ":scan",
+                "EffectExecutor type=" + effect.getType()
+                        + " effect=" + effect.getId()
+                        + " level=" + level
+                        + " radius=" + radius
+                        + " verticalRadius=" + verticalRadius
+                        + " maxBlocksPerTick=" + maxBlocksPerTick
+                        + " maxScannedBlocks=" + maxScannedBlocks
+                        + " range=" + beacon.getRange()
+                        + " targets=" + targetBlocks);
 
         int scanned = 0;
         int processed = 0;
@@ -98,6 +110,17 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
                     short currentCook = furnace.getCookTime();
                     short newCook = (short) Math.min(currentTotal - 1, currentCook + speedUpTime);
                     furnace.setCookTime(newCook);
+
+                    DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId() + ":process",
+                            "BlockProcess applied type=" + effect.getType()
+                                    + " effect=" + effect.getId()
+                                    + " level=" + level
+                                    + " block=" + block.getType().name()
+                                    + " speedUpTime=" + speedUpTime
+                                    + " fuelSpeedUpTime=" + fuelSpeedUpTime
+                                    + " currentTotal=" + currentTotal
+                                    + " currentCook=" + currentCook
+                                    + " newCook=" + newCook);
 
                     if (furnace.getBurnTime() < fuelSpeedUpTime) {
                         furnace.setBurnTime((short) fuelSpeedUpTime);

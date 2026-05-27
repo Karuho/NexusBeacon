@@ -9,6 +9,7 @@ import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.effects.EffectLevelUtil;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
 import cl.dynasty.nexusbeacon.util.RangeUtil;
 
@@ -28,20 +29,35 @@ public class DamageFieldExecutor implements EffectExecutor {
     @Override
     public void tick(BeaconData beacon, BeaconEffect effect) {
         Location center = beacon.getLocation();
-        if (center == null || center.getWorld() == null) return;
+        if (center == null || center.getWorld() == null)
+            return;
 
         ConfigurationSection section = plugin.getConfigManager()
                 .getEffectsConfig()
                 .getConfigurationSection("effects." + effect.getId());
 
+        if (section == null) {
+            return;
+        }
+
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
         double damage = EffectLevelUtil.getLevelDouble(plugin, effect, level, "damage",
-        section.getDouble("damage-per-level", 1.0D) * level);
+                section.getDouble("damage-per-level", 1.0D) * level);
+
+        DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId(),
+                "EffectExecutor type=" + effect.getType()
+                        + " effect=" + effect.getId()
+                        + " level=" + level
+                        + " damage=" + damage
+                        + " range=" + beacon.getRange());
 
         for (Entity entity : center.getWorld().getEntities()) {
-            if (!(entity instanceof LivingEntity)) continue;
-            if (!MobUtil.isHostile(entity)) continue;
-            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange())) continue;
+            if (!(entity instanceof LivingEntity))
+                continue;
+            if (!MobUtil.isHostile(entity))
+                continue;
+            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange()))
+                continue;
 
             ((LivingEntity) entity).damage(damage);
         }

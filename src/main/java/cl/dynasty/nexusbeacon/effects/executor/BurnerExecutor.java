@@ -9,6 +9,7 @@ import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.effects.EffectLevelUtil;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
 import cl.dynasty.nexusbeacon.util.RangeUtil;
 
@@ -38,6 +39,12 @@ public class BurnerExecutor implements EffectExecutor {
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
         int fireTicks = EffectLevelUtil.getLevelInt(plugin, effect, level, "fire-ticks",
                 section.getInt("fire-ticks-per-level", 60) * level);
+
+        DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId(), "EffectExecutor type=" + effect.getType()
+                + " effect=" + effect.getId()
+                + " level=" + level
+                + " fireTicks=" + fireTicks
+                + " range=" + beacon.getRange());
 
         for (Entity entity : center.getWorld().getEntities()) {
             if (!(entity instanceof LivingEntity))

@@ -589,7 +589,7 @@ effects:
               money:
                 type: VAULT_MONEY
                 amount: 1000
-
+ 
   burner:
     enabled: true
     display-name: "&6Quemador"

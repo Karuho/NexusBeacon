@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
-import cl.dynasty.nexusbeacon.effects.BeaconEffect;
-import cl.dynasty.nexusbeacon.util.ColorUtil;
-
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
+import cl.dynasty.nexusbeacon.effects.BeaconEffect;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 
 public class PaymentManager {
 
@@ -116,9 +116,22 @@ public class PaymentManager {
         ConfigurationSection section = getLevelOption(effect, action, optionKey, level);
 
         if (section == null) {
+            DebugLogger.log(plugin, "payment-missing:" + effect.getId() + ":" + action + ":" + optionKey,
+                    "Payment option missing effect=" + effect.getId()
+                            + " action=" + action
+                            + " option=" + optionKey
+                            + " level=" + level);
+
             player.sendMessage(plugin.getLanguageManager().withPrefix("payment.payment-option-not-configured"));
             return false;
         }
+
+        DebugLogger.log(plugin, "payment:" + effect.getId() + ":" + action + ":" + optionKey,
+                "Payment option effect=" + effect.getId()
+                        + " action=" + action
+                        + " option=" + optionKey
+                        + " level=" + level
+                        + " type=" + section.getString("type", "NONE"));
 
         return paySection(player, section, level);
     }

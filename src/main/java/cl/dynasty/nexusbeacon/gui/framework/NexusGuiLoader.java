@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 
 public final class NexusGuiLoader {
 
@@ -36,6 +37,9 @@ public final class NexusGuiLoader {
         int size = resolveSize(menuSection);
 
         NexusGuiMenu menu = new NexusGuiMenu(menuId, title, size, context);
+
+        DebugLogger.log(plugin, "gui-load:" + menuId,
+                "Loaded GUI menu=" + menuId + " size=" + size);
 
         ConfigurationSection itemsSection = menuSection.getConfigurationSection("items");
 

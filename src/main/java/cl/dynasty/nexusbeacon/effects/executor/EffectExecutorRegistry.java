@@ -3,6 +3,7 @@ package cl.dynasty.nexusbeacon.effects.executor;
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +39,9 @@ public class EffectExecutorRegistry {
         EffectExecutor executor = executors.get(effect.getType().toUpperCase());
 
         if (executor == null) {
+            DebugLogger.log(plugin, "missing-executor:" + effect.getType(),
+                    "No executor found for type=" + effect.getType()
+                            + " effect=" + effect.getId());
             return;
         }
 

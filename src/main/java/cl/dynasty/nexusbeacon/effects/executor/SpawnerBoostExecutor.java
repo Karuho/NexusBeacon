@@ -4,6 +4,8 @@ import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.effects.EffectLevelUtil;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -71,6 +73,17 @@ public class SpawnerBoostExecutor implements EffectExecutor {
                 level,
                 "cooldown-ticks",
                 section.getInt("cooldown-ticks", 200));
+        DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId() + ":scan",
+                "EffectExecutor type=" + effect.getType()
+                        + " effect=" + effect.getId()
+                        + " level=" + level
+                        + " radius=" + radius
+                        + " verticalRadius=" + verticalRadius
+                        + " maxProcessed=" + maxProcessed
+                        + " speedUpPercentage=" + speedUpPercentage
+                        + " speedUpFactor=" + speedUpFactor
+                        + " cooldownTicks=" + cooldownTicks
+                        + " range=" + beacon.getRange());
         long now = System.currentTimeMillis();
 
         Material spawnerMaterial = plugin.getVersionAdapter().material("SPAWNER");
@@ -121,6 +134,17 @@ public class SpawnerBoostExecutor implements EffectExecutor {
 
                     spawner.setDelay(boostedDelay);
                     spawner.update(true);
+
+                    DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId() + ":process",
+                            "SpawnerBoost applied effect=" + effect.getId()
+                                    + " level=" + level
+                                    + " location=" + block.getWorld().getName()
+                                    + "," + block.getX()
+                                    + "," + block.getY()
+                                    + "," + block.getZ()
+                                    + " baseDelay=" + baseDelay
+                                    + " boostedDelay=" + boostedDelay
+                                    + " cooldownTicks=" + cooldownTicks);
 
                     cooldowns.put(block.getLocation(), now + (cooldownTicks * 50L));
                     processed++;

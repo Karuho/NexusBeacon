@@ -10,6 +10,7 @@ import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.effects.EffectLevelUtil;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
 import cl.dynasty.nexusbeacon.util.RangeUtil;
 
@@ -48,6 +49,15 @@ public class GravityWellExecutor implements EffectExecutor {
         double defaultMaxVelocity = section != null ? section.getDouble("max-velocity", 1.2D) : 1.2D;
         double maxVelocity = EffectLevelUtil.getLevelDouble(plugin, effect, level, "max-velocity",
                 defaultMaxVelocity);
+
+        DebugLogger.log(plugin, effect.getType() + ":" + beacon.getId(),
+                "EffectExecutor type=" + effect.getType()
+                        + " effect=" + effect.getId()
+                        + " level=" + level
+                        + " strength=" + strength
+                        + " verticalBoost=" + verticalBoost
+                        + " maxVelocity=" + maxVelocity
+                        + " range=" + beacon.getRange());
 
         Location target = center.clone().add(0.5D, 1.0D, 0.5D);
 
