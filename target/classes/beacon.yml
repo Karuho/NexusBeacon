@@ -183,9 +183,10 @@ performance:
     disable-when-spawnermeta-enabled: true
 
   crop-boost:
-    scan-radius: 16
+    scan-radius: 64
     vertical-radius: 8
     max-blocks-per-tick: 16
+    max-scanned-blocks-per-tick: 2500
 
 # ============================================================
 # RECETA CUSTOM DEL NexusBeacon

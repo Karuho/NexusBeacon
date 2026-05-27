@@ -135,6 +135,8 @@ messages:
   trust:
     use-command: "&eUse &f/nb trust <player>&e."
     removed: "&cPlayer removed from trust."
+    trust:
+  cannot-trust-owner: "&cYou cannot add the owner as a trusted player."
 
 materials:
   DIAMOND: "diamonds"

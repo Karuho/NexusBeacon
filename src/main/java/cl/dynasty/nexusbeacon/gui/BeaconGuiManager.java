@@ -1,7 +1,9 @@
 package cl.dynasty.nexusbeacon.gui;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -13,6 +15,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
@@ -282,6 +285,29 @@ public class BeaconGuiManager {
         return createItem(material, name, lore.toArray(new String[0]));
     }
 
+    private ItemStack createPlayerHead(UUID uuid, String name, String... lore) {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) item.getItemMeta();
+
+        if (meta != null) {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+
+            meta.setOwningPlayer(offlinePlayer);
+            meta.setDisplayName(plugin.getLanguageManager().color("&a" + name));
+
+            List<String> coloredLore = new ArrayList<>();
+
+            for (String line : lore) {
+                coloredLore.add(plugin.getLanguageManager().color(line));
+            }
+
+            meta.setLore(coloredLore);
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
+
     public void openTrustMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
@@ -290,12 +316,12 @@ public class BeaconGuiManager {
         int slot = 10;
 
         for (UUID uuid : beacon.getTrustedPlayers()) {
-            OfflinePlayer trusted = Bukkit.getOfflinePlayer(uuid);
-            String name = trusted.getName() != null ? trusted.getName() : uuid.toString();
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+            String name = offlinePlayer.getName() != null ? offlinePlayer.getName() : uuid.toString();
 
-            inventory.setItem(slot, createItem(
-                    plugin.getVersionAdapter().material("PLAYER_HEAD"),
-                    "&a" + name,
+            inventory.setItem(slot, createPlayerHead(
+                    uuid,
+                    name,
                     "&7Jugador confiado.",
                     "&cClick para quitar trust."));
 

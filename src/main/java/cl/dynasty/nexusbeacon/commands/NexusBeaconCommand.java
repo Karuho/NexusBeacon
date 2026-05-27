@@ -18,7 +18,6 @@ import org.bukkit.inventory.ItemStack;
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.model.BeaconData;
 
-
 public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
 
     private final NexusBeaconPlugin plugin;
@@ -41,7 +40,7 @@ public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
             }
 
             plugin.reloadAll();
-            plugin.restartVisualBeamTask();
+            plugin.restartRuntimeTasks();
             sender.sendMessage(plugin.getLanguageManager().withPrefix("reload"));
             return true;
         }
@@ -124,6 +123,11 @@ public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
 
             if (target == null) {
                 player.sendMessage(plugin.getLanguageManager().withPrefix("command.player-not-online"));
+                return true;
+            }
+
+            if (beacon.getOwner().equals(target.getUniqueId())) {
+                player.sendMessage(plugin.getLanguageManager().withPrefix("trust.cannot-trust-owner"));
                 return true;
             }
 

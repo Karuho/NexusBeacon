@@ -223,7 +223,7 @@ public final class NexusBeaconPlugin extends JavaPlugin {
         }
 
         reloadAll();
-        restartVisualBeamTask();
+        restartRuntimeTasks();
         registerPlaceholderApi();
         customRecipeManager.load();
 
@@ -236,29 +236,6 @@ public final class NexusBeaconPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BeaconGuiListener(this), this);
         Bukkit.getPluginManager().registerEvents(new VanillaBeaconListener(this), this);
         Bukkit.getPluginManager().registerEvents(new NexusGuiListener(), this);
-
-        int interval = configManager.getBeaconConfig().getInt("beacon.tick-interval", 40);
-        int particleInterval = configManager.getBeaconConfig().getInt("beacon.particles.interval-ticks", 20);
-
-        restartVisualBeamTask();
-
-        if (beaconTickHandle != null) {
-            beaconTickHandle.cancel();
-        }
-
-        if (beaconParticleHandle != null) {
-            beaconParticleHandle.cancel();
-        }
-
-        beaconTickHandle = schedulerService.runSyncTimer(
-                new BeaconTickTask(this),
-                interval,
-                interval);
-
-        beaconParticleHandle = schedulerService.runSyncTimer(
-                new BeaconParticleTask(this),
-                particleInterval,
-                particleInterval);
 
         getLogger().info("NexusBeacon successfully activated.");
         getLogger().info("Bukkit version detected: " + Bukkit.getBukkitVersion());
@@ -291,11 +268,37 @@ public final class NexusBeaconPlugin extends JavaPlugin {
     }
 
     public void reloadAll() {
+        configManager.load();
         languageManager.load();
         beamStyleManager.load();
         effectRegistry.load();
         effectExecutorRegistry.load();
         beaconManager.load();
+    }
+
+    public void restartRuntimeTasks() {
+        restartVisualBeamTask();
+
+        if (beaconTickHandle != null) {
+            beaconTickHandle.cancel();
+        }
+
+        if (beaconParticleHandle != null) {
+            beaconParticleHandle.cancel();
+        }
+
+        int interval = configManager.getBeaconConfig().getInt("beacon.tick-interval", 40);
+        int particleInterval = configManager.getBeaconConfig().getInt("beacon.particles.interval-ticks", 20);
+
+        beaconTickHandle = schedulerService.runSyncTimer(
+                new BeaconTickTask(this),
+                interval,
+                interval);
+
+        beaconParticleHandle = schedulerService.runSyncTimer(
+                new BeaconParticleTask(this),
+                particleInterval,
+                particleInterval);
     }
 
     public void restartVisualBeamTask() {
@@ -365,5 +368,10 @@ public final class NexusBeaconPlugin extends JavaPlugin {
         placeholderExpansion.register();
 
         getLogger().info("PlaceholderAPI successfully registered.");
+    }
+
+    public boolean isDebugEnabled() {
+        return configManager != null
+                && configManager.getConfig().getBoolean("debug", false);
     }
 }

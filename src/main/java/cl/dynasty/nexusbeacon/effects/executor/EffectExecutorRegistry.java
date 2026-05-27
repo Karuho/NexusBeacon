@@ -25,6 +25,7 @@ public class EffectExecutorRegistry {
         register(new BurnerExecutor(plugin));
         register(new DamageFieldExecutor(plugin));
         register(new GravityWellExecutor(plugin));
+        register(new BlockProcessBoostExecutor(plugin));
 
         plugin.getLogger().info("EffectExecutors loaded: " + executors.size());
     }

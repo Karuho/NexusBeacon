@@ -135,6 +135,7 @@ messages:
   trust:
     use-command: "&eUsa &f/nb trust <jugador>&e."
     removed: "&cJugador eliminado de trust."
+    cannot-trust-owner: "&cNo puedes agregar al dueño como jugador confiable."
     
     
 materials:

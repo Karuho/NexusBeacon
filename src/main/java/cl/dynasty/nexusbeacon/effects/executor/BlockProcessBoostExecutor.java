@@ -2,7 +2,6 @@ package cl.dynasty.nexusbeacon.effects.executor;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -41,18 +40,12 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
             return;
 
         int level = Math.max(1, beacon.getEffectLevel(effect.getId()));
-        int radius = section.getInt("scan-radius", Math.min(beacon.getRange(), 16));
+        int radius = Math.min(
+        beacon.getRange(),
+        section.getInt("scan-radius", beacon.getRange()));
         int verticalRadius = section.getInt("vertical-radius", radius);
         int maxBlocksPerTick = section.getInt("max-blocks-per-tick", 32);
         int maxScannedBlocks = section.getInt("max-scanned-blocks-per-tick", 2000);
-
-        int furnaceTimeL1 = section.getInt("furnace-time-level-1", 160);
-        int furnaceTimeL2 = section.getInt("furnace-time-level-2", 120);
-        int furnaceTimeL3 = section.getInt("furnace-time-level-3", 80);
-
-        int modernTimeL1 = section.getInt("modern-furnace-time-level-1", 80);
-        int modernTimeL2 = section.getInt("modern-furnace-time-level-2", 60);
-        int modernTimeL3 = section.getInt("modern-furnace-time-level-3", 40);
 
         List<String> targetBlocks = section.getStringList("target-blocks");
         if (targetBlocks.isEmpty()) {
@@ -88,39 +81,26 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
                     if (furnace.getBurnTime() <= 0)
                         continue;
 
-                    boolean isModern = isModernFurnace(block.getType());
+                    int speedUpTime = section.getInt(
+                            "levels." + level + ".speed-up-time",
+                            section.getInt("speed-up-time", 8));
 
-                    int wantedTotal;
-                    if (isModern) {
-                        wantedTotal = level >= 3 ? modernTimeL3 : (level >= 2 ? modernTimeL2 : modernTimeL1);
-                    } else {
-                        wantedTotal = level >= 3 ? furnaceTimeL3 : (level >= 2 ? furnaceTimeL2 : furnaceTimeL1);
-                    }
+                    int fuelSpeedUpTime = section.getInt(
+                            "levels." + level + ".fuel-speed-up-time",
+                            section.getInt("fuel-speed-up-time", speedUpTime));
 
                     int currentTotal = getCookTimeTotal(furnace);
 
-                    if (currentTotal > wantedTotal) {
-                        boolean totalSet = setCookTimeTotal(furnace, wantedTotal);
-
-                        plugin.getLogger().info("[NexusBeacon] setCookTimeTotal result=" + totalSet
-                                + " -> wantedTotal=" + wantedTotal);
-
-                        if (!totalSet) {
-                            int vanillaTotal = isModern ? 100 : 200;
-                            int ratio = Math.max(1, vanillaTotal / wantedTotal);
-                            short currentCook = furnace.getCookTime();
-                            int advance = (ratio - 1) * 40;
-                            short newCook = (short) Math.min(wantedTotal - 1, currentCook + advance);
-                            furnace.setCookTime(newCook);
-
-                            plugin.getLogger().info("[NexusBeacon] Fallback: cookTime " + currentCook + " -> " + newCook
-                                    + " (advance=" + advance + " ratio=" + ratio + ")");
-                        }
+                    if (currentTotal <= 0) {
+                        currentTotal = isModernFurnace(block.getType()) ? 100 : 200;
                     }
 
-                    // Mantenemos el combustible para no cortar el ciclo
-                    if (furnace.getBurnTime() < 60) {
-                        furnace.setBurnTime((short) 60);
+                    short currentCook = furnace.getCookTime();
+                    short newCook = (short) Math.min(currentTotal - 1, currentCook + speedUpTime);
+                    furnace.setCookTime(newCook);
+
+                    if (furnace.getBurnTime() < fuelSpeedUpTime) {
+                        furnace.setBurnTime((short) fuelSpeedUpTime);
                     }
 
                     furnace.update(true);
@@ -137,22 +117,6 @@ public class BlockProcessBoostExecutor implements EffectExecutor {
             return result instanceof Number ? ((Number) result).intValue() : -1;
         } catch (Exception e) {
             return -1;
-        }
-    }
-
-    private boolean setCookTimeTotal(Furnace furnace, int totalTime) {
-        try {
-            Method method = furnace.getClass().getMethod("setCookTimeTotal", int.class);
-            method.invoke(furnace, totalTime);
-            return true;
-        } catch (NoSuchMethodException e) {
-            plugin.getLogger().warning(plugin.getLanguageManager().get("console.cook-time-total-unavailable"));
-            return false;
-        } catch (Exception e) {
-            plugin.getLogger().warning(plugin.getLanguageManager().get(
-                    "console.cook-time-total-failed",
-                    Map.of("error", e.getMessage())));
-            return false;
         }
     }
 

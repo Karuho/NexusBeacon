@@ -3,6 +3,8 @@ package cl.dynasty.nexusbeacon.manager;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -15,6 +17,7 @@ public final class LanguageManager {
     private final NexusBeaconPlugin plugin;
     private FileConfiguration languageConfig;
     private String prefix;
+    private static final Pattern HEX_PATTERN = Pattern.compile("#([A-Fa-f0-9]{6})");
 
     public LanguageManager(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
@@ -72,13 +75,34 @@ public final class LanguageManager {
         String result = text;
 
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-            result = result.replace("%" + entry.getKey() + "%", entry.getValue());
+            result = result.replace("%" + entry.getKey() + "%", color(entry.getValue()));
         }
 
         return result;
     }
 
     public String color(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
+    if (text == null || text.isEmpty()) {
+        return "";
     }
+
+    Matcher matcher = HEX_PATTERN.matcher(text);
+    StringBuffer buffer = new StringBuffer();
+
+    while (matcher.find()) {
+        String hex = matcher.group(1);
+        StringBuilder replacement = new StringBuilder("§x");
+
+        for (char character : hex.toCharArray()) {
+            replacement.append('§').append(character);
+        }
+
+        matcher.appendReplacement(buffer, replacement.toString());
+    }
+
+    matcher.appendTail(buffer);
+
+    return ChatColor.translateAlternateColorCodes('&', buffer.toString());
+}
+
 }
