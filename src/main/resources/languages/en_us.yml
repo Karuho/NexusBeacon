@@ -43,6 +43,42 @@ messages:
     vanilla-recipe-disabled: "Vanilla beacon recipe disabled."
     player-settings-save-error: "Could not save player file %uuid%"
 
+  storage:
+    loaded: "&aActive storage: &f%type%"
+    save-error: "&cCould not save storage.yml"
+    load-error: "&cCould not load storage."
+    migration-started: "&eStarting storage migration from &f%from% &eto &f%to%&e..."
+    migration-success: "&aMigration completed: &f%from% &7-> &f%to%&7. Beacons: &f%amount%"
+    migration-failed: "&cStorage migration failed: &f%error%"
+    migration-invalid: "&cInvalid storage type. Valid types: YAML, SQLITE, MYSQL."
+    migration-same-type: "&eSource and destination storage cannot be the same."
+    migration-empty: "&eNo beacons were found to migrate."
+
+  command:
+    give-usage: "&cUsage: /%label% give <player> [amount]"
+    trust-usage: "&cUsage: /%label% trust <player>"
+    untrust-usage: "&cUsage: /%label% untrust <player>"
+    storage-migrate-usage: "&cUsage: /%label% storage migrate <YAML|MYSQL|SQLITE> <YAML|MYSQL|SQLITE>"
+    unknown: "&cUnknown subcommand. Use &f/%label% help&c."
+    give-sender: "&aYou gave &f%amount% &aNexusBeacon to &f%player%&a."
+    give-target: "&aYou received a NexusBeacon."
+    trusted-added: "&a%player% &ais now trusted."
+    trusted-removed: "&cRemoved trust from &f%player%&c."
+    trusted-count: "&eTrusted players: &f%amount%"
+    look-at-beacon: "&cYou must look at a NexusBeacon."
+    cannot-manage: "&cYou cannot manage this NexusBeacon."
+    player-not-online: "&cPlayer not found or not online."
+
+  help:
+    title: "&b&lNexusBeacon &7- Commands"
+    help: "&f/%label% help &7- Shows this help."
+    give: "&f/%label% give <player> [amount] &7- Gives a NexusBeacon."
+    trust: "&f/%label% trust <player> &7- Trusts a player in the NexusBeacon you are looking at."
+    untrust: "&f/%label% untrust <player> &7- Removes trust."
+    trusted: "&f/%label% trusted &7- Lists trusted players."
+    storage-migrate: "&f/%label% storage migrate <source> <destination> &7- Migrates storage."
+    reload: "&f/%label% reload &7- Reloads the configuration."
+
   beacon:
     registered: "&aBeacon registered successfully."
     removed: "&cBeacon removed."
@@ -51,6 +87,12 @@ messages:
     no-access: "&cYou do not have access to this beacon."
     owner-only: "&cOnly the beacon owner can do that."
     beam-style-changed: "&aBeam style changed to &f%style%&a."
+    place-no-permission: "&cYou do not have permission to place this beacon."
+    not-owner: "&cThis NexusBeacon does not belong to you."
+    break-not-owner: "&cYou cannot break a NexusBeacon that does not belong to you."
+    inventory-full: "&cYour inventory is full."
+    base-block-protected: "&cYou cannot break base blocks from another player's NexusBeacon."
+    vanilla-disabled: "&cVanilla beacons are disabled."
 
   menu:
     opened: "&aMenu opened."
@@ -67,17 +109,32 @@ messages:
     paid: "&aPayment completed successfully."
     acquired: "&aBeacon acquired successfully."
     upgraded: "&aBeacon upgraded successfully."
-
-  storage:
-    loaded: "&aActive storage: &f%type%"
-    save-error: "&cCould not save storage.yml"
-    load-error: "&cCould not load storage."
+    free: "&7Cost: &aFree"
+    option-not-configured: "&cOption not configured."
+    payment-option-not-configured: "&cThat payment option is not configured."
+    cost-item: "&7Cost: &b%amount%x %material%"
+    cost-exp: "&7Cost: &a%amount% EXP levels"
+    cost-money: "&7Cost: &6$%amount%"
+    cost-multiple: "&7Cost: &e%cost%"
+    cost-separator: " &7/ &e"
+    need-exp: "&cYou need &f%amount% &cexperience levels."
+    need-item: "&cYou need &f%amount%x %material%&c."
+    need-money: "&cYou need &f$%amount%&c."
 
   effect:
     enabled: "&aEffect enabled: &f%effect%&a."
     disabled: "&cEffect disabled: &f%effect%&c."
     upgraded: "&aEffect upgraded: &f%effect% &7Level &f%level%&a."
     max-level: "&eThis effect is already at max level."
+    disabled-level: "&cThat level is disabled."
+    must-acquire-first: "&cYou must acquire this effect first with right click."
+    not-enough-power: "&cThere is not enough power."
+    power-status: "&7Used power: &f%used%&7/&f%available%"
+    acquired: "&aEffect acquired: &f%effect%"
+
+  trust:
+    use-command: "&eUse &f/nb trust <player>&e."
+    removed: "&cPlayer removed from trust."
 
 materials:
   DIAMOND: "diamonds"

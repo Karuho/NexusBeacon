@@ -3,6 +3,7 @@ package cl.dynasty.nexusbeacon.commands;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -16,11 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.model.BeaconData;
-import cl.dynasty.nexusbeacon.storage.BeaconStorageProvider;
-import cl.dynasty.nexusbeacon.storage.MySqlBeaconStorageProvider;
-import cl.dynasty.nexusbeacon.storage.SqliteBeaconStorageProvider;
-import cl.dynasty.nexusbeacon.storage.YamlBeaconStorageProvider;
-import cl.dynasty.nexusbeacon.util.ColorUtil;
+
 
 public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
 
@@ -39,7 +36,7 @@ public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
 
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("NexusBeacon.admin")) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo tienes permiso."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("no-permission"));
                 return true;
             }
 
@@ -51,19 +48,21 @@ public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
 
         if (args[0].equalsIgnoreCase("give")) {
             if (!sender.hasPermission("NexusBeacon.admin")) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo tienes permiso."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("no-permission"));
                 return true;
             }
 
             if (args.length < 2) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cUso: /" + label + " give <jugador> [cantidad]"));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "command.give-usage",
+                        Map.of("label", label)));
                 return true;
             }
 
             Player target = Bukkit.getPlayer(args[1]);
 
             if (target == null) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cJugador no encontrado."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("player-not-found"));
                 return true;
             }
 
@@ -85,93 +84,104 @@ public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
             ItemStack item = plugin.getCustomBeaconItemManager().createBeaconItem(amount);
             target.getInventory().addItem(item);
 
-            sender.sendMessage(ColorUtil.color(
-                    "&b[NexusBeacon]&r &aEntregaste &f" + amount + " &aNexusBeacon a &f" + target.getName() + "&a."));
-            target.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &aRecibiste un NexusBeacon."));
+            sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                    "command.give-sender",
+                    Map.of(
+                            "amount", String.valueOf(amount),
+                            "player", target.getName())));
+            target.sendMessage(plugin.getLanguageManager().withPrefix("command.give-target"));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("trust")) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cSolo jugadores."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("only-players"));
                 return true;
             }
 
             Player player = (Player) sender;
 
             if (args.length < 2) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cUso: /" + label + " trust <jugador>"));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "command.trust-usage",
+                        Map.of("label", label)));
                 return true;
             }
 
             BeaconData beacon = getTargetBeacon(player);
 
             if (beacon == null) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cDebes mirar un NexusBeacon."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.look-at-beacon"));
                 return true;
             }
 
             if (!beacon.canManage(player.getUniqueId()) && !player.hasPermission("NexusBeacon.admin")) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo puedes administrar este NexusBeacon."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.cannot-manage"));
                 return true;
             }
 
             Player target = Bukkit.getPlayer(args[1]);
 
             if (target == null) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cJugador no encontrado o no está online."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.player-not-online"));
                 return true;
             }
 
             beacon.addTrusted(target.getUniqueId());
             plugin.getStorageManager().saveBeacon(beacon);
 
-            player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &aAhora &f" + target.getName() + " &aes confiable."));
+            player.sendMessage(plugin.getLanguageManager().withPrefix(
+                    "command.trusted-added",
+                    Map.of("player", target.getName())));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("untrust")) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cSolo jugadores."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("only-players"));
                 return true;
             }
 
             Player player = (Player) sender;
 
             if (args.length < 2) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cUso: /" + label + " untrust <jugador>"));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "command.untrust-usage",
+                        Map.of("label", label)));
                 return true;
             }
 
             BeaconData beacon = getTargetBeacon(player);
 
             if (beacon == null) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cDebes mirar un NexusBeacon."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.look-at-beacon"));
                 return true;
             }
 
             if (!beacon.canManage(player.getUniqueId()) && !player.hasPermission("NexusBeacon.admin")) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo puedes administrar este NexusBeacon."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.cannot-manage"));
                 return true;
             }
 
             Player target = Bukkit.getPlayer(args[1]);
 
             if (target == null) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cJugador no encontrado o no está online."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.player-not-online"));
                 return true;
             }
 
             beacon.removeTrusted(target.getUniqueId());
             plugin.getStorageManager().saveBeacon(beacon);
 
-            player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cQuitaste trust a &f" + target.getName() + "&c."));
+            player.sendMessage(plugin.getLanguageManager().withPrefix(
+                    "command.trusted-removed",
+                    Map.of("player", target.getName())));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("trusted")) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cSolo jugadores."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("only-players"));
                 return true;
             }
 
@@ -179,80 +189,111 @@ public class NexusBeaconCommand implements CommandExecutor, TabCompleter {
             BeaconData beacon = getTargetBeacon(player);
 
             if (beacon == null) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cDebes mirar un NexusBeacon."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("command.look-at-beacon"));
                 return true;
             }
 
-            player.sendMessage(
-                    ColorUtil.color("&b[NexusBeacon]&r &eJugadores confiables: &f" + beacon.getTrustedPlayers().size()));
+            player.sendMessage(plugin.getLanguageManager().withPrefix(
+                    "command.trusted-count",
+                    Map.of("amount", String.valueOf(beacon.getTrustedPlayers().size()))));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("storage")) {
             if (!sender.hasPermission("NexusBeacon.admin")) {
-                sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo tienes permiso."));
+                sender.sendMessage(plugin.getLanguageManager().withPrefix("no-permission"));
                 return true;
             }
 
             return handleStorageCommand(sender, label, args);
         }
 
-        sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cSubcomando desconocido. Usa &f/" + label + " help&c."));
+        sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                "command.unknown",
+                Map.of("label", label)));
         return true;
     }
 
     private boolean handleStorageCommand(CommandSender sender, String label, String[] args) {
-    if (args.length < 4 || !args[1].equalsIgnoreCase("migrate")) {
-        sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cUso: /" + label
-                + " storage migrate <YAML|MYSQL|SQLITE> <YAML|MYSQL|SQLITE>"));
+        if (args.length < 4 || !args[1].equalsIgnoreCase("migrate")) {
+            sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                    "command.storage-migrate-usage",
+                    Map.of("label", label)));
+            return true;
+        }
+
+        String from = args[2].toUpperCase();
+        String to = args[3].toUpperCase();
+
+        if (!plugin.getStorageManager().isValidStorageType(from)
+                || !plugin.getStorageManager().isValidStorageType(to)) {
+            sender.sendMessage(plugin.getLanguageManager().withPrefix("storage.migration-invalid"));
+            return true;
+        }
+
+        if (from.equalsIgnoreCase(to)) {
+            sender.sendMessage(plugin.getLanguageManager().withPrefix("storage.migration-same-type"));
+            return true;
+        }
+
+        sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                "storage.migration-started",
+                Map.of(
+                        "from", from,
+                        "to", to)));
+
+        int migrated = plugin.getStorageManager().migrateCount(from, to);
+
+        if (migrated < 0) {
+            sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                    "storage.migration-failed",
+                    Map.of("error", "unknown")));
+            return true;
+        }
+
+        if (migrated == 0) {
+            sender.sendMessage(plugin.getLanguageManager()
+                    .withPrefix("storage.migration-empty"));
+            return true;
+        }
+
+        sender.sendMessage(plugin.getLanguageManager().withPrefix(
+                "storage.migration-success",
+                Map.of(
+                        "from", from,
+                        "to", to,
+                        "amount", String.valueOf(migrated))));
+
         return true;
     }
 
-    String from = args[2].toUpperCase();
-    String to = args[3].toUpperCase();
-
-    BeaconStorageProvider source = createStorageProvider(from);
-    BeaconStorageProvider target = createStorageProvider(to);
-
-    List<BeaconData> beacons = source.loadBeacons();
-
-    for (BeaconData beacon : beacons) {
-        target.saveBeacon(beacon);
-    }
-
-    source.close();
-    target.close();
-
-    sender.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &aMigración completada: &f"
-            + from + " &7-> &f" + to + "&7. Beacons: &f" + beacons.size()));
-
-    return true;
-}
-
-private BeaconStorageProvider createStorageProvider(String type) {
-    if (type.equalsIgnoreCase("MYSQL")) {
-        return new MySqlBeaconStorageProvider(plugin);
-    }
-
-    if (type.equalsIgnoreCase("SQLITE")) {
-        return new SqliteBeaconStorageProvider(plugin);
-    }
-
-    return new YamlBeaconStorageProvider(plugin);
-}
-
     private void sendHelp(CommandSender sender, String label) {
-        sender.sendMessage(ColorUtil.color("&8&m--------------------------------"));
-        sender.sendMessage(ColorUtil.color("&b&lNexusBeacon &7- Comandos"));
-        sender.sendMessage(ColorUtil.color("&f/" + label + " help &7- Muestra esta ayuda."));
-        sender.sendMessage(ColorUtil.color("&f/" + label + " give <jugador> [cantidad] &7- Entrega NexusBeacon."));
-        sender.sendMessage(
-                ColorUtil.color("&f/" + label + " trust <jugador> &7- Confía un jugador en el NexusBeacon que miras."));
-        sender.sendMessage(ColorUtil.color("&f/" + label + " untrust <jugador> &7- Quita trust."));
-        sender.sendMessage(ColorUtil.color("&f/" + label + " trusted &7- Lista jugadores confiables."));
-        sender.sendMessage(ColorUtil.color("&f/" + label + " storage migrate <origen> <destino> &7- Migra storage."));
-        sender.sendMessage(ColorUtil.color("&f/" + label + " reload &7- Recarga configuración."));
-        sender.sendMessage(ColorUtil.color("&8&m--------------------------------"));
+        sender.sendMessage(plugin.getLanguageManager().color("&8&m--------------------------------"));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.title",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.help",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.give",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.trust",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.untrust",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.trusted",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.storage-migrate",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().get(
+                "help.reload",
+                Map.of("label", label)));
+        sender.sendMessage(plugin.getLanguageManager().color("&8&m--------------------------------"));
     }
 
     @Override
@@ -260,7 +301,8 @@ private BeaconStorageProvider createStorageProvider(String type) {
         List<String> result = new ArrayList<String>();
 
         if (args.length == 1) {
-            List<String> subcommands = Arrays.asList("help", "give", "reload", "trust", "untrust", "trusted", "storage");
+            List<String> subcommands = Arrays.asList("help", "give", "reload", "trust", "untrust", "trusted",
+                    "storage");
 
             for (String subcommand : subcommands) {
                 if (subcommand.toLowerCase().startsWith(args[0].toLowerCase())) {
@@ -293,7 +335,7 @@ private BeaconStorageProvider createStorageProvider(String type) {
     private BeaconData getTargetBeacon(Player player) {
         Block block = player.getTargetBlock(null, 6);
 
-        if (block == null || block.getType() != Material.BEACON) {
+        if (block.getType() != Material.BEACON) {
             return null;
         }
 

@@ -16,8 +16,6 @@ import cl.dynasty.nexusbeacon.gui.framework.NexusGuiLoader;
 import cl.dynasty.nexusbeacon.gui.framework.NexusGuiMenu;
 import cl.dynasty.nexusbeacon.gui.framework.NexusPlaceholderContext;
 import cl.dynasty.nexusbeacon.model.BeaconData;
-import cl.dynasty.nexusbeacon.model.PlayerSettings;
-import cl.dynasty.nexusbeacon.util.ColorUtil;
 
 public class BeaconGuiListener implements Listener {
 
@@ -70,7 +68,6 @@ public class BeaconGuiListener implements Listener {
         }
 
         if (menuId.equalsIgnoreCase("settings")) {
-            PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
 
             if (slot == 20) {
                 beacon.setRangeParticlesEnabled(!beacon.isRangeParticlesEnabled());
@@ -127,7 +124,7 @@ public class BeaconGuiListener implements Listener {
 
             if (slot == 22) {
                 player.closeInventory();
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &eUsa &f/dbeacon trust <jugador>&e."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("trust.use-command"));
                 return;
             }
 
@@ -138,7 +135,7 @@ public class BeaconGuiListener implements Listener {
                     beacon.removeTrusted(uuid);
                     plugin.getStorageManager().saveBeacon(beacon);
                     plugin.getBeaconGuiManager().openTrustMenu(player, beacon);
-                    player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cJugador eliminado de trust."));
+                    player.sendMessage(plugin.getLanguageManager().withPrefix("trust.removed"));
                     return;
                 }
 
@@ -171,12 +168,12 @@ public class BeaconGuiListener implements Listener {
                 int nextLevel = currentLevel + 1;
 
                 if (!cl.dynasty.nexusbeacon.effects.EffectLevelUtil.isLevelEnabled(plugin, clickedEffect, nextLevel)) {
-                    player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cEse nivel está desactivado."));
+                    player.sendMessage(plugin.getLanguageManager().withPrefix("effect.disabled-level"));
                     return;
                 }
 
                 if (currentLevel >= clickedEffect.getMaxLevel()) {
-                    player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &eEste efecto ya está al nivel máximo."));
+                    player.sendMessage(plugin.getLanguageManager().withPrefix("effect.max-level"));
                     return;
                 }
 
@@ -187,8 +184,7 @@ public class BeaconGuiListener implements Listener {
 
             if (event.getClick() == ClickType.LEFT) {
                 if (!beacon.hasEffect(clickedEffect.getId())) {
-                    player.sendMessage(ColorUtil
-                            .color("&b[NexusBeacon]&r &cPrimero debes adquirir este efecto con click derecho."));
+                    player.sendMessage(plugin.getLanguageManager().withPrefix("effect.must-acquire-first"));
                     return;
                 }
 
@@ -197,8 +193,12 @@ public class BeaconGuiListener implements Listener {
                 if (newState && !plugin.getBeaconPowerManager().canActivate(beacon, clickedEffect)) {
                     int available = plugin.getBeaconPowerManager().getAvailablePower(beacon);
                     int used = plugin.getBeaconPowerManager().getUsedPower(beacon);
-                    player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo hay poder suficiente."));
-                    player.sendMessage(ColorUtil.color("&7Poder usado: &f" + used + "&7/&f" + available));
+                    player.sendMessage(plugin.getLanguageManager().withPrefix("effect.not-enough-power"));
+                    player.sendMessage(plugin.getLanguageManager().get(
+                            "effect.power-status",
+                            java.util.Map.of(
+                                    "used", String.valueOf(used),
+                                    "available", String.valueOf(available))));
                     return;
                 }
 
@@ -242,7 +242,7 @@ public class BeaconGuiListener implements Listener {
             int nextLevel = currentLevel + 1;
 
             if (!cl.dynasty.nexusbeacon.effects.EffectLevelUtil.isLevelEnabled(plugin, effect, nextLevel)) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cEse nivel está desactivado."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("effect.disabled-level"));
                 return;
             }
 
@@ -252,11 +252,16 @@ public class BeaconGuiListener implements Listener {
 
             if (action.equalsIgnoreCase("acquire")) {
                 beacon.acquireEffect(effect.getId());
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &aEfecto adquirido: " + effect.getDisplayName()));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "effect.acquired",
+                        java.util.Map.of("effect", effect.getDisplayName())));
             } else {
                 beacon.setEffectLevel(effect.getId(), nextLevel);
-                player.sendMessage(ColorUtil.color(
-                        "&b[NexusBeacon]&r &aEfecto mejorado: " + effect.getDisplayName() + " &7Nivel &f" + nextLevel));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "effect.upgraded",
+                        java.util.Map.of(
+                                "effect", effect.getDisplayName(),
+                                "level", String.valueOf(nextLevel))));
             }
 
             plugin.getStorageManager().saveBeacon(beacon);

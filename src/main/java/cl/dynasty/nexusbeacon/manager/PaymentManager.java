@@ -1,8 +1,13 @@
 package cl.dynasty.nexusbeacon.manager;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.util.ColorUtil;
+
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -29,15 +34,18 @@ public class PaymentManager {
                 .getEffectsConfig()
                 .getConfigurationSection("effects." + effect.getId() + ".costs." + path + ".options");
 
-        if (options == null)
-            return "&7Costo: &aGratis";
+        if (options == null) {
+            return plugin.getLanguageManager().get("payment.free");
+        }
 
-        java.util.List<String> parts = new java.util.ArrayList<String>();
+        List<String> parts = new ArrayList<>();
 
         for (String key : options.getKeys(false)) {
             ConfigurationSection option = options.getConfigurationSection(key);
-            if (option == null)
+
+            if (option == null) {
                 continue;
+            }
 
             String type = option.getString("type", "NONE");
             int amount = option.getInt("amount", option.getInt("amount-per-level", 0) * level);
@@ -45,24 +53,35 @@ public class PaymentManager {
             if (type.equalsIgnoreCase("ITEM")) {
                 String materialName = option.getString("material", "DIAMOND");
                 parts.add(amount + "x " + getMaterialName(materialName));
-            } else if (type.equalsIgnoreCase("EXP_LEVEL")) {
+                continue;
+            }
+
+            if (type.equalsIgnoreCase("EXP_LEVEL")) {
                 parts.add(amount + " EXP");
-            } else if (type.equalsIgnoreCase("VAULT_MONEY")) {
+                continue;
+            }
+
+            if (type.equalsIgnoreCase("VAULT_MONEY")) {
                 parts.add("$" + amount);
             }
         }
 
-        if (parts.isEmpty())
-            return "&7Costo: &aGratis";
+        if (parts.isEmpty()) {
+            return plugin.getLanguageManager().get("payment.free");
+        }
 
-        return "&7Costo: &e" + join(parts, " &7/ &e");
+        String separator = plugin.getLanguageManager().get("payment.cost-separator");
+
+        return plugin.getLanguageManager().get(
+                "payment.cost-multiple",
+                Map.of("cost", join(parts, separator)));
     }
 
     public String getOptionText(BeaconEffect effect, String action, String optionKey, int level) {
         ConfigurationSection section = getLevelOption(effect, action, optionKey, level);
 
         if (section == null) {
-            return ColorUtil.color("&cOpción no configurada.");
+            return plugin.getLanguageManager().get("payment.option-not-configured");
         }
 
         String type = section.getString("type", "NONE");
@@ -70,25 +89,34 @@ public class PaymentManager {
 
         if (type.equalsIgnoreCase("ITEM")) {
             String materialName = section.getString("material", "DIAMOND");
-            return ColorUtil.color("&7Costo: &b" + amount + "x " + getMaterialName(materialName));
+
+            return plugin.getLanguageManager().get(
+                    "payment.cost-item",
+                    Map.of(
+                            "amount", String.valueOf(amount),
+                            "material", getMaterialName(materialName)));
         }
 
         if (type.equalsIgnoreCase("EXP_LEVEL")) {
-            return ColorUtil.color("&7Costo: &a" + amount + " niveles EXP");
+            return plugin.getLanguageManager().get(
+                    "payment.cost-exp",
+                    Map.of("amount", String.valueOf(amount)));
         }
 
         if (type.equalsIgnoreCase("VAULT_MONEY")) {
-            return ColorUtil.color("&7Costo: &6$" + amount);
+            return plugin.getLanguageManager().get(
+                    "payment.cost-money",
+                    Map.of("amount", String.valueOf(amount)));
         }
 
-        return ColorUtil.color("&7Costo: &aGratis");
+        return plugin.getLanguageManager().get("payment.free");
     }
 
     public boolean payOption(Player player, BeaconEffect effect, String action, String optionKey, int level) {
         ConfigurationSection section = getLevelOption(effect, action, optionKey, level);
 
         if (section == null) {
-            player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cEsa opción de pago no está configurada."));
+            player.sendMessage(plugin.getLanguageManager().withPrefix("payment.payment-option-not-configured"));
             return false;
         }
 
@@ -126,8 +154,9 @@ public class PaymentManager {
 
         if (type.equalsIgnoreCase("EXP_LEVEL")) {
             if (player.getLevel() < amount) {
-                player.sendMessage(
-                        ColorUtil.color("&b[NexusBeacon]&r &cNecesitas &f" + amount + " &cniveles de experiencia."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "payment.need-exp",
+                        Map.of("amount", String.valueOf(amount))));
                 return false;
             }
 
@@ -140,8 +169,11 @@ public class PaymentManager {
             Material material = plugin.getVersionAdapter().material(materialName);
 
             if (!hasItem(player, material, amount)) {
-                player.sendMessage(ColorUtil.color(
-                        "&b[NexusBeacon]&r &cNecesitas &f" + amount + "x " + getMaterialName(materialName) + "&c."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "payment.need-item",
+                        Map.of(
+                                "amount", String.valueOf(amount),
+                                "material", getMaterialName(materialName))));
                 return false;
             }
 
@@ -151,12 +183,14 @@ public class PaymentManager {
 
         if (type.equalsIgnoreCase("VAULT_MONEY")) {
             if (plugin.getEconomy() == null) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cLa economía Vault no está disponible."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix("payment.vault-unavailable"));
                 return false;
             }
 
             if (!plugin.getEconomy().has(player, amount)) {
-                player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNecesitas &f$" + amount + "&c."));
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "payment.need-money",
+                        Map.of("amount", String.valueOf(amount))));
                 return false;
             }
 
@@ -198,7 +232,9 @@ public class PaymentManager {
             int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
 
             if (player.getLevel() < amount) {
-                player.sendMessage("§b[NexusBeacon] §cNecesitas §f" + amount + " §cniveles de experiencia.");
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "payment.need-exp",
+                        Map.of("amount", String.valueOf(amount))));
                 return false;
             }
 
@@ -213,8 +249,11 @@ public class PaymentManager {
             Material material = plugin.getVersionAdapter().material(materialName);
 
             if (!hasItem(player, material, amount)) {
-                player.sendMessage(
-                        "§b[NexusBeacon] §cNecesitas §f" + amount + "x " + getMaterialName(materialName) + "§c.");
+                player.sendMessage(plugin.getLanguageManager().withPrefix(
+                        "payment.need-item",
+                        Map.of(
+                                "amount", String.valueOf(amount),
+                                "material", getMaterialName(materialName))));
                 return false;
             }
 
@@ -241,8 +280,6 @@ public class PaymentManager {
     }
 
     private String getMaterialName(String material) {
-        return plugin.getConfigManager()
-                .getLanguageConfig()
-                .getString("materials." + material.toUpperCase(), material);
+        return plugin.getLanguageManager().materialName(material.toUpperCase());
     }
 }

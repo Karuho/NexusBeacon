@@ -14,7 +14,6 @@ import org.bukkit.inventory.ItemStack;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.model.BeaconData;
-import cl.dynasty.nexusbeacon.util.ColorUtil;
 
 public class BeaconListener implements Listener {
 
@@ -41,7 +40,7 @@ public class BeaconListener implements Listener {
 
         if (!player.hasPermission("NexusBeacon.use")) {
             event.setCancelled(true);
-            player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNo tienes permiso para colocar este beacon."));
+            player.sendMessage(plugin.getLanguageManager().withPrefix("beacon.place-no-permission"));
             return;
         }
 
@@ -56,7 +55,7 @@ public class BeaconListener implements Listener {
                 effects,
                 activeEffects);
 
-        player.sendMessage(ColorUtil.color("&b[NexusBeacon]&r &aNexusBeacon registrado correctamente."));
+        player.sendMessage(plugin.getLanguageManager().withPrefix("beacon.registered"));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
@@ -85,7 +84,7 @@ public class BeaconListener implements Listener {
                 && !beacon.canManage(event.getPlayer().getUniqueId())
                 && !event.getPlayer().hasPermission("NexusBeacon.admin")) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cEste NexusBeacon no te pertenece."));
+            event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.not-owner"));
             return;
         }
 
@@ -111,8 +110,7 @@ public class BeaconListener implements Listener {
                 && !beacon.canManage(event.getPlayer().getUniqueId())
                 && !event.getPlayer().hasPermission("NexusBeacon.admin")) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(
-                    ColorUtil.color("&b[NexusBeacon]&r &cNo puedes romper un NexusBeacon que no te pertenece."));
+            event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.break-not-owner"));
             return;
         }
 
@@ -141,13 +139,13 @@ public class BeaconListener implements Listener {
                 event.getPlayer().getInventory().addItem(dropItem);
             }
 
-            event.getPlayer().sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNexusBeacon eliminado."));
+            event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.removed"));
             return;
         }
 
         if (autoPickup && cancelIfFull && event.getPlayer().getInventory().firstEmpty() == -1) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cTu inventario está lleno."));
+            event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.inventory-full"));
             return;
         }
 
@@ -159,7 +157,7 @@ public class BeaconListener implements Listener {
             block.getWorld().dropItemNaturally(block.getLocation(), dropItem);
         }
 
-        event.getPlayer().sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cNexusBeacon eliminado."));
+        event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.removed"));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
@@ -186,7 +184,6 @@ public class BeaconListener implements Listener {
         }
 
         event.setCancelled(true);
-        event.getPlayer().sendMessage(
-                ColorUtil.color("&b[NexusBeacon]&r &cNo puedes romper bloques de la base de un NexusBeacon ajeno."));
+        event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.base-block-protected"));
     }
 }

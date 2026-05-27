@@ -10,7 +10,6 @@ public class StorageManager {
 
     private final NexusBeaconPlugin plugin;
     private final BeaconStorageProvider provider;
-    private static final String STORAGE_ACTIVE = "console.storage-active";
 
     public StorageManager(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
@@ -20,35 +19,57 @@ public class StorageManager {
     private BeaconStorageProvider createProvider() {
         String type = plugin.getConfigManager()
                 .getConfig()
-                .getString("storage.type", "YAML")
-                .toUpperCase();
+                .getString("storage.type", "YAML");
 
-        return switch (type) {
-            case "MYSQL" -> {
-                plugin.getLanguageManager().get(
-                        STORAGE_ACTIVE,
-                        Map.of("type", "MYSQL"));
-                yield new MySqlBeaconStorageProvider(plugin);
-            }
-            case "SQLITE" -> {
-                plugin.getLanguageManager().get(
-                        STORAGE_ACTIVE,
-                        Map.of("type", "SQLITE"));
-                yield new SqliteBeaconStorageProvider(plugin);
-            }
-            case "YAML" -> {
-                plugin.getLanguageManager().get(
-                        STORAGE_ACTIVE,
-                        Map.of("type", "YAML"));
-                yield new YamlBeaconStorageProvider(plugin);
-            }
-            default -> {
-                plugin.getLanguageManager().get(
-                        STORAGE_ACTIVE,
-                        Map.of("type", type));
-                yield new YamlBeaconStorageProvider(plugin);
-            }
+        return createProvider(type);
+    }
+
+    private BeaconStorageProvider createProvider(String type) {
+        String normalizedType = type == null ? "YAML" : type.toUpperCase();
+
+        return switch (normalizedType) {
+            case "MYSQL" -> new MySqlBeaconStorageProvider(plugin);
+            case "SQLITE" -> new SqliteBeaconStorageProvider(plugin);
+            case "YAML" -> new YamlBeaconStorageProvider(plugin);
+            default -> new YamlBeaconStorageProvider(plugin);
         };
+    }
+
+    public int migrateCount(String fromType, String toType) {
+        BeaconStorageProvider fromProvider = createProvider(fromType);
+        BeaconStorageProvider toProvider = createProvider(toType);
+
+        try {
+            List<BeaconData> beacons = fromProvider.loadBeacons();
+
+            if (beacons.isEmpty()) {
+                return 0;
+            }
+
+            for (BeaconData beacon : beacons) {
+                toProvider.saveBeacon(beacon);
+            }
+
+            return beacons.size();
+        } catch (Exception exception) {
+            plugin.getLogger().severe(plugin.getLanguageManager().get(
+                    "storage.migration-failed",
+                    Map.of("error", exception.getMessage())));
+            return -1;
+        } finally {
+            fromProvider.close();
+            toProvider.close();
+        }
+    }
+
+    public boolean isValidStorageType(String type) {
+        if (type == null) {
+            return false;
+        }
+
+        return type.equalsIgnoreCase("YAML")
+                || type.equalsIgnoreCase("SQLITE")
+                || type.equalsIgnoreCase("MYSQL");
     }
 
     public List<BeaconData> loadBeacons() {
@@ -66,4 +87,5 @@ public class StorageManager {
     public void close() {
         provider.close();
     }
+
 }

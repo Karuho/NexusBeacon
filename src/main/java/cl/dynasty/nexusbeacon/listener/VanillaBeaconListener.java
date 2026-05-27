@@ -31,6 +31,6 @@ public class VanillaBeaconListener implements Listener {
         }
 
         event.setCancelled(true);
-        event.getPlayer().sendMessage(ColorUtil.color("&b[NexusBeacon]&r &cLos beacons vanilla están deshabilitados."));
+        event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.vanilla-disabled"));
     }
 }

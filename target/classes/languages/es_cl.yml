@@ -7,6 +7,7 @@ messages:
   player-not-found: "&cJugador no encontrado."
   invalid-usage: "&cUso incorrecto del comando."
   unknown-command: "&cSubcomando desconocido."
+
   console:
     beam-styles-loaded: "BeamStyles cargados: %amount%"
     invalid-particle: "Partícula inválida en beacon.yml: %particle%"
@@ -37,12 +38,47 @@ messages:
     gui-material-invalid: "Material inválido en gui.yml: %material%"
     gui-action-unknown: "Acción GUI desconocida: %action%"
     gui-dynamic-symbol-invalid: "Dynamic GUI symbol inválido: %symbol%"
-
     beacons-loaded: "Beacons cargados: %amount%"
     custom-recipe-registered: "Receta custom de NexusBeacon registrada."
     vanilla-recipe-disabled: "Receta vanilla del beacon deshabilitada."
     player-settings-save-error: "No se pudo guardar el archivo del jugador %uuid%"
+
+  storage:
+    loaded: "&aStorage activo: &f%type%"
+    save-error: "&cNo se pudo guardar storage.yml"
+    load-error: "&cNo se pudo cargar el almacenamiento."
+    migration-started: "&eIniciando migración de storage desde &f%from% &ehacia &f%to%&e..."
+    migration-success: "&aMigración completada: &f%from% &7-> &f%to%&7. Beacons: &f%amount%"
+    migration-failed: "&cLa migración falló: &f%error%"
+    migration-invalid: "&cStorage inválido. Tipos válidos: YAML, SQLITE, MYSQL."
+    migration-same-type: "&eEl storage origen y destino no pueden ser iguales."
+    migration-empty: "&eNo se encontraron beacons para migrar."
     
+  command:
+    give-usage: "&cUso: /%label% give <jugador> [cantidad]"
+    trust-usage: "&cUso: /%label% trust <jugador>"
+    untrust-usage: "&cUso: /%label% untrust <jugador>"
+    storage-migrate-usage: "&cUso: /%label% storage migrate <YAML|MYSQL|SQLITE> <YAML|MYSQL|SQLITE>"
+    unknown: "&cSubcomando desconocido. Usa &f/%label% help&c."
+    give-sender: "&aEntregaste &f%amount% &aNexusBeacon a &f%player%&a."
+    give-target: "&aRecibiste un NexusBeacon."
+    trusted-added: "&aAhora &f%player% &aes confiable."
+    trusted-removed: "&cQuitaste trust a &f%player%&c."
+    trusted-count: "&eJugadores confiables: &f%amount%"
+    look-at-beacon: "&cDebes mirar un NexusBeacon."
+    cannot-manage: "&cNo puedes administrar este NexusBeacon."
+    player-not-online: "&cJugador no encontrado o no está online."
+
+  help:
+    title: "&b&lNexusBeacon &7- Comandos"
+    help: "&f/%label% help &7- Muestra esta ayuda."
+    give: "&f/%label% give <jugador> [cantidad] &7- Entrega NexusBeacon."
+    trust: "&f/%label% trust <jugador> &7- Confía un jugador en el NexusBeacon que miras."
+    untrust: "&f/%label% untrust <jugador> &7- Quita trust."
+    trusted: "&f/%label% trusted &7- Lista jugadores confiables."
+    storage-migrate: "&f/%label% storage migrate <origen> <destino> &7- Migra storage."
+    reload: "&f/%label% reload &7- Recarga configuración."
+
   beacon:
     registered: "&aBeacon registrado correctamente."
     removed: "&cBeacon eliminado."
@@ -51,6 +87,12 @@ messages:
     no-access: "&cNo tienes acceso a este beacon."
     owner-only: "&cSolo el dueño del beacon puede hacer eso."
     beam-style-changed: "&aEstilo del rayo cambiado a &f%style%&a."
+    place-no-permission: "&cNo tienes permiso para colocar este beacon."
+    not-owner: "&cEste NexusBeacon no te pertenece."
+    break-not-owner: "&cNo puedes romper un NexusBeacon que no te pertenece."
+    inventory-full: "&cTu inventario está lleno."
+    base-block-protected: "&cNo puedes romper bloques de la base de un NexusBeacon ajeno."
+    vanilla-disabled: "&cLos beacons vanilla están deshabilitados."
 
   menu:
     opened: "&aMenú abierto."
@@ -67,17 +109,33 @@ messages:
     paid: "&aPago realizado correctamente."
     acquired: "&aBeacon adquirido correctamente."
     upgraded: "&aBeacon mejorado correctamente."
-
-  storage:
-    loaded: "&aStorage activo: &f%type%"
-    save-error: "&cNo se pudo guardar storage.yml"
-    load-error: "&cNo se pudo cargar el almacenamiento."
+    free: "&7Costo: &aGratis"
+    option-not-configured: "&cOpción no configurada."
+    payment-option-not-configured: "&cEsa opción de pago no está configurada."
+    cost-item: "&7Costo: &b%amount%x %material%"
+    cost-exp: "&7Costo: &a%amount% niveles EXP"
+    cost-money: "&7Costo: &6$%amount%"
+    cost-multiple: "&7Costo: &e%cost%"
+    cost-separator: " &7/ &e"
+    need-exp: "&cNecesitas &f%amount% &cniveles de experiencia."
+    need-item: "&cNecesitas &f%amount%x %material%&c."
+    need-money: "&cNecesitas &f$%amount%&c."
 
   effect:
     enabled: "&aEfecto activado: &f%effect%&a."
     disabled: "&cEfecto desactivado: &f%effect%&c."
     upgraded: "&aEfecto mejorado: &f%effect% &7Nivel &f%level%&a."
     max-level: "&eEste efecto ya está en su nivel máximo."
+    disabled-level: "&cEse nivel está desactivado."
+    must-acquire-first: "&cPrimero debes adquirir este efecto con click derecho."
+    not-enough-power: "&cNo hay poder suficiente."
+    power-status: "&7Poder usado: &f%used%&7/&f%available%"
+    acquired: "&aEfecto adquirido: &f%effect%"
+
+  trust:
+    use-command: "&eUsa &f/nb trust <jugador>&e."
+    removed: "&cJugador eliminado de trust."
+    
     
 materials:
   DIAMOND: "diamantes"

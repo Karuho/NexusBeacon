@@ -3,7 +3,6 @@ version: 1.0.0
 main: cl.dynasty.nexusbeacon.NexusBeaconPlugin
 api-version: '1.21'
 author: DynaDev
-description: Sistema de beacon con efectos personalizables, menús y opciones de pago.
 softdepend: [Vault, PlaceholderAPI, SpawnerMeta, Towny, WorldGuard, PlotSquared, GriefPrevention, WorldEdit]
 folia-supported: true
 

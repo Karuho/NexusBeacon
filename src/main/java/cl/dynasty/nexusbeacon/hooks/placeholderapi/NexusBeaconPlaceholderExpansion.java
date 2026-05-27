@@ -78,7 +78,10 @@ public final class NexusBeaconPlaceholderExpansion extends PlaceholderExpansion 
         return switch (params.toLowerCase()) {
             case "beacon_id" -> beacon.getId();
             case "beacon_unique_id" -> beacon.getUniqueId();
-            case "beacon_owner" -> Bukkit.getOfflinePlayer(beacon.getOwner()).getName();
+            case "beacon_owner" -> {
+                String name = Bukkit.getOfflinePlayer(beacon.getOwner()).getName();
+                yield name != null ? name : beacon.getOwner().toString();
+            }
             case "active_effects" -> String.valueOf(beacon.getActiveEffects().size());
             case "beacon_world" -> beacon.getLocation().getWorld().getName();
             case "beacon_x" -> String.valueOf(beacon.getLocation().getBlockX());
@@ -88,10 +91,12 @@ public final class NexusBeaconPlaceholderExpansion extends PlaceholderExpansion 
                     "%s, %s, %s",
                     beacon.getLocation().getBlockX(),
                     beacon.getLocation().getBlockY(),
-                    beacon.getLocation().getBlockZ()
-            );
+                    beacon.getLocation().getBlockZ());
             case "beacon_range" -> String.valueOf(beacon.getRange());
             case "beacon_level" -> String.valueOf(beacon.getLevel());
+            case "beam_style" -> beacon.getBeamStyle() != null ? beacon.getBeamStyle() : "global";
+            case "range_particle_type" -> beacon.getRangeParticleType();
+            case "range_particles_enabled" -> beacon.isRangeParticlesEnabled() ? "true" : "false";
             case "trusted_players" -> String.valueOf(beacon.getTrustedPlayers().size());
             case "protect_base_blocks" -> beacon.isProtectBaseBlocks() ? "Sí" : "No";
             default -> null;

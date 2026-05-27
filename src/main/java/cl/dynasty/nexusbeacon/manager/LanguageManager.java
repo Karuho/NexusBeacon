@@ -42,7 +42,7 @@ public final class LanguageManager {
         String message = languageConfig.getString("messages." + path);
 
         if (message == null) {
-            message = "&cMensaje no encontrado: " + path;
+            message = "&cMissing message: " + path;
         }
 
         return apply(color(message), placeholders);

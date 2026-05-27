@@ -19,7 +19,7 @@
 language: es_cl
 
 debug: false
-
+ 
 settings:
   require-permission: true
   permission-use: NexusBeacon.use
