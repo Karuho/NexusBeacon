@@ -137,6 +137,7 @@ messages:
     use-command: "&eUsa &f/nb trust <jugador>&e."
     removed: "&cJugador eliminado de trust."
     cannot-trust-owner: "&cNo puedes agregar al dueño como jugador confiable."
+    prepare-add: "Ingresa el nombre del jugador que quieres confiar."
 
 materials:
   DIAMOND: "diamantes"
@@ -156,6 +157,9 @@ placeholders:
   disabled_female_plural: "&cDesactivadas"
   global: "Global"
 
+trust:
+  prepare-add-click: "&eHaz click aquí para preparar: &f/nb trust <jugador>"
+  
 item:
   display-name: "&b&lNexusBeacon"
   lore:

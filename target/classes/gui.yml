@@ -238,7 +238,7 @@ menus:
         name: "%lang_gui.trust.add-name%"
         lore:
           - "%lang_gui.trust.add-lore%"
-        action: "close"
+        action: "trust:prepare-add"
 
       B:
         material: ARROW

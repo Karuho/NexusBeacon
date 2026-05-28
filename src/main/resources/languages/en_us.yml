@@ -136,8 +136,8 @@ messages:
   trust:
     use-command: "&eUse &f/nb trust <player>&e."
     removed: "&cPlayer removed from trust."
-    trust:
-  cannot-trust-owner: "&cYou cannot add the owner as a trusted player."
+    cannot-trust-owner: "&cYou cannot add the owner as a trusted player."
+    prepare-add: "Enter the name of the player you want to trust."
 
 materials:
   DIAMOND: "diamonds"
@@ -157,6 +157,9 @@ placeholders:
   disabled_female_plural: "&cDisabled"
   global: "Global"
 
+trust:
+  prepare-add-click: "&eClick here to prepare: &f/nb trust <player>"
+  
 item:
   display-name: "&b&lNexusBeacon"
   lore:

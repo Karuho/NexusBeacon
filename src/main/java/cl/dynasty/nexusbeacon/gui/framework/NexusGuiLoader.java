@@ -18,6 +18,8 @@ import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.model.BeaconData;
 import cl.dynasty.nexusbeacon.util.DebugLogger;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 
 public final class NexusGuiLoader {
 
@@ -337,6 +339,19 @@ public final class NexusGuiLoader {
                 beacon.setProtectBaseBlocks(!beacon.isProtectBaseBlocks());
                 plugin.getStorageManager().saveBeacon(beacon);
                 plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+            };
+        }
+
+        if (actionText.equalsIgnoreCase("trust:prepare-add")) {
+            return (player, menu, event) -> {
+                player.closeInventory();
+
+                player.sendMessage(plugin.getLanguageManager().withPrefix("trust.prepare-add"));
+
+                player.sendMessage(
+                        Component.text(plugin.getLanguageManager().color(
+                                plugin.getLanguageManager().raw("trust.prepare-add-click")))
+                                .clickEvent(ClickEvent.suggestCommand("/nb trust ")));
             };
         }
 
