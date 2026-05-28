@@ -1,15 +1,27 @@
 package cl.dynasty.nexusbeacon.storage;
 
-import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
-import cl.dynasty.nexusbeacon.model.BeaconData;
-import cl.dynasty.nexusbeacon.util.LocationUtil;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.sql.*;
-import java.util.*;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
+import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.util.LocationUtil;
 
 public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
 
@@ -71,7 +83,9 @@ public class MySqlBeaconStorageProvider implements BeaconStorageProvider {
                 Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException exception) {
-            throw new IllegalStateException("No se pudo preparar la tabla MySQL de NexusBeacon.", exception);
+            throw new IllegalStateException(
+                    plugin.getLanguageManager().get("console.mysql-prepare-table-error"),
+                    exception);
         }
     }
 

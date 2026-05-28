@@ -2,17 +2,17 @@
 # NexusBeacon GUI Configuration
 # =========================================================
 #
-# Sistema de layouts:
+# Layout system:
 #
-# Cada línea representa una fila del inventario.
-# Cada carácter representa un item definido en "items".
+# Each line represents one inventory row.
+# Each character represents an item defined in "items".
 #
-# Caracteres especiales:
+# Special characters:
 #
-#   # = decoración / filler
-#   . = slot vacío
+#   # = decoration / filler
+#   . = empty slot
 #
-# Ejemplo:
+# Example:
 #
 # layout:
 #   - "#########"
@@ -22,42 +22,42 @@
 #   - "#########"
 #   - "####C####"
 #
-# Significado:
+# Meaning:
 #
-#   E = botón de efectos
-#   S = botón de configuración
-#   C = botón cerrar
+#   E = effects button
+#   S = settings button
+#   C = close button
 #
 # =========================================================
-# Acciones disponibles
+# Available actions
 # =========================================================
 #
 # close
-#   Cierra el menú actual.
+#   Closes the current menu.
 #
 # open:<menu>
-#   Abre otro menú registrado.
+#   Opens another registered menu.
 #
-# Ejemplos:
+# Examples:
 #
 # action: "close"
 # action: "open:effects"
 # action: "open:main"
 #
-# %beam_style%          Estilo visual actual del rayo
+# %beam_style% = Current visual beam style
 # =========================================================
 
 titles:
-  main: "&8NexusBeacon"
-  effects: "&8NexusBeacon - Efectos"
-  settings: "&8NexusBeacon - Config"
-  trust: "&8NexusBeacon - Trust"
-  payment-acquire: "&8NexusBeacon - Adquirir"
-  payment-upgrade: "&8NexusBeacon - Mejorar"
+  main: "%lang_gui.main.title%"
+  effects: "%lang_gui.effects.title%"
+  settings: "%lang_gui.settings.title%"
+  trust: "%lang_gui.trust.title%"
+  payment-acquire: "%lang_gui.payment.title-acquire%"
+  payment-upgrade: "%lang_gui.payment.title-upgrade%"
   
 menus:
   main:
-    title: "&8NexusBeacon"
+    title: "%lang_gui.main.title%"
 
     layout:
       - "#########"
@@ -74,26 +74,25 @@ menus:
 
       E:
         material: BEACON
-        name: "&bEfectos"
+        name: "%lang_gui.main.effects-name%"
         lore:
-          - "&7Efectos activos: &f%active_effects%"
-          - "&eClick para abrir."
+          - "%lang_gui.main.effects-lore%"
         action: "open:effects"
 
       S:
         material: COMPARATOR
-        name: "&eConfiguración"
+        name: "%lang_gui.main.settings-name%"
         lore:
-          - "&7Configura tu beacon."
+          - "%lang_gui.main.settings-lore%"
         action: "open:settings"
 
       C:
         material: BARRIER
-        name: "&cCerrar"
+        name: "%lang_gui.common.close%"
         action: "close"
 
   effects:
-    title: "&8NexusBeacon - Efectos"
+    title: "%lang_gui.effects.title%"
 
     layout:
       - "#########"
@@ -113,39 +112,69 @@ menus:
 
       B:
         material: ARROW
-        name: "&eVolver"
+        name: "%lang_gui.common.back%"
         action: "open:main"
 
   settings:
-    title: "&8NexusBeacon - Config"
+    title: "%lang_gui.settings.title%"
 
     layout:
       - "#########"
       - "#.......#"
-      - "#...P...#"
-      - "#.......#"
+      - "#.R.P.B.#"
+      - "#.T.V...#"
       - "#########"
-      - "####B####"
+      - "####C####"
 
     items:
       "#":
         material: BLACK_STAINED_GLASS_PANE
         name: " "
 
-      P:
-        material: REDSTONE
-        name: "&dPartículas"
+      R:
+        material: EMERALD_BLOCK
+        name: "%lang_gui.settings.range-particles-name%"
         lore:
-          - "&7Configurar partículas."
-        action: "open:beam-style"
+          - "%lang_gui.settings.range-particles-lore%"
+        action: "settings:toggle-range-particles"
+
+      P:
+        material: NETHER_STAR
+        name: "%lang_gui.settings.range-particle-type-name%"
+        lore:
+          - "%lang_gui.settings.range-particle-type-lore%"
+        action: "settings:cycle-range-particle"
 
       B:
+        material: REINFORCED_DEEPSLATE
+        name: "%lang_gui.settings.base-protection-name%"
+        lore:
+          - "%lang_gui.settings.base-protection-lore%"
+        action: "settings:toggle-base-protection"
+
+      T:
+        material: NAME_TAG
+        name: "%lang_gui.settings.trusted-name%"
+        lore:
+          - "%lang_gui.settings.trusted-lore%"
+        action: "open:trust"
+
+      V:
+        material: LIGHT_BLUE_DYE
+        name: "%lang_gui.settings.visual-beam-name%"
+        lore:
+          - "%lang_gui.settings.visual-beam-lore%"
+        action: "open:beam-style"
+
+      C:
         material: ARROW
-        name: "&eVolver"
+        name: "%lang_gui.common.back%"
+        lore:
+          - "%lang_gui.common.back-lore%"
         action: "open:main"
 
   beam-style:
-    title: "&8NexusBeacon - Rayos"
+    title: "%lang_gui.beam-style.title%"
     layout:
       - "#########"
       - "#.......#"
@@ -166,20 +195,31 @@ menus:
 
       R:
         material: RED_DYE
-        name: "&cRojo"
+        name: "&cRed"
         action: "beam-style:red"
 
       G:
         material: LIME_DYE
-        name: "&aVerde"
+        name: "&aGreen"
         action: "beam-style:green"
 
       P:
         material: PURPLE_DYE
-        name: "&dMorado"
+        name: "&dPurple"
         action: "beam-style:purple"
 
       B:
         material: ARROW
-        name: "&eVolver"
-        action: "open:settings"
+        name: "%lang_gui.common.back%"
+        action: "open:main"
+
+  legacy:
+    payment:
+      slots:
+        # Slot positions used by the legacy payment menu.
+        # Inventory size is 27 slots (0-26).
+        # Changing these values allows menu layout customization without recompiling the plugin.
+        diamond: 11
+        exp: 13
+        money: 15
+        back: 22

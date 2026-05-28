@@ -58,6 +58,9 @@ public class SpawnerBoostExecutor implements EffectExecutor {
         int maxProcessed = plugin.getConfigManager().getBeaconConfig()
                 .getInt("performance.spawner-boost.max-blocks-per-tick", 8);
 
+        int maxScanned = plugin.getConfigManager().getBeaconConfig()
+                .getInt("performance.spawner-boost.max-scanned-blocks-per-tick", 2000);
+
         double speedUpPercentage = EffectLevelUtil.getLevelDouble(
                 plugin,
                 effect,
@@ -89,11 +92,17 @@ public class SpawnerBoostExecutor implements EffectExecutor {
         Material spawnerMaterial = plugin.getVersionAdapter().material("SPAWNER");
 
         int processed = 0;
+        int scanned = 0;
 
         for (int x = -radius; x <= radius; x++) {
             for (int y = -verticalRadius; y <= verticalRadius; y++) {
                 for (int z = -radius; z <= radius; z++) {
                     if (processed >= maxProcessed) {
+                        cleanupCooldowns(now);
+                        return;
+                    }
+
+                    if (++scanned >= maxScanned) {
                         cleanupCooldowns(now);
                         return;
                     }

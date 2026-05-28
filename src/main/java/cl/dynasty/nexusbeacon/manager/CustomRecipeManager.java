@@ -19,46 +19,71 @@ public class CustomRecipeManager {
         this.plugin = plugin;
     }
 
-    public void load() {
-        removeVanillaBeaconRecipe();
+public void load() {
+    removeCustomRecipe();
+    removeVanillaBeaconRecipe();
 
-        if (!plugin.getConfigManager().getBeaconConfig().getBoolean("recipe.enabled", true)) {
-            return;
-        }
-
-        ItemStack result = plugin.getCustomBeaconItemManager().createBeaconItem(1);
-        ShapedRecipe recipe;
-
-        try {
-            org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "NexusBeacon");
-            recipe = new ShapedRecipe(key, result);
-        } catch (Throwable throwable) {
-            recipe = new ShapedRecipe(result); // fallback legacy
-        }
-
-        recipe.shape(
-                plugin.getConfigManager().getBeaconConfig().getString("recipe.shape.0", "DND"),
-                plugin.getConfigManager().getBeaconConfig().getString("recipe.shape.1", "DBD"),
-                plugin.getConfigManager().getBeaconConfig().getString("recipe.shape.2", "OGO"));
-
-        ConfigurationSection ingredients = plugin.getConfigManager()
-                .getBeaconConfig()
-                .getConfigurationSection("recipe.ingredients");
-
-        if (ingredients != null) {
-            for (String key : ingredients.getKeys(false)) {
-                String materialName = ingredients.getString(key);
-                Material material = plugin.getVersionAdapter().material(materialName);
-
-                if (material != null) {
-                    recipe.setIngredient(key.charAt(0), material);
-                }
-            }
-        }
-
-        Bukkit.addRecipe(recipe);
-        plugin.getLogger().info(plugin.getLanguageManager().get("console.custom-recipe-registered"));
+    if (!plugin.getConfigManager().getBeaconConfig().getBoolean("recipe.enabled", true)) {
+        return;
     }
+
+    ConfigurationSection recipeSection = plugin.getConfigManager()
+            .getBeaconConfig()
+            .getConfigurationSection("recipe");
+
+    if (recipeSection == null) {
+        return;
+    }
+
+    java.util.List<String> shape = recipeSection.getStringList("shape");
+
+    if (shape.size() != 3) {
+        plugin.getLogger().warning("[NexusBeacon] Invalid recipe shape in beacon.yml. Expected 3 rows.");
+        return;
+    }
+
+    ItemStack result = plugin.getCustomBeaconItemManager().createBeaconItem(1);
+
+    org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "nexusbeacon");
+    ShapedRecipe recipe = new ShapedRecipe(key, result);
+
+    recipe.shape(
+            shape.get(0),
+            shape.get(1),
+            shape.get(2));
+
+    ConfigurationSection ingredients = recipeSection.getConfigurationSection("ingredients");
+
+    if (ingredients == null) {
+        plugin.getLogger().warning("[NexusBeacon] Missing recipe.ingredients in beacon.yml.");
+        return;
+    }
+
+    for (String symbol : ingredients.getKeys(false)) {
+        if (symbol.length() != 1) {
+            plugin.getLogger().warning("[NexusBeacon] Invalid recipe symbol in beacon.yml: " + symbol);
+            continue;
+        }
+
+        String materialName = ingredients.getString(symbol);
+        Material material = plugin.getVersionAdapter().material(materialName);
+
+        if (material == null) {
+            plugin.getLogger().warning("[NexusBeacon] Invalid recipe material in beacon.yml: " + materialName);
+            continue;
+        }
+
+        recipe.setIngredient(symbol.charAt(0), material);
+    }
+
+    Bukkit.addRecipe(recipe);
+    plugin.getLogger().info(plugin.getLanguageManager().get("console.custom-recipe-registered"));
+}
+
+private void removeCustomRecipe() {
+    org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "nexusbeacon");
+    Bukkit.removeRecipe(key);
+}
 
     public void removeVanillaBeaconRecipe() {
         if (!plugin.getConfigManager().getBeaconConfig().getBoolean("vanilla-beacon.disable-recipe", false)) {

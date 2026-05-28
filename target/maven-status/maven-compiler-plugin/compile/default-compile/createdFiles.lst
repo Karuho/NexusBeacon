@@ -48,6 +48,7 @@ cl\dynasty\nexusbeacon\manager\CustomBeaconItemManager.class
 cl\dynasty\nexusbeacon\service\FoliaSchedulerService.class
 cl\dynasty\nexusbeacon\effects\BeaconEffect.class
 cl\dynasty\nexusbeacon\util\RangeUtil.class
+cl\dynasty\nexusbeacon\util\DebugLogger.class
 cl\dynasty\nexusbeacon\listener\FurnaceBoostListener$FurnaceBoostData.class
 cl\dynasty\nexusbeacon\service\SpigotTeleporterService.class
 cl\dynasty\nexusbeacon\api\VersionAdapter.class

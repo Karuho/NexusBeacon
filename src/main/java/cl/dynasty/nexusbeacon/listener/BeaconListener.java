@@ -131,17 +131,10 @@ public class BeaconListener implements Listener {
                 .getBoolean("beacon-item.auto-pickup", true);
 
         if (event.getPlayer().getGameMode() == org.bukkit.GameMode.CREATIVE && creativeNoDupe) {
-            plugin.getBeaconManager().removeBeacon(block.getLocation());
-
-            if (event.getPlayer().getInventory().firstEmpty() == -1) {
-                block.getWorld().dropItemNaturally(block.getLocation(), dropItem);
-            } else {
-                event.getPlayer().getInventory().addItem(dropItem);
-            }
-
-            event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.removed"));
-            return;
-        }
+    plugin.getBeaconManager().removeBeacon(block.getLocation());
+    event.getPlayer().sendMessage(plugin.getLanguageManager().withPrefix("beacon.removed"));
+    return;
+}
 
         if (autoPickup && cancelIfFull && event.getPlayer().getInventory().firstEmpty() == -1) {
             event.setCancelled(true);

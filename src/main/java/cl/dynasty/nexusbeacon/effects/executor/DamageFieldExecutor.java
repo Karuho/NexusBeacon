@@ -51,7 +51,14 @@ public class DamageFieldExecutor implements EffectExecutor {
                         + " damage=" + damage
                         + " range=" + beacon.getRange());
 
-        for (Entity entity : center.getWorld().getEntities()) {
+        int range = beacon.getRange();
+        double searchRange = range;
+
+        for (Entity entity : center.getWorld().getNearbyEntities(
+                center,
+                searchRange,
+                searchRange,
+                searchRange)) {
             if (!(entity instanceof LivingEntity))
                 continue;
             if (!MobUtil.isHostile(entity))

@@ -101,9 +101,14 @@ public class PotionBeaconEffect implements BeaconEffect {
         int amplifier = Math.max(0, (level * amplifierPerLevel) - 1);
         Location center = beacon.getLocation();
         int range = beacon.getRange();
-        
+        double searchRange = range;
 
-        for (Entity entity : center.getWorld().getEntities()) {
+        for (Entity entity : center.getWorld().getNearbyEntities(
+                center,
+                searchRange,
+                searchRange,
+                searchRange)) {
+
             if (!(entity instanceof LivingEntity)) {
                 continue;
             }

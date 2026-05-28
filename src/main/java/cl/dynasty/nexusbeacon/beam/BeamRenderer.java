@@ -23,7 +23,7 @@ public final class BeamRenderer {
         if (renderMode.equalsIgnoreCase("CUSTOM_ONLY")) {
             return customBase;
         }
-        
+
         return customBase;
     }
 
@@ -51,9 +51,9 @@ public final class BeamRenderer {
         Location base = beacon.getLocation().clone().add(0.5, 1.0, 0.5);
         World world = base.getWorld();
 
-        int height = plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.height", 96);
-        double step = plugin.getConfigManager().getBeaconConfig().getDouble("visual-beam.step", 0.45);
-        int count = plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1);
+        int height = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.height", 96));
+        double step = Math.max(0.25D, plugin.getConfigManager().getBeaconConfig().getDouble("visual-beam.step", 0.45));
+        int count = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1));
 
         Particle particle = style.getParticle();
 
@@ -83,10 +83,9 @@ public final class BeamRenderer {
 
         Location base = beacon.getLocation().clone().add(0.5, 1.0, 0.5);
 
-        int height = plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.height", 96);
-        double step = plugin.getConfigManager().getBeaconConfig().getDouble("visual-beam.step", 0.45);
-        int count = plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1);
-
+        int height = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.height", 96));
+        double step = Math.max(0.25D, plugin.getConfigManager().getBeaconConfig().getDouble("visual-beam.step", 0.45));
+        int count = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1));
         Particle particle = style.getParticle();
 
         for (double y = 0; y <= height; y += step) {

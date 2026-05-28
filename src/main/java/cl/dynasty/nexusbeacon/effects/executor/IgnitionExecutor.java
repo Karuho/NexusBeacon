@@ -13,17 +13,17 @@ import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
 import cl.dynasty.nexusbeacon.util.RangeUtil;
 
-public class BurnerExecutor implements EffectExecutor {
+public class IgnitionExecutor implements EffectExecutor {
 
     private final NexusBeaconPlugin plugin;
 
-    public BurnerExecutor(NexusBeaconPlugin plugin) {
+    public IgnitionExecutor(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public String getType() {
-        return "BURNER";
+        return "IGNITION";
     }
 
     @Override
@@ -45,8 +45,14 @@ public class BurnerExecutor implements EffectExecutor {
                 + " level=" + level
                 + " fireTicks=" + fireTicks
                 + " range=" + beacon.getRange());
+        int range = beacon.getRange();
+        double searchRange = range;
 
-        for (Entity entity : center.getWorld().getEntities()) {
+        for (Entity entity : center.getWorld().getNearbyEntities(
+                center,
+                searchRange,
+                searchRange,
+                searchRange)) {
             if (!(entity instanceof LivingEntity))
                 continue;
             if (!MobUtil.isHostile(entity))

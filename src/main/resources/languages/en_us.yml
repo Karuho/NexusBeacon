@@ -42,6 +42,7 @@ messages:
     custom-recipe-registered: "Custom NexusBeacon recipe registered."
     vanilla-recipe-disabled: "Vanilla beacon recipe disabled."
     player-settings-save-error: "Could not save player file %uuid%"
+    mysql-prepare-table-error: "Could not prepare the NexusBeacon MySQL table."
 
   storage:
     loaded: "&aActive storage: &f%type%"
@@ -131,169 +132,6 @@ messages:
     not-enough-power: "&cThere is not enough power."
     power-status: "&7Used power: &f%used%&7/&f%available%"
     acquired: "&aEffect acquired: &f%effect%"
-    speed:
-      name: "&bSpeed"
-      description:
-        - "&7Grants speed inside the beacon range."
-        
-    regeneration:
-      name: "&dRegeneration"
-      description:
-         - "&7Regenerates life within range."
-
-    strength:
-      name: "&cStrength"
-      description:
-        - "&7Increases damage within range."
-
-    night_vision:
-      name: "&9Night Vision"
-      description:
-        - "&7Allows you to see clearly in the dark."
-
-    jump:
-      name: "&aJump Boost"
-      description:
-        - "&7Increases your jump height within range."
-
-    invisible:
-      name: "&aInvisibility"
-      description:
-        - "&7Makes you invisible within range."
-
-    haste:
-      name: "&aHaste"
-      description:
-        - "&7Increases mining speed within range."
-
-    luck:
-      name: "&aLuck"
-      description:
-        - "&7Increases luck within range."
-
-    water_breathing:
-      name: "&aWater Breathing"
-      description:
-        - "&7Allows you to breathe underwater within range."
-
-    poison:
-      name: "&2Poison"
-      description:
-        - "&7Poisons monsters within range."
-
-    resistance:
-      name: "&eResistance"
-      description:
-        - "&7Grants resistance within range."
-
-    slowdown:
-      name: "&8Slowness"
-      description:
-        - "&7Slows monsters within range."
-
-    crop_boost:
-      name: "&aCrop Growth"
-      description:
-        - "&7Speeds up crop growth."
-        - "&7Works within the beacon range."
-      levels:
-        2:
-          description:
-            - "&7Speeds up crop growth moderately."
-            - "&7Works within the beacon range."
-        3:
-          description:
-            - "&7Speeds up crop growth significantly."
-            - "&7Works within the beacon range."
-
-    burner:
-      name: "&6Burner"
-      description:
-        - "&7Sets hostile mobs on fire within range."
-      levels:
-        2:
-          description:
-            - "&7Sets hostile mobs on fire within range moderately."
-        3:
-          description:
-            - "&7Sets hostile mobs on fire within range."
-
-    damage_field:
-      name: "&cDamage Field"
-      description:
-        - "&7Damages hostile mobs within range."
-        - "&7Does not affect animals or players."
-      levels:
-        2:
-          description:
-            - "&7Damages hostile mobs within range moderately."
-            - "&7Does not affect animals or players."
-        3:
-          description:
-            - "&7Damages hostile mobs within range significantly."
-            - "&7Does not affect animals or players."
-
-    gravity_well:
-      name: "&5Gravity Well"
-      description:
-        - "&7Pulls hostile mobs toward the beacon."
-        - "&7Useful for farms and area control."
-      levels:
-        2:
-          description:
-            - "&7Pulls hostile mobs toward the beacon moderately."
-            - "&7Useful for farms and area control."
-        3:
-          description:
-            - "&7Pulls hostile mobs toward the beacon significantly."
-            - "&7Useful for farms and area control."
-
-    furnace_boost:
-      name: "&6Furnace Booster"
-      description:
-        - "&7Speeds up furnaces within range."
-      levels:
-        2:
-          description:
-            - "&7Speeds up furnaces moderately."
-        3:
-          description:
-            - "&7Speeds up furnaces significantly."
-
-    modern_furnace_boost:
-      name: "&bModern Furnaces"
-      description:
-        - "&7Speeds up blast furnaces and smokers."
-      levels:
-        2:
-          description:
-            - "&7Speeds up blast furnaces and smokers moderately."
-        3:
-          description:
-            - "&7Speeds up blast furnaces and smokers significantly."
-
-    spawner_boost:
-      name: "&5Spawner Booster"
-      description:
-        - "&7Reduces nearby spawner delay."
-        - "&7Works within the beacon range."
-      levels:
-        2:
-          description:
-            - "&7Reduces nearby spawner delay slightly."
-            - "&7Works within the beacon range."
-        3:
-          description:
-            - "&7It greatly reduces nearby spawner delay."
-            - "&7Works within the beacon range."
-        4:
-          description:
-            - "&7Reduces nearby spawner delay moderately."
-            - "&7Works within the beacon range."
-        5:
-          description:
-            - "&7Reduces nearby spawner delay significantly."
-            - "&7Works within the beacon range."
 
   trust:
     use-command: "&eUse &f/nb trust <player>&e."
@@ -313,3 +151,284 @@ placeholders:
   disabled: "&cDisabled"
   yes: "&aYes"
   no: "&cNo"
+  enabled_female: "&aEnabled"
+  disabled_female: "&cDisabled"
+  enabled_female_plural: "&aEnabled"
+  disabled_female_plural: "&cDisabled"
+  global: "Global"
+
+item:
+  display-name: "&b&lNexusBeacon"
+  lore:
+    - ""
+    - "&5◆ &7Owner: &f{owner}"
+    - "&5◆ &7Range: &f{range} blocks"
+    - "&5◆ &7Trusted: &f{trusted}"
+    - ""
+    - "&5◆ &7Effects:"
+    - "{effect_list}"
+  no-owner: "No owner"
+  no-trusted: "No"
+  no-effects: "&7- &cNo acquired effects"
+  effect-level: " &8| &dLevel "
+  effect-active: " &aActive"
+  effect-inactive: " &cInactive"
+
+gui:
+  common:
+    close: "&cClose"
+    back: "&eReturn"
+    back-lore: "&7Return to the main menu."
+
+  main:
+    title: "&8NexusBeacon"
+    effects-name: "&bEffects"
+    effects-lore:
+      - "&7Active effects: &f%active_effects%"
+      - "&eClick to open"
+    settings-name: "&eSettings"
+    settings-lore:
+      - "&7Configure your beacon."
+
+  effects:
+    title: "&8NexusBeacon - Effects"
+    status-active: "&7Status: &aActive"
+    status-inactive: "&7Status: &cInactive"
+    status-not-acquired: "&7Status: &cNot acquired"
+    level: "&7Level: &f%level%&7/&f%max%"
+    level-not-acquired: "&7Level: &cNot acquired"
+    consumption: "&7Consumption: &e%power% power"
+    beacon-power: "&7Beacon power: &f%used%&7/&f%available%"
+    left-click-toggle: "&eLeft click: &fEnable/Disable"
+    buy-from-payment: "&7Buy this effect from the payment menu."
+    right-click-acquire: "&aRight click: &fAcquire"
+    right-click-upgrade: "&bRight click: &fUpgrade"
+    maxed: "&6Maxed out!"
+    back-name: "&eBack"
+    back-lore: "&7Back to main menu."
+    dynamic-name: "&b%effect_name%"
+    dynamic-status-active: "&aActive"
+    dynamic-status-inactive: "&cInactive"
+    dynamic-lore:
+      - ""
+      - "&7Status: %effect_status%"
+      - "&7Level: &f%effect_level%/%effect_max_level%"
+      - "&7Power: &f%effect_power%"
+      - ""
+      - "&eLeft click: Toggle"
+      - "&6Right click: Upgrade"
+
+  payment:
+    item-name: "&bPay with item"
+    exp-name: "&aPay with experience"
+    money-name: "&6Pay with money"
+    confirm: "&eClick to confirm."
+    back-name: "&eBack"
+    back-lore: "&7Back to effects."
+    title-acquire: "&8NexusBeacon - Acquire"
+    title-upgrade: "&8NexusBeacon - Upgrade"
+
+  trust:
+    title: "&8NexusBeacon - Trust"
+    trusted-player-lore:
+      - "&7Trusted player."
+      - "&cClick to remove trust."
+    add-name: "&eAdd player"
+    add-lore:
+      - "&7Use the command:"
+      - "&f/nb trust <player>"
+    back-name: "&eBack"
+    back-lore: "&7Back to settings."
+
+  beam-style:
+    title: "&8NexusBeacon - Rays"
+
+  settings:
+    title: "&8NexusBeacon - Settings"
+    range-particles-name: "&bRange particles"
+    range-particles-lore:
+      - "&7Status: %range_particles_status%"
+      - "&7Displays the beacon range outline."
+      - "&eClick to toggle."
+    range-particle-type-name: "&dRange particle type"
+    range-particle-type-lore:
+      - "&7Current: &f%range_particle_type%"
+      - "&eClick to cycle."
+    base-protection-name: "&eBase protection"
+    base-protection-lore:
+      - "&7Status: %protect_base_status%"
+      - "&7Protects only the valid beacon pyramid."
+      - "&eClick to toggle."
+    trusted-name: "&aTrusted players"
+    trusted-lore:
+      - "&7Trusted players: &f%trusted_players%"
+      - "&eClick to manage."
+    visual-beam-name: "&bVisual beam"
+    visual-beam-lore:
+      - "&7Current style: &f%beam_style%"
+      - "&eClick to change color/particle."
+
+effects:
+  speed:
+    name: "&bSpeed"
+    description:
+      - "&7Grants speed inside the beacon range."
+
+  regeneration:
+    name: "&dRegeneration"
+    description:
+      - "&7Regenerates life within range."
+
+  strength:
+    name: "&cStrength"
+    description:
+      - "&7Increases damage within range."
+
+  night_vision:
+    name: "&9Night Vision"
+    description:
+      - "&7Allows you to see clearly in the dark."
+
+  jump:
+    name: "&aJump Boost"
+    description:
+      - "&7Increases your jump height within range."
+
+  invisible:
+    name: "&aInvisibility"
+    description:
+      - "&7Makes you invisible within range."
+
+  haste:
+    name: "&aHaste"
+    description:
+      - "&7Increases mining speed within range."
+
+  luck:
+    name: "&aLuck"
+    description:
+      - "&7Increases luck within range."
+
+  water_breathing:
+    name: "&aWater Breathing"
+    description:
+      - "&7Allows you to breathe underwater within range."
+
+  poison:
+    name: "&2Poison"
+    description:
+      - "&7Poisons monsters within range."
+
+  resistance:
+    name: "&eResistance"
+    description:
+      - "&7Grants resistance within range."
+
+  slowdown:
+    name: "&8Slowness"
+    description:
+      - "&7Slows monsters within range."
+
+  crop_boost:
+    name: "&aCrop Growth"
+    description:
+      - "&7Speeds up crop growth."
+      - "&7Works within the beacon range."
+    levels:
+      2:
+        description:
+          - "&7Speeds up crop growth moderately."
+          - "&7Works within the beacon range."
+      3:
+        description:
+          - "&7Speeds up crop growth significantly."
+          - "&7Works within the beacon range."
+
+  ignition:
+    name: "&6Ignition"
+    description:
+      - "&7Sets hostile mobs on fire within range."
+    levels:
+      2:
+        description:
+          - "&7Sets hostile mobs on fire within range moderately."
+      3:
+        description:
+          - "&7Sets hostile mobs on fire within range."
+
+  damage_field:
+    name: "&cDamage Field"
+    description:
+      - "&7Damages hostile mobs within range."
+      - "&7Does not affect animals or players."
+    levels:
+      2:
+        description:
+          - "&7Damages hostile mobs within range moderately."
+          - "&7Does not affect animals or players."
+      3:
+        description:
+          - "&7Damages hostile mobs within range significantly."
+          - "&7Does not affect animals or players."
+
+  gravity_pulse:
+    name: "&5Gravity Pulse"
+    description:
+      - "&7Pulls hostile mobs toward the beacon."
+      - "&7Useful for farms and area control."
+    levels:
+      2:
+        description:
+          - "&7Pulls hostile mobs toward the beacon moderately."
+          - "&7Useful for farms and area control."
+      3:
+        description:
+          - "&7Pulls hostile mobs toward the beacon significantly."
+          - "&7Useful for farms and area control."
+
+  furnace_boost:
+    name: "&6Furnace Booster"
+    description:
+      - "&7Speeds up furnaces within range."
+    levels:
+      2:
+        description:
+          - "&7Speeds up furnaces moderately."
+      3:
+        description:
+          - "&7Speeds up furnaces significantly."
+
+  modern_furnace_boost:
+    name: "&bModern Furnaces"
+    description:
+      - "&7Speeds up blast furnaces and smokers."
+    levels:
+      2:
+        description:
+          - "&7Speeds up blast furnaces and smokers moderately."
+      3:
+        description:
+          - "&7Speeds up blast furnaces and smokers significantly."
+
+  spawner_boost:
+    name: "&5Spawner Booster"
+    description:
+      - "&7Reduces nearby spawner delay."
+      - "&7Works within the beacon range."
+    levels:
+      2:
+        description:
+          - "&7Reduces nearby spawner delay slightly."
+          - "&7Works within the beacon range."
+      3:
+        description:
+          - "&7It greatly reduces nearby spawner delay."
+          - "&7Works within the beacon range."
+      4:
+        description:
+          - "&7Reduces nearby spawner delay moderately."
+          - "&7Works within the beacon range."
+      5:
+        description:
+          - "&7Reduces nearby spawner delay significantly."
+          - "&7Works within the beacon range."

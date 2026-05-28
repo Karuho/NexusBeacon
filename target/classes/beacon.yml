@@ -1,5 +1,5 @@
 # ============================================================
-# CONFIGURACIÓN PRINCIPAL DE NexusBeacon
+# MAIN NexusBeacon CONFIGURATION
 # ============================================================
 
 beacon:
@@ -7,25 +7,25 @@ beacon:
   max-range: 150
 
   particles:
-    # Activa o desactiva las partículas visuales.
+    # Enables or disables visual particles.
     enabled: true
 
-    # Cada cuántos ticks se dibujan.
+    # How often particles are rendered.
     interval-ticks: 20
 
-    # Cantidad de puntos usados para formar el círculo.
-    # Más puntos = círculo más suave, pero más carga visual.
+    # Amount of points used to form the circle.
+    # More points = smoother circle, but more visual load.
     radius-points: 96
     type: VILLAGER_HAPPY
 
   range-calculator:
     enabled: true
 
-    # Modos:
-    # FIXED       = usa default-range
-    # PERCENTILE  = rango = poder * porcentaje
-    # EXPONENTIAL = rango = poder^exponente
-    # CLASSIFIED  = rango según tabla de poder
+    # Modes:
+    # FIXED       = uses default-range
+    # PERCENTILE  = range = power * percentage
+    # EXPONENTIAL = range = power^exponent
+    # CLASSIFIED  = range based on power table
     mode: EXPONENTIAL
 
     percentile:
@@ -62,30 +62,36 @@ beacon:
       REDSTONE_BLOCK: 1
       LAPIS_BLOCK: 2
       AMETHYST_BLOCK: 2
+      
+beacon-item:
+  # If true, breaking a NexusBeacon in creative will not duplicate it.
+  # Recommended: true.
+  creative-no-dupe: true
+
+  # If true, breaking a NexusBeacon with a full inventory will cancel the break.
+  cancel-if-inventory-full: true
+
+  # If true, the NexusBeacon item goes directly to the player's inventory.
+  # If false, it drops naturally on the ground.
+  auto-pickup: true
 
 item:
   material: BEACON
-  display-name: "&b&lNexusBeacon"
+  display-name: "%lang_item.display-name%"
   lore:
-  - ""
-  - "&8[&b+&8] &7Dueño: &f{owner}"
-  - "&8[&b+&8] &7Rango: &f{range} bloques"
-  - "&8[&b+&8] &7Trust: &f{trusted}"
-  - ""
-  - "&8[&b+&8] &7Efectos:"
-  - "{effect_list}"
+    - "%lang_item.lore%"
 
 visual-beam:
   enabled: true
 
-  # GLOBAL = todos usan el estilo global-style
-  # PLAYER = cada beacon usa su estilo elegido por GUI
-  # PLAYER_OR_GLOBAL = usa estilo del beacon si existe; si no, usa global-style
+  # GLOBAL = all beacons use global-style
+  # PLAYER = each beacon uses its selected GUI style
+  # PLAYER_OR_GLOBAL = uses beacon style if set; otherwise uses global-style
   style-mode: PLAYER_OR_GLOBAL
 
-  # AUTO = dibuja rayo visual solo si la base usa materiales custom
-  # ALWAYS = siempre dibuja rayo visual
-  # CUSTOM_ONLY = solo si la base usa materiales custom
+  # AUTO = renders visual beam only if the base uses custom materials
+  # ALWAYS = always renders visual beam
+  # CUSTOM_ONLY = only renders if the base uses custom materials
   render-mode: AUTO
 
   interval-ticks: 4
@@ -113,21 +119,21 @@ beam-styles:
     permission: ""
 
   red:
-    name: "&cRojo"
+    name: "&cRed"
     particle: DUST
     color: RED
     size: 1.2
     permission: ""
 
   green:
-    name: "&aVerde"
+    name: "&aGreen"
     particle: DUST
     color: LIME
     size: 1.2
     permission: ""
 
   purple:
-    name: "&dMorado"
+    name: "&dPurple"
     particle: DUST
     color: PURPLE
     size: 1.2
@@ -141,46 +147,52 @@ beam-styles:
     permission: ""
 
 # ============================================================
-# PROTECCIÓN
+# PROTECTION
 # ============================================================
 protection:
-  # Solo el dueño o admins pueden interactuar con el NexusBeacon.
+  # Only the owner or admins can interact with the NexusBeacon.
   owner-only-interact: true
 
-  # Solo el dueño o admins pueden romper el NexusBeacon.
+  # Only the owner or admins can break the NexusBeacon.
   owner-only-break: true
 
-  # Protege los bloques minerales usados como base.
+  # Protects mineral blocks used as the beacon base.
   protect-base-blocks: true
 
 # ============================================================
-# BEACON VANILLA
+# VANILLA BEACON
 # ============================================================
 vanilla-beacon:
-  # Si es true, bloquea el uso/colocación de beacons vanilla.
+  # If true, blocks vanilla beacon placement/usage.
   disable-vanilla: false
 
-  # Si es true, elimina o bloquea la receta vanilla del beacon.
+  # If true, removes or blocks the vanilla beacon recipe.
   disable-recipe: false
 
 # ============================================================
-# RENDIMIENTO
+# PERFORMANCE
 # ============================================================
 performance:
   spawner-boost:
-    # Radio horizontal para buscar spawners cercanos.
-    # Mantener bajo para proteger TPS.
+    # Horizontal radius used to search nearby spawners.
+    # Keep this low to protect TPS.
     scan-radius: 16
 
-    # Radio vertical para buscar spawners.
+    # Vertical radius used to search spawners.
     vertical-radius: 16
 
-    # Máximo de spawners procesados por ejecución.
+    # Maximum spawners processed per execution.
     max-blocks-per-tick: 8
 
-    # Si SpawnerMeta está activo, NexusBeacon no modifica spawners.
-    # Evita conflictos con plugins que administran spawners.
+    # If SpawnerMeta is enabled, NexusBeacon will not modify spawners.
+    # Prevents conflicts with spawner management plugins.
     disable-when-spawnermeta-enabled: true
+
+    # Maximum amount of blocks SpawnerBoost will scan per execution before stopping.
+    # This does not limit how many spawners are boosted; that is controlled by max-blocks-per-tick.
+    # Helps prevent large area scans from impacting TPS on servers with many active beacons.
+    # Recommended: 1000-3000. Increase carefully depending on hardware and beacon count.
+    max-scanned-blocks-per-tick: 2000
 
   crop-boost:
     scan-radius: 64
@@ -189,18 +201,19 @@ performance:
     max-scanned-blocks-per-tick: 2500
 
 # ============================================================
-# RECETA CUSTOM DEL NexusBeacon
+# CUSTOM NexusBeacon RECIPE
 # ============================================================
 recipe:
-  # Activa o desactiva la receta custom.
+  # Enables or disables the custom recipe.
   enabled: true
 
-  # Forma de la receta.
+  # Recipe shape.
   shape:
   - "DDD"
   - "DBD"
   - "OOO"
-  # Ingredientes usados en la forma.
+
+  # Ingredients used in the recipe shape.
   ingredients:
     B: BEACON
     D: DIAMOND_BLOCK

@@ -77,9 +77,6 @@ public class YamlBeaconStorageProvider implements BeaconStorageProvider {
             beacon.setRangeParticleType(rangeParticleType);
 
             beacons.add(beacon);
-
-            beacons.add(new BeaconData(id, uniqueId, location, owner, range, level, effects, activeEffects,
-                    trustedPlayers, protectBaseBlocks, null));
         }
 
         return beacons;
@@ -105,6 +102,7 @@ public class YamlBeaconStorageProvider implements BeaconStorageProvider {
         storage.set("beacons." + id + ".active-effects", new ArrayList<String>(beacon.getActiveEffects()));
         storage.set("beacons." + id + ".range-particles-enabled", beacon.isRangeParticlesEnabled());
         storage.set("beacons." + id + ".range-particle-type", beacon.getRangeParticleType());
+        storage.set("beacons." + id + ".beam-style", beacon.getBeamStyle());
 
         plugin.getConfigManager().saveStorage();
     }

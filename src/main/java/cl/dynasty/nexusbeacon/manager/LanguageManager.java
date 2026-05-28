@@ -95,6 +95,22 @@ public final class LanguageManager {
                 .toList();
     }
 
+    public String raw(String path) {
+        return color(languageConfig.getString(path, path));
+    }
+
+    public String raw(String path, Map<String, String> placeholders) {
+        return apply(raw(path), placeholders);
+    }
+
+    public List<String> rawList(String path, Map<String, String> placeholders) {
+        return languageConfig.getStringList(path)
+                .stream()
+                .map(this::color)
+                .map(line -> apply(line, placeholders))
+                .toList();
+    }
+
     public String materialName(String key) {
         return languageConfig.getString("materials." + key, key);
     }

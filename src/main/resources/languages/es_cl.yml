@@ -42,6 +42,7 @@ messages:
     custom-recipe-registered: "Receta custom de NexusBeacon registrada."
     vanilla-recipe-disabled: "Receta vanilla del beacon deshabilitada."
     player-settings-save-error: "No se pudo guardar el archivo del jugador %uuid%"
+    mysql-prepare-table-error: "No se pudo preparar la tabla MySQL de NexusBeacon."
 
   storage:
     loaded: "&aStorage activo: &f%type%"
@@ -53,7 +54,7 @@ messages:
     migration-invalid: "&cStorage inválido. Tipos válidos: YAML, SQLITE, MYSQL."
     migration-same-type: "&eEl storage origen y destino no pueden ser iguales."
     migration-empty: "&eNo se encontraron beacons para migrar."
-    
+
   command:
     give-usage: "&cUso: /%label% give <jugador> [cantidad]"
     trust-usage: "&cUso: /%label% trust <jugador>"
@@ -131,169 +132,12 @@ messages:
     not-enough-power: "&cNo hay poder suficiente."
     power-status: "&7Poder usado: &f%used%&7/&f%available%"
     acquired: "&aEfecto adquirido: &f%effect%"
-    speed:
-      name: "&bVelocidad"
-      description:
-        - "&7Otorga velocidad dentro del rango."
-
-    regeneration:
-      name: "&dRegeneración"
-      description:
-         - "&7Regenera vida dentro del rango."
-
-    strength:
-      name: "&cFuerza"
-      description:
-        - "&7Aumenta el daño dentro del rango."
-
-    night_vision:
-      name: "&9Visión Nocturna"
-      description:
-        - "&7Permite ver claramente en la oscuridad."
-
-    jump:
-      name: "&aSalto"
-      description:
-        - "&7Aumenta tu salto dentro del rango."
-
-    invisible:
-      name: "&aInvisible"
-      description:
-        - "&7Hace que seas invisible dentro del rango."
-
-    haste:
-      name: "&aVelocidad de Minado"
-      description:
-        - "&7Aumenta la velocidad de minado dentro del rango."
-
-    luck:
-      name: "&aSuerte"
-      description:
-        - "&7Aumenta la suerte dentro del rango."
-
-    water_breathing:
-      name: "&aRespiración Acuática"
-      description:
-        - "&7Permite respirar bajo el agua dentro del rango."
-
-    poison:
-      name: "&2Veneno"
-      description:
-        - "&7Envenena monstruos dentro del rango."
-
-    resistance:
-      name: "&eResistencia"
-      description:
-        - "&7Otorga resistencia dentro del rango."
-
-    slowdown:
-      name: "&8Ralentización"
-      description:
-        - "&7Ralentiza monstruos dentro del rango."
-
-    crop_boost:
-      name: "&aCrecimiento de Cultivos"
-      description:
-        - "&7Acelera el crecimiento de cultivos."
-        - "&7Funciona dentro del rango del beacon."
-      levels:
-        2:
-          description:
-            - "&7Acelera el crecimiento de cultivos moderadamente."
-            - "&7Funciona dentro del rango del beacon."
-        3:
-          description:
-            - "&7Acelera el crecimiento de cultivos significativamente."
-            - "&7Funciona dentro del rango del beacon."
-
-    burner:
-      name: "&6Quemador"
-      description:
-        - "&7Prende fuego a mobs hostiles dentro del rango."
-      levels:
-        2:
-          description:
-            - "&7Prende fuego a mobs hostiles dentro del rango moderadamente."
-        3:
-          description:
-            - "&7Prende fuego a mobs hostiles dentro del rango significativamente."
-
-    damage_field:
-      name: "&cCampo de Daño"
-      description:
-        - "&7Daña mobs hostiles dentro del rango."
-        - "&7No afecta animales ni jugadores."
-      levels:
-        2:
-          description:
-            - "&7Daña mobs hostiles dentro del rango moderadamente."
-            - "&7No afecta animales ni jugadores."
-        3:
-          description:
-            - "&7Daña mobs hostiles dentro del rango significativamente."
-            - "&7No afecta animales ni jugadores."
-
-    gravity_well:
-      name: "&5Pozo Gravitacional"
-      description:
-        - "&7Atrae mobs hostiles hacia el beacon."
-        - "&7Útil para granjas y control de área."
-      levels:
-        2:
-          description:
-            - "&7Atrae mobs hostiles hacia el beacon moderadamente."
-            - "&7Útil para granjas y control de área."
-        3:
-          description:
-            - "&7Atrae mobs hostiles hacia el beacon significativamente."
-            - "&7Útil para granjas y control de área."
-
-    furnace_boost:
-      name: "&6Furnace Booster"
-      description:
-        - "&7Acelera hornos dentro del rango."
-      levels:
-        2:
-          description:
-            - "&7Acelera hornos moderadamente."
-        3:
-          description:
-            - "&7Acelera hornos significativamente."
-
-    modern_furnace_boost:
-      name: "&bHornos Modernos"
-      description:
-        - "&7Acelera altos hornos y ahumadores."
-
-    spawner_boost:
-      name: "&5Spawner Booster"
-      description:
-        - "&7Reduce el delay de spawners cercanos."
-        - "&7Funciona dentro del rango del beacon."
-      levels:
-        2:
-          description:
-            - "&7Reduce el delay de spawners cercanos levemente."
-            - "&7Funciona dentro del rango del beacon."
-        3:
-          description:
-            - "&7Reduce el delay de spawners cercanos moderadamente."
-            - "&7Funciona dentro del rango del beacon."
-        4:
-          description:
-            - "&7Reduce mucho el delay de spawners cercanos."
-            - "&7Funciona dentro del rango del beacon."
-        5:
-          description:
-            - "&7Reduce el delay de spawners cercanos significativamente."
-            - "&7Funciona dentro del rango del beacon."
 
   trust:
     use-command: "&eUsa &f/nb trust <jugador>&e."
     removed: "&cJugador eliminado de trust."
     cannot-trust-owner: "&cNo puedes agregar al dueño como jugador confiable."
-    
-    
+
 materials:
   DIAMOND: "diamantes"
   EMERALD: "esmeraldas"
@@ -306,3 +150,277 @@ placeholders:
   disabled: "&cDesactivado"
   yes: "&aSí"
   no: "&cNo"
+  enabled_female: "&aActivada"
+  disabled_female: "&cDesactivada"
+  enabled_female_plural: "&aActivadas"
+  disabled_female_plural: "&cDesactivadas"
+  global: "Global"
+
+item:
+  display-name: "&b&lNexusBeacon"
+  lore:
+    - ""
+    - "&5◆ &7Dueño: &f{owner}"
+    - "&5◆ &7Rango: &f{range} bloques"
+    - "&5◆ &7Confiables: &f{trusted}"
+    - ""
+    - "&5◆ &7Efectos:"
+    - "{effect_list}"
+  no-owner: "Sin dueño"
+  no-trusted: "No"
+  no-effects: "&7- &cSin efectos adquiridos"
+  effect-level: " &8| &dNivel "
+  effect-active: " &aActivo"
+  effect-inactive: " &cInactivo"
+
+gui:
+  common:
+    close: "&cCerrar"
+    back: "&eVolver"
+    back-lore: "&7Volver al menú principal."
+
+  main:
+    title: "&8NexusBeacon"
+    effects-name: "&bEfectos"
+    effects-lore:
+      - "&7Efectos activos: &f%active_effects%"
+      - "&eClick para abrir"
+    settings-name: "&eConfiguración"
+    settings-lore:
+      - "&7Configura tu beacon."
+
+  effects:
+    title: "&8NexusBeacon - Efectos"
+    status-active: "&7Estado: &aActivo"
+    status-inactive: "&7Estado: &cInactivo"
+    status-not-acquired: "&7Estado: &cNo adquirido"
+    level: "&7Nivel: &f%level%&7/&f%max%"
+    level-not-acquired: "&7Nivel: &cNo adquirido"
+    consumption: "&7Consumo: &e%power% poder"
+    beacon-power: "&7Poder beacon: &f%used%&7/&f%available%"
+    left-click-toggle: "&eClick izquierdo: &fActivar/Desactivar"
+    buy-from-payment: "&7Compra este efecto desde el menú de pago."
+    right-click-acquire: "&aClick derecho: &fAdquirir"
+    right-click-upgrade: "&bClick derecho: &fMejorar"
+    maxed: "&6¡Al máximo!"
+    back-name: "&eVolver"
+    back-lore: "&7Volver al menú principal."
+    dynamic-name: "&b%effect_name%"
+    dynamic-status-active: "&aActivo"
+    dynamic-status-inactive: "&cInactivo"
+    dynamic-lore:
+      - ""
+      - "&7Estado: %effect_status%"
+      - "&7Nivel: &f%effect_level%/%effect_max_level%"
+      - "&7Consumo: &f%effect_power%"
+      - ""
+      - "&eClick izquierdo: Activar/Desactivar"
+      - "&6Click derecho: Mejorar"
+
+  payment:
+    title-acquire: "&8NexusBeacon - Adquirir"
+    title-upgrade: "&8NexusBeacon - Mejorar"
+    item-name: "&bPagar con ítem"
+    exp-name: "&aPagar con experiencia"
+    money-name: "&6Pagar con dinero"
+    confirm: "&eClick para confirmar."
+    back-name: "&eVolver"
+    back-lore: "&7Volver a efectos."
+
+  trust:
+    title: "&8NexusBeacon - Confianza"
+    trusted-player-lore:
+      - "&7Jugador confiado."
+      - "&cClick para quitarlo."
+    add-name: "&eAgregar jugador"
+    add-lore:
+      - "&7Usa el comando:"
+      - "&f/nb trust <jugador>"
+    back-name: "&eVolver"
+    back-lore: "&7Volver a configuración."
+
+  beam-style:
+    title: "&8NexusBeacon - Rayos"
+
+  settings:
+    title: "&8NexusBeacon - Config."
+    range-particles-name: "&bPartículas de rango"
+    range-particles-lore:
+      - "&7Estado: %range_particles_status%"
+      - "&7Muestra la circunferencia del rango."
+      - "&eClick para alternar."
+    range-particle-type-name: "&dTipo de partícula de rango"
+    range-particle-type-lore:
+      - "&7Actual: &f%range_particle_type%"
+      - "&eClick para cambiar."
+    base-protection-name: "&eProtección de base"
+    base-protection-lore:
+      - "&7Estado: %protect_base_status%"
+      - "&7Protege solo la pirámide válida."
+      - "&eClick para alternar."
+    trusted-name: "&aJugadores confiables"
+    trusted-lore:
+      - "&7Jugadores confiables: &f%trusted_players%"
+      - "&eClick para gestionar."
+    visual-beam-name: "&bRayo visual"
+    visual-beam-lore:
+      - "&7Estilo actual: &f%beam_style%"
+      - "&eClick para cambiar color/partícula."
+
+effects:
+  speed:
+    name: "&bVelocidad"
+    description:
+      - "&7Otorga velocidad dentro del rango."
+
+  regeneration:
+    name: "&dRegeneración"
+    description:
+      - "&7Regenera vida dentro del rango."
+
+  strength:
+    name: "&cFuerza"
+    description:
+      - "&7Aumenta el daño dentro del rango."
+
+  night_vision:
+    name: "&9Visión Nocturna"
+    description:
+      - "&7Permite ver claramente en la oscuridad."
+
+  jump:
+    name: "&aSalto"
+    description:
+      - "&7Aumenta tu salto dentro del rango."
+
+  invisible:
+    name: "&aInvisible"
+    description:
+      - "&7Hace que seas invisible dentro del rango."
+
+  haste:
+    name: "&aVelocidad de Minado"
+    description:
+      - "&7Aumenta la velocidad de minado dentro del rango."
+
+  luck:
+    name: "&aSuerte"
+    description:
+      - "&7Aumenta la suerte dentro del rango."
+
+  water_breathing:
+    name: "&aRespiración Acuática"
+    description:
+      - "&7Permite respirar bajo el agua dentro del rango."
+
+  poison:
+    name: "&2Veneno"
+    description:
+      - "&7Envenena monstruos dentro del rango."
+
+  resistance:
+    name: "&eResistencia"
+    description:
+      - "&7Otorga resistencia dentro del rango."
+
+  slowdown:
+    name: "&8Ralentización"
+    description:
+      - "&7Ralentiza monstruos dentro del rango."
+
+  crop_boost:
+    name: "&aCrecimiento de Cultivos"
+    description:
+      - "&7Acelera el crecimiento de cultivos."
+      - "&7Funciona dentro del rango del beacon."
+    levels:
+      2:
+        description:
+          - "&7Acelera el crecimiento de cultivos moderadamente."
+          - "&7Funciona dentro del rango del beacon."
+      3:
+        description:
+         - "&7Acelera el crecimiento de cultivos significativamente."
+         - "&7Funciona dentro del rango del beacon."
+
+  ignition:
+    name: "&6Ignición"
+    description:
+      - "&7Prende fuego a mobs hostiles dentro del rango."
+    levels:
+      2:
+        description:
+          - "&7Prende fuego a mobs hostiles dentro del rango moderadamente."
+      3:
+        description:
+          - "&7Prende fuego a mobs hostiles dentro del rango significativamente."
+
+  damage_field:
+    name: "&cCampo de Daño"
+    description:
+      - "&7Daña mobs hostiles dentro del rango."
+      - "&7No afecta animales ni jugadores."
+    levels:
+      2:
+        description:
+          - "&7Daña mobs hostiles dentro del rango moderadamente."
+          - "&7No afecta animales ni jugadores."
+      3:
+        description:
+          - "&7Daña mobs hostiles dentro del rango significativamente."
+          - "&7No afecta animales ni jugadores."
+
+  gravity_pulse:
+    name: "&5Pulso Gravitacional"
+    description:
+      - "&7Atrae mobs hostiles hacia el beacon."
+      - "&7Útil para granjas y control de área."
+    levels:
+      2:
+        description:
+          - "&7Atrae mobs hostiles hacia el beacon moderadamente."
+          - "&7Útil para granjas y control de área."
+      3:
+        description:
+          - "&7Atrae mobs hostiles hacia el beacon significativamente."
+          - "&7Útil para granjas y control de área."
+
+  furnace_boost:
+    name: "&6Furnace Booster"
+    description:
+      - "&7Acelera hornos dentro del rango."
+    levels:
+      2:
+        description:
+          - "&7Acelera hornos moderadamente."
+      3:
+        description:
+          - "&7Acelera hornos significativamente."
+ 
+  modern_furnace_boost:
+    name: "&bHornos Modernos"
+    description:
+      - "&7Acelera altos hornos y ahumadores."
+
+  spawner_boost:
+    name: "&5Spawner Booster"
+    description:
+      - "&7Reduce el delay de spawners cercanos."
+      - "&7Funciona dentro del rango del beacon."
+    levels:
+      2:
+        description:
+          - "&7Reduce el delay de spawners cercanos levemente."
+          - "&7Funciona dentro del rango del beacon."
+      3:
+        description:
+          - "&7Reduce el delay de spawners cercanos moderadamente."
+          - "&7Funciona dentro del rango del beacon."
+      4:
+        description:
+          - "&7Reduce mucho el delay de spawners cercanos."
+          - "&7Funciona dentro del rango del beacon."
+      5:
+        description:
+          - "&7Reduce el delay de spawners cercanos significativamente."
+          - "&7Funciona dentro del rango del beacon."

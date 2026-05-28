@@ -16,11 +16,11 @@ public class SpigotSchedulerService implements SchedulerService {
 
     @Override
     public void runSync(Runnable runnable) {
-        if (!plugin.isEnabled()) {
+        if (!plugin.isEnabled() || runnable == null) {
             return;
         }
 
-        plugin.getSchedulerService().runSync(runnable);
+        plugin.getServer().getScheduler().runTask(plugin, runnable);
     }
 
     @Override
@@ -62,7 +62,8 @@ public class SpigotSchedulerService implements SchedulerService {
 
     @Override
     public ScheduledTaskHandle runAsyncTimer(Runnable runnable, long delayTicks, long intervalTicks) {
-        BukkitTask task = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable, delayTicks, intervalTicks);
+        BukkitTask task = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable, delayTicks,
+                intervalTicks);
         return new BukkitScheduledTaskHandle(task);
     }
 

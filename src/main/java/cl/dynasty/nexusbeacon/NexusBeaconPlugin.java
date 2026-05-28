@@ -228,8 +228,16 @@ public final class NexusBeaconPlugin extends JavaPlugin {
         customRecipeManager.load();
 
         NexusBeaconCommand command = new NexusBeaconCommand(this);
-        getCommand("NexusBeacon").setExecutor(command);
-        getCommand("NexusBeacon").setTabCompleter(command);
+        org.bukkit.command.PluginCommand nexusCommand = getCommand("NexusBeacon");
+
+        if (nexusCommand == null) {
+            getLogger().severe("Command 'NexusBeacon' is missing in plugin.yml. Disabling plugin.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        nexusCommand.setExecutor(command);
+        nexusCommand.setTabCompleter(command);
 
         getServer().getPluginManager().registerEvents(new FurnaceBoostListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BeaconListener(this), this);

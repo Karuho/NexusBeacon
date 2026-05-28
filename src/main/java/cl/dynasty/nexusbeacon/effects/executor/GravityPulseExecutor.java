@@ -14,17 +14,17 @@ import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
 import cl.dynasty.nexusbeacon.util.RangeUtil;
 
-public class GravityWellExecutor implements EffectExecutor {
+public class GravityPulseExecutor implements EffectExecutor {
 
     private final NexusBeaconPlugin plugin;
 
-    public GravityWellExecutor(NexusBeaconPlugin plugin) {
+    public GravityPulseExecutor(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public String getType() {
-        return "GRAVITY_WELL";
+        return "GRAVITY_PULSE";
     }
 
     @Override
@@ -61,7 +61,14 @@ public class GravityWellExecutor implements EffectExecutor {
 
         Location target = center.clone().add(0.5D, 1.0D, 0.5D);
 
-        for (Entity entity : center.getWorld().getEntities()) {
+        int range = beacon.getRange();
+        double searchRange = range;
+
+        for (Entity entity : center.getWorld().getNearbyEntities(
+                center,
+                searchRange,
+                searchRange,
+                searchRange)) {
             if (entity instanceof LivingEntity
                     && MobUtil.isHostile(entity)
                     && RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange())) {

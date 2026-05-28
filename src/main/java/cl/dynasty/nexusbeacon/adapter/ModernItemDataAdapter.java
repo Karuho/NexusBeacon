@@ -32,7 +32,7 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
 
     @Override
     public ItemStack writeBaseMarker(ItemStack item) {
-        set(item, "NexusBeacon", "true");
+        set(item, "nexusbeacon", "true");
         return item;
     }
 
@@ -47,7 +47,7 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
 
     @Override
     public boolean isCustomBeacon(ItemStack item) {
-        return "true".equalsIgnoreCase(get(item, "NexusBeacon"));
+        return "true".equalsIgnoreCase(get(item, "nexusbeacon"));
     }
 
     @Override
@@ -69,7 +69,8 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
     private void set(ItemStack item, String keyName, String value) {
         try {
             ItemMeta meta = item.getItemMeta();
-            if (meta == null) return;
+            if (meta == null)
+                return;
 
             Object container = meta.getClass().getMethod("getPersistentDataContainer").invoke(meta);
             Object key = createKey(keyName);
@@ -79,16 +80,20 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
             setMethod.invoke(container, key, stringType, value);
 
             item.setItemMeta(meta);
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            plugin.getLogger().warning("[NexusBeacon] Could not write item data key '" + keyName + "': "
+                    + exception.getClass().getSimpleName() + " - " + exception.getMessage());
         }
     }
 
     private String get(ItemStack item, String keyName) {
         try {
-            if (item == null || !item.hasItemMeta()) return null;
+            if (item == null || !item.hasItemMeta())
+                return null;
 
             ItemMeta meta = item.getItemMeta();
-            if (meta == null) return null;
+            if (meta == null)
+                return null;
 
             Object container = meta.getClass().getMethod("getPersistentDataContainer").invoke(meta);
             Object key = createKey(keyName);
@@ -128,7 +133,8 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
         StringBuilder builder = new StringBuilder();
 
         for (Map.Entry<String, Integer> entry : effects.entrySet()) {
-            if (builder.length() > 0) builder.append(";");
+            if (builder.length() > 0)
+                builder.append(";");
             builder.append(entry.getKey()).append(":").append(entry.getValue());
         }
 
@@ -137,11 +143,13 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
 
     private Map<String, Integer> deserializeEffects(String raw) {
         Map<String, Integer> effects = new HashMap<String, Integer>();
-        if (raw == null || raw.isEmpty()) return effects;
+        if (raw == null || raw.isEmpty())
+            return effects;
 
         for (String part : raw.split(";")) {
             String[] split = part.split(":");
-            if (split.length != 2) continue;
+            if (split.length != 2)
+                continue;
 
             try {
                 effects.put(split[0].toLowerCase(), Integer.parseInt(split[1]));
@@ -156,7 +164,8 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
         StringBuilder builder = new StringBuilder();
 
         for (String effect : active) {
-            if (builder.length() > 0) builder.append(";");
+            if (builder.length() > 0)
+                builder.append(";");
             builder.append(effect);
         }
 
@@ -165,7 +174,8 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
 
     private Set<String> deserializeActive(String raw) {
         Set<String> active = new HashSet<String>();
-        if (raw == null || raw.isEmpty()) return active;
+        if (raw == null || raw.isEmpty())
+            return active;
 
         for (String part : raw.split(";")) {
             active.add(part.toLowerCase());

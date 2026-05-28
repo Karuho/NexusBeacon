@@ -6,7 +6,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
-import cl.dynasty.nexusbeacon.util.ColorUtil;
 
 public class VanillaBeaconListener implements Listener {
 

@@ -576,13 +576,13 @@ effects:
                 type: VAULT_MONEY
                 amount: 7500
  
-  burner:
+  ignition:
     enabled: true
-    display-name: "%lang_effects.burner.name%"
+    display-name: "%lang_effects.ignition.name%"
     description:
-      - "%lang_effects.burner.description%"
+      - "%lang_effects.ignition.description%"
     icon: BLAZE_POWDER
-    type: BURNER
+    type: IGNITION
     max-level: 3
     levels:
       1:
@@ -605,7 +605,7 @@ effects:
       2:
         enabled: true
         description:
-          - "%lang_effects.burner.levels.2.description%"
+          - "%lang_effects.ignition.levels.2.description%"
         power-consumption: 6
         fire-ticks: 100
         costs:
@@ -624,7 +624,7 @@ effects:
       3:
         enabled: true
         description:
-          - "%lang_effects.burner.levels.3.description%"
+          - "%lang_effects.ignition.levels.3.description%"
         power-consumption: 8
         fire-ticks: 140
         costs:
@@ -707,13 +707,13 @@ effects:
                 type: VAULT_MONEY
                 amount: 60000
 
-  gravity_well:
+  gravity_pulse:
     enabled: true
-    display-name: "%lang_effects.gravity_well.name%"
+    display-name: "%lang_effects.gravity_pulse.name%"
     description:
-      - "%lang_effects.gravity_well.description%"
+      - "%lang_effects.gravity_pulse.description%"
     icon: ENDER_PEARL
-    type: GRAVITY_WELL
+    type: GRAVITY_PULSE
     max-level: 3
     levels:
       1:
@@ -738,7 +738,7 @@ effects:
       2:
         enabled: true
         description:
-          - "%lang_effects.gravity_well.levels.2.description%"
+          - "%lang_effects.gravity_pulse.levels.2.description%"
         power-consumption: 6
         pull-strength: 0.16
         vertical-boost: 0.03
@@ -759,7 +759,7 @@ effects:
       3:
         enabled: true
         description:
-          - "%lang_effects.gravity_well.levels.3.description%"
+          - "%lang_effects.gravity_pulse.levels.3.description%"
         power-consumption: 8
         pull-strength: 0.25
         vertical-boost: 0.1

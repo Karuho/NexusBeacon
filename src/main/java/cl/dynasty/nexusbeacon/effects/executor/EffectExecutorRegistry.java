@@ -23,9 +23,9 @@ public class EffectExecutorRegistry {
         register(new PotionEffectExecutor());
         register(new CropBoostExecutor(plugin));
         register(new SpawnerBoostExecutor(plugin));
-        register(new BurnerExecutor(plugin));
+        register(new IgnitionExecutor(plugin));
         register(new DamageFieldExecutor(plugin));
-        register(new GravityWellExecutor(plugin));
+        register(new GravityPulseExecutor(plugin));
         register(new BlockProcessBoostExecutor(plugin));
 
         plugin.getLogger().info("EffectExecutors loaded: " + executors.size());

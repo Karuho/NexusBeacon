@@ -3,11 +3,16 @@ package cl.dynasty.nexusbeacon.gui.framework;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
@@ -33,7 +38,8 @@ public final class NexusGuiLoader {
             return null;
         }
 
-        String title = menuSection.getString("title", "&8NexusBeacon");
+        String title = plugin.getLanguageManager().resolveLangValue(
+                menuSection.getString("title", "&8NexusBeacon"));
         int size = resolveSize(menuSection);
 
         NexusGuiMenu menu = new NexusGuiMenu(menuId, title, size, context);
@@ -55,6 +61,28 @@ public final class NexusGuiLoader {
         loadSlotItems(menu, itemsSection, size, context);
 
         return menu;
+    }
+
+    private ItemStack createPlayerHead(UUID uuid, String name, List<String> lore, NexusPlaceholderContext context) {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) item.getItemMeta();
+
+        if (meta != null) {
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+
+            meta.setOwningPlayer(offlinePlayer);
+            meta.setDisplayName(plugin.getLanguageManager().color(context.apply("&a" + name)));
+
+            List<String> coloredLore = lore.stream()
+                    .map(context::apply)
+                    .map(plugin.getLanguageManager()::color)
+                    .toList();
+
+            meta.setLore(coloredLore);
+            item.setItemMeta(meta);
+        }
+
+        return item;
     }
 
     public NexusGuiMenu loadMenu(String menuId) {
@@ -141,8 +169,11 @@ public final class NexusGuiLoader {
 
     private NexusGuiItem createGuiItem(ConfigurationSection itemSection, NexusPlaceholderContext context) {
         Material material = parseMaterial(itemSection.getString("material", "STONE"));
-        String name = itemSection.getString("name", "&fItem");
-        List<String> lore = itemSection.getStringList("lore");
+        String name = plugin.getLanguageManager().resolveLangValue(
+                itemSection.getString("name", "&fItem"));
+
+        List<String> lore = plugin.getLanguageManager().resolveLangList(
+                itemSection.getStringList("lore"));
         String actionText = itemSection.getString("action", "");
 
         return new NexusGuiItem(
@@ -200,7 +231,7 @@ public final class NexusGuiLoader {
             String targetMenuId = actionText.substring("open:".length());
 
             return (player, menu, event) -> {
-                NexusGuiMenu targetMenu = loadMenu(targetMenuId);
+                NexusGuiMenu targetMenu = loadMenu(targetMenuId, menu.getContext());
 
                 if (targetMenu != null) {
                     targetMenu.open(player);
@@ -292,6 +323,74 @@ public final class NexusGuiLoader {
             if (dynamicType.equalsIgnoreCase("effects")) {
                 loadEffectItems(menu, layout, symbol, context);
             }
+
+            if (dynamicType.equalsIgnoreCase("trusted")) {
+                loadTrustedItems(menu, layout, symbol, context);
+            }
+        }
+    }
+
+    private void loadTrustedItems(
+            NexusGuiMenu menu,
+            List<String> layout,
+            char symbol,
+            NexusPlaceholderContext context) {
+        List<Integer> slots = menu.getSlotsBySymbol(symbol, layout);
+
+        String beaconId = context.apply("%beacon_id%");
+
+        if (beaconId == null || beaconId.isBlank() || beaconId.equals("%beacon_id%")) {
+            return;
+        }
+
+        BeaconData beacon = plugin.getBeaconManager().getBeacon(beaconId);
+
+        if (beacon == null) {
+            return;
+        }
+
+        int index = 0;
+
+        for (java.util.UUID uuid : beacon.getTrustedPlayers()) {
+            if (index >= slots.size()) {
+                break;
+            }
+
+            org.bukkit.OfflinePlayer offlinePlayer = org.bukkit.Bukkit.getOfflinePlayer(uuid);
+            String name = offlinePlayer.getName() != null ? offlinePlayer.getName() : uuid.toString();
+
+            NexusPlaceholderContext trustedContext = new NexusPlaceholderContext()
+                    .put("trusted_name", name)
+                    .put("trusted_uuid", uuid.toString());
+
+            int slot = slots.get(index);
+
+            menu.setItem(slot, new NexusGuiItem(
+                    createPlayerHead(
+                            uuid,
+                            "%trusted_name%",
+                            plugin.getLanguageManager().rawList("gui.trust.trusted-player-lore", Map.of()),
+                            trustedContext),
+                    (player, clickedMenu, event) -> {
+                        BeaconData clickedBeacon = getOpenBeacon(player);
+
+                        if (clickedBeacon == null) {
+                            return;
+                        }
+
+                        clickedBeacon.getTrustedPlayers().remove(uuid);
+                        plugin.getStorageManager().saveBeacon(clickedBeacon);
+
+                        player.sendMessage(plugin.getLanguageManager().withPrefix("trust.removed"));
+
+                        NexusGuiMenu refreshed = loadMenu("trust", clickedMenu.getContext());
+
+                        if (refreshed != null) {
+                            refreshed.open(player);
+                        }
+                    }));
+
+            index++;
         }
     }
 
@@ -319,7 +418,8 @@ public final class NexusGuiLoader {
                     .put("effect_id", effect.getId())
                     .put("effect_name", effect.getDisplayName())
                     .put("effect_type", effect.getType())
-                    .put("effect_status", active ? "&aActivo" : "&cInactivo")
+                    .put("effect_status", plugin.getLanguageManager().raw(
+                            active ? "gui.effects.dynamic-status-active" : "gui.effects.dynamic-status-inactive"))
                     .put("effect_level", level)
                     .put("effect_max_level", effect.getMaxLevel())
                     .put("effect_power", effect.getPowerConsumption());
@@ -329,15 +429,8 @@ public final class NexusGuiLoader {
             menu.setItem(slot, new NexusGuiItem(
                     NexusItemBuilder.build(
                             effect.getIcon(),
-                            "&b%effect_name%",
-                            List.of(
-                                    "",
-                                    "&7Estado: %effect_status%",
-                                    "&7Nivel: &f%effect_level%/%effect_max_level%",
-                                    "&7Consumo: &f%effect_power%",
-                                    "",
-                                    "&eClick izquierdo: Activar/Desactivar",
-                                    "&6Click derecho: Mejorar"),
+                            plugin.getLanguageManager().raw("gui.effects.dynamic-name"),
+                            plugin.getLanguageManager().rawList("gui.effects.dynamic-lore", java.util.Map.of()),
                             effectContext),
                     (player, clickedMenu, event) -> {
                         String clickedBeaconId = plugin.getBeaconGuiManager().getOpenBeaconId(player.getUniqueId());

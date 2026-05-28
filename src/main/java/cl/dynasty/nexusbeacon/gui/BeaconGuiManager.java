@@ -23,8 +23,6 @@ import cl.dynasty.nexusbeacon.gui.framework.NexusGuiLoader;
 import cl.dynasty.nexusbeacon.gui.framework.NexusGuiMenu;
 import cl.dynasty.nexusbeacon.gui.framework.NexusPlaceholderContext;
 import cl.dynasty.nexusbeacon.model.BeaconData;
-import cl.dynasty.nexusbeacon.model.PlayerSettings;
-import cl.dynasty.nexusbeacon.util.ColorUtil;
 
 public class BeaconGuiManager {
 
@@ -49,12 +47,14 @@ public class BeaconGuiManager {
     }
 
     public void clear(Player player) {
-        openBeaconIds.remove(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
+        openBeaconIds.remove(uuid);
+        pendingEffectIds.remove(uuid);
+        pendingActions.remove(uuid);
     }
 
     private NexusPlaceholderContext createContext(Player player, BeaconData beacon) {
         return new NexusPlaceholderContext()
-                // Jugador
                 .put("player", player.getName())
                 .put("player_uuid", player.getUniqueId())
                 .put("player_world", player.getWorld().getName())
@@ -63,8 +63,6 @@ public class BeaconGuiManager {
                 .put("player_health", Math.round(player.getHealth()))
                 .put("player_max_health", Math.round(player.getMaxHealth()))
                 .put("player_gamemode", player.getGameMode().name())
-
-                // Beacon
                 .put("beacon_id", beacon.getId())
                 .put("beacon_owner", Bukkit.getOfflinePlayer(beacon.getOwner()).getName())
                 .put("active_effects", beacon.getActiveEffects().size())
@@ -77,14 +75,22 @@ public class BeaconGuiManager {
                         String.format("%s, %s, %s", beacon.getLocation().getBlockX(), beacon.getLocation().getBlockY(),
                                 beacon.getLocation().getBlockZ()))
                 .put("beacon_level", beacon.getLevel())
-                .put("protect_base_blocks", beacon.isProtectBaseBlocks() ? "Sí" : "No")
-                .put("beam_style", beacon.getBeamStyle() != null ? beacon.getBeamStyle() : "global")
-
-                // Plugin
                 .put("plugin_name", plugin.getName())
                 .put("plugin_version", plugin.getDescription().getVersion())
                 .put("server_name", plugin.getServer().getName())
-                .put("server_version", plugin.getServer().getVersion());
+                .put("server_version", plugin.getServer().getVersion())
+                .put("range_particles_status", plugin.getLanguageManager().raw(
+                        beacon.isRangeParticlesEnabled() ? "placeholders.enabled_female_plural"
+                                : "placeholders.disabled_female_plural"))
+                .put("range_particle_type", beacon.getRangeParticleType())
+                .put("protect_base_status", plugin.getLanguageManager().raw(
+                        beacon.isProtectBaseBlocks() ? "placeholders.enabled_female" : "placeholders.disabled_female"))
+                .put("protect_base_blocks", plugin.getLanguageManager().raw(
+                        beacon.isProtectBaseBlocks() ? "placeholders.yes" : "placeholders.no"))
+                .put("beam_style",
+                        beacon.getBeamStyle() != null ? beacon.getBeamStyle()
+                                : plugin.getLanguageManager().raw("placeholders.global"))
+                .put("trusted_players", beacon.getTrustedPlayers().size());
     }
 
     public void openMainMenu(Player player, BeaconData beacon) {
@@ -103,7 +109,10 @@ public class BeaconGuiManager {
     public void openEffectsMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
-        Inventory inventory = createGui("effects", 54, getGuiTitle("effects", "&8NexusBeacon - Efectos"));
+        Inventory inventory = createGui(
+                "effects",
+                54,
+                getGuiTitle("effects", plugin.getLanguageManager().raw("gui.effects.title")));
 
         int slot = 10;
 
@@ -128,24 +137,38 @@ public class BeaconGuiManager {
             String rightClickText;
 
             if (!purchased) {
-                rightClickText = "&aClick derecho: &fAdquirir";
+                rightClickText = plugin.getLanguageManager().raw("gui.effects.right-click-acquire");
             } else if (level >= effect.getMaxLevel()) {
-                rightClickText = "&6¡Al máximo!";
+                rightClickText = plugin.getLanguageManager().raw("gui.effects.maxed");
             } else {
-                rightClickText = "&bClick derecho: &fMejorar";
+                rightClickText = plugin.getLanguageManager().raw("gui.effects.right-click-upgrade");
             }
 
             inventory.setItem(slot, createItem(
                     effect.getIcon(),
                     effect.getDisplayName(),
                     effect.getDescription(),
-                    purchased ? (active ? "&7Estado: &aActivo" : "&7Estado: &cInactivo") : "&7Estado: &cNo adquirido",
-                    purchased ? "&7Nivel: &f" + level + "&7/&f" + effect.getMaxLevel() : "&7Nivel: &cNo adquirido",
-                    "&7Consumo: &e" + effectPower + " poder",
-                    "&7Poder beacon: &f" + usedPower + "&7/&f" + availablePower,
+                    purchased
+                            ? (active
+                                    ? plugin.getLanguageManager().raw("gui.effects.status-active")
+                                    : plugin.getLanguageManager().raw("gui.effects.status-inactive"))
+                            : plugin.getLanguageManager().raw("gui.effects.status-not-acquired"),
+                    purchased
+                            ? plugin.getLanguageManager().raw("gui.effects.level",
+                                    Map.of(
+                                            "level", String.valueOf(level),
+                                            "max", String.valueOf(effect.getMaxLevel())))
+                            : plugin.getLanguageManager().raw("gui.effects.level-not-acquired"),
+                    plugin.getLanguageManager().raw("gui.effects.consumption",
+                            Map.of("power", String.valueOf(effectPower))),
+                    plugin.getLanguageManager().raw("gui.effects.beacon-power",
+                            Map.of(
+                                    "used", String.valueOf(usedPower),
+                                    "available", String.valueOf(availablePower))),
                     "",
-                    purchased ? "&eClick izquierdo: &fActivar/Desactivar"
-                            : "&7Compra este efecto desde el menú de pago.",
+                    purchased
+                            ? plugin.getLanguageManager().raw("gui.effects.left-click-toggle")
+                            : plugin.getLanguageManager().raw("gui.effects.buy-from-payment"),
                     rightClickText));
 
             slot++;
@@ -158,7 +181,10 @@ public class BeaconGuiManager {
                 break;
         }
 
-        inventory.setItem(49, createItem(Material.ARROW, "&eVolver", "&7Volver al menú principal."));
+        inventory.setItem(49, createItem(
+                Material.ARROW,
+                plugin.getLanguageManager().raw("gui.effects.back-name"),
+                plugin.getLanguageManager().raw("gui.effects.back-lore")));
 
         player.openInventory(inventory);
     }
@@ -166,45 +192,14 @@ public class BeaconGuiManager {
     public void openSettingsMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
-        PlayerSettings settings = plugin.getPlayerSettingsManager().get(player.getUniqueId());
+        NexusPlaceholderContext context = createContext(player, beacon);
 
-        Inventory inventory = createGui("settings", 54, getGuiTitle("settings", "&8NexusBeacon - Config"));
+        NexusGuiLoader loader = new NexusGuiLoader(plugin);
+        NexusGuiMenu menu = loader.loadMenu("settings", context);
 
-        inventory.setItem(20, createItem(
-                beacon.isRangeParticlesEnabled() ? Material.EMERALD_BLOCK : Material.REDSTONE_BLOCK,
-                "&bPartículas de rango",
-                beacon.isRangeParticlesEnabled() ? "&7Estado: &aActivadas" : "&7Estado: &cDesactivadas",
-                "&7Muestra la circunferencia del rango.",
-                "&7Click para alternar."));
-
-        inventory.setItem(22, createItem(
-                Material.NETHER_STAR,
-                "&dTipo de partícula de rango",
-                "&7Actual: &f" + beacon.getRangeParticleType(),
-                "&7Click para cambiar."));
-
-        inventory.setItem(24, createItem(
-                beacon.isProtectBaseBlocks() ? Material.REINFORCED_DEEPSLATE : Material.REDSTONE_BLOCK,
-                "&eProtección de base",
-                beacon.isProtectBaseBlocks() ? "&7Estado: &aActivada" : "&7Estado: &cDesactivada",
-                "&7Protege solo la pirámide válida.",
-                "&7Click para alternar."));
-
-        inventory.setItem(30, createItem(
-                Material.NAME_TAG,
-                "&aJugadores confiables",
-                "&7Jugadores confiados: &f" + beacon.getTrustedPlayers().size(),
-                "&7Click para gestionar."));
-
-        inventory.setItem(32, createItem(
-                Material.LIGHT_BLUE_DYE,
-                "&bRayo visual",
-                "&7Estilo actual: &f" + (beacon.getBeamStyle() != null ? beacon.getBeamStyle() : "Global"),
-                "&7Click para cambiar color/partícula."));
-
-        inventory.setItem(49, createItem(Material.ARROW, "&eVolver", "&7Volver al menú principal."));
-
-        player.openInventory(inventory);
+        if (menu != null) {
+            menu.open(player);
+        }
     }
 
     public String getPendingEffectId(Player player) {
@@ -221,33 +216,45 @@ public class BeaconGuiManager {
         pendingActions.put(player.getUniqueId(), action);
 
         String title = action.equalsIgnoreCase("acquire")
-                ? "&8NexusBeacon - Adquirir"
-                : "&8NexusBeacon - Mejorar";
+                ? plugin.getLanguageManager().raw("gui.payment.title-acquire")
+                : plugin.getLanguageManager().raw("gui.payment.title-upgrade");
 
-        Inventory inventory = createGui(action.equalsIgnoreCase("acquire") ? "payment_acquire" : "payment_upgrade",
+        Inventory inventory = createGui(
+                action.equalsIgnoreCase("acquire") ? "payment_acquire" : "payment_upgrade",
                 27,
                 getGuiTitle(action.equalsIgnoreCase("acquire") ? "payment-acquire" : "payment-upgrade", title));
 
-        inventory.setItem(11, createItem(Material.DIAMOND, "&bPagar con ítem",
-                plugin.getPaymentManager().getOptionText(effect, action, "diamond",
-                        beacon.getEffectLevel(effect.getId()) + 1),
+        int nextLevel = beacon.getEffectLevel(effect.getId()) + 1;
+        int diamondSlot = plugin.getConfigManager().getGuiConfig().getInt("legacy.payment.slots.diamond", 11);
+        int expSlot = plugin.getConfigManager().getGuiConfig().getInt("legacy.payment.slots.exp", 13);
+        int moneySlot = plugin.getConfigManager().getGuiConfig().getInt("legacy.payment.slots.money", 15);
+        int backSlot = plugin.getConfigManager().getGuiConfig().getInt("legacy.payment.slots.back", 22);
+
+        inventory.setItem(diamondSlot, createItem(
+                Material.DIAMOND,
+                plugin.getLanguageManager().raw("gui.payment.item-name"),
+                plugin.getPaymentManager().getOptionText(effect, action, "diamond", nextLevel),
                 "",
-                "&eClick para confirmar."));
+                plugin.getLanguageManager().raw("gui.payment.confirm")));
 
-        inventory.setItem(13,
-                createItem(plugin.getVersionAdapter().material("EXPERIENCE_BOTTLE"), "&aPagar con experiencia",
-                        plugin.getPaymentManager().getOptionText(effect, action, "exp",
-                                beacon.getEffectLevel(effect.getId()) + 1),
-                        "",
-                        "&eClick para confirmar."));
-
-        inventory.setItem(15, createItem(plugin.getVersionAdapter().material("SUNFLOWER"), "&6Pagar con dinero",
-                plugin.getPaymentManager().getOptionText(effect, action, "money",
-                        beacon.getEffectLevel(effect.getId()) + 1),
+        inventory.setItem(expSlot, createItem(
+                plugin.getVersionAdapter().material("EXPERIENCE_BOTTLE"),
+                plugin.getLanguageManager().raw("gui.payment.exp-name"),
+                plugin.getPaymentManager().getOptionText(effect, action, "exp", nextLevel),
                 "",
-                "&eClick para confirmar."));
+                plugin.getLanguageManager().raw("gui.payment.confirm")));
 
-        inventory.setItem(22, createItem(Material.ARROW, "&eVolver", "&7Volver a efectos."));
+        inventory.setItem(moneySlot, createItem(
+                plugin.getVersionAdapter().material("SUNFLOWER"),
+                plugin.getLanguageManager().raw("gui.payment.money-name"),
+                plugin.getPaymentManager().getOptionText(effect, action, "money", nextLevel),
+                "",
+                plugin.getLanguageManager().raw("gui.payment.confirm")));
+
+        inventory.setItem(backSlot, createItem(
+                Material.ARROW,
+                plugin.getLanguageManager().raw("gui.payment.back-name"),
+                plugin.getLanguageManager().raw("gui.payment.back-lore")));
 
         player.openInventory(inventory);
     }
@@ -257,8 +264,13 @@ public class BeaconGuiManager {
         ItemMeta meta = item.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(ColorUtil.color(name));
-            meta.setLore(ColorUtil.color(Arrays.asList(lore)));
+            meta.setDisplayName(plugin.getLanguageManager().color(name));
+
+            List<String> coloredLore = Arrays.stream(lore)
+                    .map(plugin.getLanguageManager()::color)
+                    .toList();
+
+            meta.setLore(coloredLore);
 
             meta.addItemFlags(
                     ItemFlag.HIDE_ATTRIBUTES,
@@ -311,42 +323,19 @@ public class BeaconGuiManager {
     public void openTrustMenu(Player player, BeaconData beacon) {
         openBeaconIds.put(player.getUniqueId(), beacon.getId());
 
-        Inventory inventory = createGui("trust", 54, getGuiTitle("trust", "&8NexusBeacon - Trust"));
+        NexusPlaceholderContext context = createContext(player, beacon);
 
-        int slot = 10;
+        NexusGuiLoader loader = new NexusGuiLoader(plugin);
+        NexusGuiMenu menu = loader.loadMenu("trust", context);
 
-        for (UUID uuid : beacon.getTrustedPlayers()) {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-            String name = offlinePlayer.getName() != null ? offlinePlayer.getName() : uuid.toString();
-
-            inventory.setItem(slot, createPlayerHead(
-                    uuid,
-                    name,
-                    "&7Jugador confiado.",
-                    "&cClick para quitar trust."));
-
-            slot++;
-
-            if (slot == 17)
-                slot = 19;
-            if (slot == 26)
-                slot = 28;
-            if (slot == 35)
-                break;
+        if (menu != null) {
+            menu.open(player);
         }
-
-        inventory.setItem(22, createItem(Material.PAPER, "&eAgregar jugador",
-                "&7Usa el comando:",
-                "&f/dbeacon trust <jugador>"));
-
-        inventory.setItem(49, createItem(Material.ARROW, "&eVolver", "&7Volver a configuración."));
-
-        player.openInventory(inventory);
     }
 
     private Inventory createGui(String menuId, int size, String title) {
         NexusBeaconGuiHolder holder = new NexusBeaconGuiHolder(menuId);
-        Inventory inventory = Bukkit.createInventory(holder, size, ColorUtil.color(title));
+        Inventory inventory = Bukkit.createInventory(holder, size, plugin.getLanguageManager().color(title));
         holder.setInventory(inventory);
         return inventory;
     }

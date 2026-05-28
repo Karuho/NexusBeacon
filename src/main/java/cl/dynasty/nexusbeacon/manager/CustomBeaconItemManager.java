@@ -51,21 +51,16 @@ public class CustomBeaconItemManager {
             return item;
         }
 
-        String name = plugin.getConfigManager().getBeaconConfig()
-                .getString("item.display-name", "&b&lNexusBeacon");
+        String name = plugin.getLanguageManager().resolveLangValue(
+                plugin.getConfigManager().getBeaconConfig()
+                        .getString("item.display-name", "&b&lNexusBeacon"));
 
-        List<String> loreTemplate = plugin.getConfigManager().getBeaconConfig()
-                .getStringList("item.lore");
+        List<String> loreTemplate = plugin.getLanguageManager().resolveLangList(
+                plugin.getConfigManager().getBeaconConfig()
+                        .getStringList("item.lore"));
 
         if (loreTemplate.isEmpty()) {
             loreTemplate = new ArrayList<>();
-            loreTemplate.add("&7Beacon avanzado de Dynasty.");
-            loreTemplate.add("");
-            loreTemplate.add("&8[&b+&8] &7Dueño: &f{owner}");
-            loreTemplate.add("&8[&b+&8] &7Rango: &f{range}");
-            loreTemplate.add("&8[&b+&8] &7Trust: &f{trusted}");
-            loreTemplate.add("");
-            loreTemplate.add("&8[&b+&8] &7Efectos:");
             loreTemplate.add("{effect_list}");
         }
 
@@ -101,7 +96,7 @@ public class CustomBeaconItemManager {
 
     private String getOwnerName(BeaconData beacon) {
         if (beacon == null || beacon.getOwner() == null) {
-            return "Sin dueño";
+            return plugin.getLanguageManager().raw("item.no-owner");
         }
 
         OfflinePlayer owner = Bukkit.getOfflinePlayer(beacon.getOwner());
@@ -110,7 +105,7 @@ public class CustomBeaconItemManager {
 
     private String getTrustedText(BeaconData beacon) {
         if (beacon == null || beacon.getTrustedPlayers().isEmpty()) {
-            return "No";
+            return plugin.getLanguageManager().raw("item.no-trusted");
         }
 
         return String.valueOf(beacon.getTrustedPlayers().size());
@@ -120,7 +115,7 @@ public class CustomBeaconItemManager {
         List<String> lines = new ArrayList<>();
 
         if (beacon == null || beacon.getEffectLevels().isEmpty()) {
-            lines.add(ColorUtil.color("&7- &cSin efectos adquiridos"));
+            lines.add(ColorUtil.color(plugin.getLanguageManager().raw("item.no-effects")));
             return lines;
         }
 
@@ -136,8 +131,9 @@ public class CustomBeaconItemManager {
             boolean active = beacon.getActiveEffects().contains(effectId);
 
             lines.add(ColorUtil.color("&7- " + effectName
-                    + " &8| &dNivel " + entry.getValue()
-                    + (active ? " &aActivo" : " &cInactivo")));
+                    + plugin.getLanguageManager().raw("item.effect-level") + entry.getValue()
+                    + (active ? plugin.getLanguageManager().raw("item.effect-active")
+                            : plugin.getLanguageManager().raw("item.effect-inactive"))));
         }
 
         return lines;
