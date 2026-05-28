@@ -1,5 +1,5 @@
 name: NexusBeacon
-version: 1.2.0
+version: 1.2.5
 main: cl.dynasty.nexusbeacon.NexusBeaconPlugin
 api-version: '1.21'
 author: DynaDev
