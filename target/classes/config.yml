@@ -15,10 +15,24 @@
 # ============================================================
 
 # Main plugin language.
-# The file must exist in:
+# The selected language file must exist in:
 # plugins/NexusBeacon/languages/<language>.yml
+#
+# NexusBeacon currently provides:
+# - en_us.yml (default)
+# - es_cl.yml
+#
+# You may create your own language files by following
+# the same naming format:
+# <language>_<country>.yml
+#
+# Examples:
+# - en_us.yml
+# - es_cl.yml
+# - es_mx.yml
+# - fr_fr.yml
 
-language: es_cl
+language: en_us
 
 debug: false
  
