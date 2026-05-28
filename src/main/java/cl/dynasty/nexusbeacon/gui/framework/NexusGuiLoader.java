@@ -63,6 +63,36 @@ public final class NexusGuiLoader {
         return menu;
     }
 
+    private void cycleParticle(BeaconData beacon) {
+        String current = beacon.getRangeParticleType();
+
+        if (current == null || current.isBlank()) {
+            current = "VILLAGER_HAPPY";
+        }
+
+        if (current.equalsIgnoreCase("VILLAGER_HAPPY")) {
+            beacon.setRangeParticleType("FLAME");
+            return;
+        }
+
+        if (current.equalsIgnoreCase("FLAME")) {
+            beacon.setRangeParticleType("CRIT");
+            return;
+        }
+
+        if (current.equalsIgnoreCase("CRIT")) {
+            beacon.setRangeParticleType("CLOUD");
+            return;
+        }
+
+        if (current.equalsIgnoreCase("CLOUD")) {
+            beacon.setRangeParticleType("PORTAL");
+            return;
+        }
+
+        beacon.setRangeParticleType("VILLAGER_HAPPY");
+    }
+
     private ItemStack createPlayerHead(UUID uuid, String name, List<String> lore, NexusPlaceholderContext context) {
         ItemStack item = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) item.getItemMeta();
@@ -271,6 +301,42 @@ public final class NexusGuiLoader {
                         Map.of("style", styleName)));
 
                 loadMenu("beam-style", menu.getContext()).open(player);
+            };
+        }
+
+        if (actionText.equalsIgnoreCase("settings:toggle-range-particles")) {
+            return (player, menu, event) -> {
+                BeaconData beacon = getOpenBeacon(player);
+                if (beacon == null)
+                    return;
+
+                beacon.setRangeParticlesEnabled(!beacon.isRangeParticlesEnabled());
+                plugin.getStorageManager().saveBeacon(beacon);
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+            };
+        }
+
+        if (actionText.equalsIgnoreCase("settings:cycle-range-particle")) {
+            return (player, menu, event) -> {
+                BeaconData beacon = getOpenBeacon(player);
+                if (beacon == null)
+                    return;
+
+                cycleParticle(beacon);
+                plugin.getStorageManager().saveBeacon(beacon);
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
+            };
+        }
+
+        if (actionText.equalsIgnoreCase("settings:toggle-base-protection")) {
+            return (player, menu, event) -> {
+                BeaconData beacon = getOpenBeacon(player);
+                if (beacon == null)
+                    return;
+
+                beacon.setProtectBaseBlocks(!beacon.isProtectBaseBlocks());
+                plugin.getStorageManager().saveBeacon(beacon);
+                plugin.getBeaconGuiManager().openSettingsMenu(player, beacon);
             };
         }
 

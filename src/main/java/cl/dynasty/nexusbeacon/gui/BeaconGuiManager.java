@@ -341,8 +341,9 @@ public class BeaconGuiManager {
     }
 
     private String getGuiTitle(String key, String fallback) {
-        return plugin.getConfigManager()
-                .getGuiConfig()
-                .getString("titles." + key, fallback);
+        return plugin.getLanguageManager().resolveLangValue(
+                plugin.getConfigManager()
+                        .getGuiConfig()
+                        .getString("titles." + key, fallback));
     }
 }

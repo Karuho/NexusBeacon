@@ -213,6 +213,40 @@ menus:
         name: "%lang_gui.common.back%"
         action: "open:main"
 
+
+  trust:
+    title: "%lang_gui.trust.title%"
+
+    layout:
+      - "#########"
+      - "#.......#"
+      - "#.TTTTT.#"
+      - "#...A...#"
+      - "#########"
+      - "####B####"
+
+    dynamic:
+      T: trusted
+
+    items:
+      "#":
+        material: BLACK_STAINED_GLASS_PANE
+        name: " "
+
+      A:
+        material: NAME_TAG
+        name: "%lang_gui.trust.add-name%"
+        lore:
+          - "%lang_gui.trust.add-lore%"
+        action: "close"
+
+      B:
+        material: ARROW
+        name: "%lang_gui.common.back%"
+        lore:
+          - "%lang_gui.common.back-lore%"
+        action: "open:settings"
+
   legacy:
     payment:
       slots:
