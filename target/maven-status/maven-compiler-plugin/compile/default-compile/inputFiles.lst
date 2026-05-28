@@ -1,3 +1,4 @@
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\effects\executor\IgnitionExecutor.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\service\TeleporterService.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\util\MobUtil.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\service\PaperTeleporterService.java
@@ -47,7 +48,7 @@ D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\task\BeaconV
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\gui\framework\NexusGuiAction.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\storage\MySqlBeaconStorageProvider.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\manager\PlayerSettingsManager.java
-D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\effects\executor\BurnerExecutor.java
+D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\effects\executor\GravityPulseExecutor.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\range\ClassifiedRangeCalculator.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\manager\BeaconManager.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\adapter\ModernItemDataAdapter.java
@@ -70,7 +71,6 @@ D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\gui\framewor
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\manager\PaymentManager.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\beam\BeamStyleManager.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\hooks\placeholderapi\NexusBeaconPlaceholderExpansion.java
-D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\effects\executor\GravityWellExecutor.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\NexusBeaconPlugin.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\storage\YamlBeaconStorageProvider.java
 D:\Git\Repositorios\dynabeacon\src\main\java\cl\dynasty\nexusbeacon\effects\ConfiguredBeaconEffect.java

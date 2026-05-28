@@ -18,11 +18,11 @@ cl\dynasty\nexusbeacon\gui\NexusBeaconGuiHolder.class
 cl\dynasty\nexusbeacon\util\ColorUtil.class
 cl\dynasty\nexusbeacon\effects\ConfiguredBeaconEffect.class
 cl\dynasty\nexusbeacon\service\ScheduledTaskHandle.class
+cl\dynasty\nexusbeacon\effects\executor\IgnitionExecutor.class
 cl\dynasty\nexusbeacon\gui\framework\NexusGuiItem.class
 cl\dynasty\nexusbeacon\range\ClassifiedRangeCalculator.class
 cl\dynasty\nexusbeacon\storage\StorageManager.class
 cl\dynasty\nexusbeacon\range\ExponentialRangeCalculator.class
-cl\dynasty\nexusbeacon\effects\executor\BurnerExecutor.class
 cl\dynasty\nexusbeacon\api\ItemDataAdapter.class
 cl\dynasty\nexusbeacon\gui\framework\NexusGuiMenu.class
 cl\dynasty\nexusbeacon\listener\BeaconGuiListener.class
@@ -38,6 +38,7 @@ cl\dynasty\nexusbeacon\effects\executor\SpawnerBoostExecutor.class
 cl\dynasty\nexusbeacon\listener\BeaconListener.class
 cl\dynasty\nexusbeacon\model\BeaconData.class
 cl\dynasty\nexusbeacon\beam\BeamStyle.class
+cl\dynasty\nexusbeacon\effects\executor\GravityPulseExecutor.class
 cl\dynasty\nexusbeacon\manager\PaymentManager.class
 cl\dynasty\nexusbeacon\service\PaperTeleporterService.class
 cl\dynasty\nexusbeacon\hooks\placeholderapi\NexusBeaconPlaceholderExpansion.class
@@ -69,7 +70,6 @@ cl\dynasty\nexusbeacon\effects\executor\BlockProcessBoostExecutor.class
 cl\dynasty\nexusbeacon\manager\BeaconPowerManager.class
 cl\dynasty\nexusbeacon\service\SpigotSchedulerService.class
 cl\dynasty\nexusbeacon\manager\BeaconManager.class
-cl\dynasty\nexusbeacon\effects\executor\GravityWellExecutor.class
 cl\dynasty\nexusbeacon\storage\BeaconStorageProvider.class
 cl\dynasty\nexusbeacon\storage\MySqlBeaconStorageProvider.class
 cl\dynasty\nexusbeacon\range\FixedRangeCalculator.class
