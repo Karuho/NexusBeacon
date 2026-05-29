@@ -1,14 +1,18 @@
 name: NexusBeacon
 version: 1.2.5
 main: cl.dynasty.nexusbeacon.NexusBeaconPlugin
-api-version: '1.21'
+description: Advanced configurable beacon system for modern Paper servers.
 author: DynaDev
+website: https://github.com/Karuho/NexusBeacon
+prefix: NexusBeacon
+api-version: '1.21'
+load: POSTWORLD
 softdepend: [Vault, PlaceholderAPI, SpawnerMeta]
 folia-supported: true
 
 commands:
   NexusBeacon:
-    description: Comando principal de NexusBeacon.
+    description: Main NexusBeacon command.
     usage: /NexusBeacon
     aliases: [nbeacon, beacon, nb, nbe]
 
