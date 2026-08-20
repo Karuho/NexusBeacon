@@ -98,7 +98,6 @@ public class PotionBeaconEffect implements BeaconEffect {
             return;
         }
 
-        int amplifier = Math.max(0, (level * amplifierPerLevel) - 1);
         Location center = beacon.getLocation();
         int range = beacon.getRange();
         double searchRange = range;
@@ -123,9 +122,18 @@ public class PotionBeaconEffect implements BeaconEffect {
                 continue;
             }
 
-            living.addPotionEffect(new PotionEffect(potionType, durationTicks, amplifier, true, true), true);
+            living.addPotionEffect(createPotionEffect(level), true);
         }
     }
+
+    PotionEffect createPotionEffect(int level) {
+        return new PotionEffect(potionType, durationTicks, calculateAmplifier(level), isAmbient(), hasParticles());
+    }
+
+    int calculateAmplifier(int level) { return Math.max(0, (level * amplifierPerLevel) - 1); }
+    int getDurationTicks() { return durationTicks; }
+    boolean isAmbient() { return true; }
+    boolean hasParticles() { return true; }
 
     private boolean matchesTarget(LivingEntity entity) {
         if (target.equalsIgnoreCase("ALL_ENTITIES")) {

@@ -1,0 +1,15 @@
+name: NexusBeaconLegacy
+version: '${project.version}'
+main: cl.dynasty.nexusbeacon.legacy.LegacyNexusBeaconPlugin
+description: NexusBeacon Legacy transactional block subset; effects, recipes, commands and GUI remain deferred.
+author: DynaDev
+website: https://github.com/Karuho/NexusBeacon
+prefix: NexusBeaconLegacy
+load: POSTWORLD
+permissions:
+  NexusBeacon.use:
+    description: Allows transactional NexusBeacon placement.
+    default: true
+  NexusBeacon.admin:
+    description: Allows administrative NexusBeacon removal.
+    default: op

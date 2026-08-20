@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.model.BeaconData;
+import cl.dynasty.nexusbeacon.platform.api.VerticalBeamGeometry;
 
 public final class BeamRenderer {
 
@@ -57,16 +58,14 @@ public final class BeamRenderer {
 
         Particle particle = style.getParticle();
 
-        for (double y = 0; y <= height; y += step) {
-            Location point = base.clone().add(0, y, 0);
-
+        VerticalBeamGeometry.forEachPoint(base, height, step, point -> {
             if (style.getColor() != null && particle == Particle.DUST) {
                 Particle.DustOptions dust = new Particle.DustOptions(style.getColor(), style.getSize());
                 world.spawnParticle(particle, point, count, 0, 0, 0, 0, dust);
             } else {
                 world.spawnParticle(particle, point, count, 0, 0, 0, 0);
             }
-        }
+        });
     }
 
     public void renderForPlayer(Player player, BeaconData beacon) {
@@ -88,16 +87,14 @@ public final class BeamRenderer {
         int count = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1));
         Particle particle = style.getParticle();
 
-        for (double y = 0; y <= height; y += step) {
-            Location point = base.clone().add(0, y, 0);
-
+        VerticalBeamGeometry.forEachPoint(base, height, step, point -> {
             if (style.getColor() != null && particle == Particle.DUST) {
                 Particle.DustOptions dust = new Particle.DustOptions(style.getColor(), style.getSize());
                 player.spawnParticle(particle, point, count, 0, 0, 0, 0, dust);
             } else {
                 player.spawnParticle(particle, point, count, 0, 0, 0, 0);
             }
-        }
+        });
     }
 
     private BeamStyle resolveStyle(BeaconData beacon) {

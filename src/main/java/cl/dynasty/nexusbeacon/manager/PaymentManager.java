@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.util.DebugLogger;
+import cl.dynasty.nexusbeacon.platform.api.MaterialContext;
 
 public class PaymentManager {
 
@@ -179,7 +180,13 @@ public class PaymentManager {
 
         if (type.equalsIgnoreCase("ITEM")) {
             String materialName = section.getString("material", "DIAMOND");
-            Material material = plugin.getVersionAdapter().material(materialName);
+            Material material = plugin.getVersionAdapter()
+                    .resolveMaterial(materialName, MaterialContext.PAYMENT).getMaterial().orElse(null);
+
+            if (material == null) {
+                plugin.getLogger().warning("Invalid or unsupported payment material: " + materialName);
+                return false;
+            }
 
             if (!hasItem(player, material, amount)) {
                 player.sendMessage(plugin.getLanguageManager().withPrefix(
@@ -259,7 +266,13 @@ public class PaymentManager {
             String materialName = section.getString("material", "DIAMOND");
             int amount = section.getInt("amount", section.getInt("amount-per-level", 0) * level);
 
-            Material material = plugin.getVersionAdapter().material(materialName);
+            Material material = plugin.getVersionAdapter()
+                    .resolveMaterial(materialName, MaterialContext.PAYMENT).getMaterial().orElse(null);
+
+            if (material == null) {
+                plugin.getLogger().warning("Invalid or unsupported payment material: " + materialName);
+                return false;
+            }
 
             if (!hasItem(player, material, amount)) {
                 player.sendMessage(plugin.getLanguageManager().withPrefix(

@@ -1,9 +1,40 @@
 ## Compatibility
 
-* Java: 21+
+* Java: 21+ for Minecraft 1.21.x; Java 25+ for Minecraft 26.2
 * Server software: Paper/Purpur
-* Supported Minecraft versions: 1.21.x
+* Supported Minecraft versions: 1.21.x and newer (validated through 26.2)
 * Experimental: newer versions may work, but are not officially tested.
+
+## Building
+
+The Maven reactor contains platform API, Modern platform, Legacy platform, and
+two distribution modules. Build and test the full reactor with:
+
+```bash
+mvn test
+mvn package
+```
+
+The public artifact candidates are generated at:
+
+```text
+nexusbeacon-dist-modern/target/NexusBeacon.jar
+nexusbeacon-dist-legacy/target/NexusBeacon-Legacy.jar
+```
+
+The Modern distribution targets Java 21 and retains current Paper behavior.
+The Legacy distribution targets Java 8 and currently provides only the proven
+platform detection and custom-NBT item-identity foundation; full Legacy
+NexusBeacon gameplay is not implemented yet.
+
+Validate Modern sources against Paper 26.2 using JDK 25:
+
+```bash
+mvn -Ppaper-26.2 clean package
+```
+
+The plugin version in `plugin.yml` is populated from the Maven project version,
+keeping the source metadata and generated JAR synchronized.
 
 ## Author
 

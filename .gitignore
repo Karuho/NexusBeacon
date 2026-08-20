@@ -58,3 +58,9 @@ storage.yml
 secrets.yml
 credentials.yml
 config.local.yml
+
+# Codex / technical analysis reports
+NEXUSBEACON_*_REPORT.md
+
+# Codex experimental build artifacts
+.codex-artifacts/

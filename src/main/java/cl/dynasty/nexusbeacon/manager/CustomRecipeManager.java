@@ -10,6 +10,8 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
+import cl.dynasty.nexusbeacon.platform.api.MaterialContext;
+import cl.dynasty.nexusbeacon.platform.api.MaterialResolution;
 
 public class CustomRecipeManager {
 
@@ -66,11 +68,13 @@ public void load() {
         }
 
         String materialName = ingredients.getString(symbol);
-        Material material = plugin.getVersionAdapter().material(materialName);
+        MaterialResolution resolution = plugin.getVersionAdapter()
+                .resolveMaterial(materialName, MaterialContext.RECIPE_INGREDIENT);
+        Material material = resolution.getMaterial().orElse(null);
 
         if (material == null) {
             plugin.getLogger().warning("[NexusBeacon] Invalid recipe material in beacon.yml: " + materialName);
-            continue;
+            return;
         }
 
         recipe.setIngredient(symbol.charAt(0), material);
