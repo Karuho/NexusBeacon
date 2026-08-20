@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import cl.dynasty.nexusbeacon.platform.api.ItemIdentity;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyItemIdentityService;
@@ -54,6 +55,8 @@ import cl.dynasty.nexusbeacon.platform.legacy.LegacyRecipeManager;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyRecipeRegistrationResult;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyRecipeRegistrationStatus;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyEffectRuntime;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyBukkitCommandEnvironment;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyNexusBeaconCommand;
 
 public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     private LegacyNbtBridge bridge;
@@ -173,7 +176,6 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             FileConfiguration effectsConfig = loadConfiguration("effects.yml");
             applicationGraph = applicationBootstrap.prepare(
                     mainConfig, beaconConfig, effectsConfig, loadConfiguration("gui.yml"));
-            assertUnavailable(LegacyApplicationCapability.LISTENERS);
             assertUnavailable(LegacyApplicationCapability.COMMANDS);
             applicationGraph.requireAvailable(LegacyApplicationCapability.STORAGE);
             LegacyApplicationConfiguration applicationConfig = applicationGraph.getConfiguration();
@@ -235,6 +237,22 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             if (!listenerGraph.register() || listenerGraph.register()) {
                 throw new IllegalStateException("Legacy listener registration lifecycle self-check failed");
             }
+            applicationGraph.setListenersAvailable(true);
+            applicationGraph.requireAvailable(LegacyApplicationCapability.LISTENERS);
+            PluginCommand pluginCommand = getCommand("NexusBeacon");
+            if (pluginCommand == null) {
+                throw new IllegalStateException("Command 'NexusBeacon' is missing in plugin.yml");
+            }
+            LegacyNexusBeaconCommand legacyCommand = new LegacyNexusBeaconCommand(
+                    applicationGraph, beaconItems, text,
+                    new LegacyBukkitCommandEnvironment(applicationState), prefix);
+            if (pluginCommand.getExecutor() != this) {
+                throw new IllegalStateException("Legacy command was already registered unexpectedly");
+            }
+            pluginCommand.setExecutor(legacyCommand);
+            pluginCommand.setTabCompleter(legacyCommand);
+            applicationGraph.setCommandsAvailable(true);
+            applicationGraph.requireAvailable(LegacyApplicationCapability.COMMANDS);
             platformServices.getTeleporter().teleport(null, null, null);
             platformServices.getScheduler().runAsync(new Runnable() {
                 @Override public void run() {
@@ -275,8 +293,10 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             getLogger().info("Legacy effect runtime active: " + effectRuntime.getDefinitionCount()
                     + " definitions, " + effectRuntime.getExecutorCount() + " executors, "
                     + effectRuntime.getSupportedDefinitionCount() + " definitions supported.");
-            getLogger().info("Legacy recipe status: " + recipeResult.getStatus() + "; commands: not wired.");
-            getLogger().warning("Full Legacy gameplay startup is intentionally disabled.");
+            getLogger().info("Legacy recipe status: " + recipeResult.getStatus()
+                    + "; productive command subset registered.");
+            getLogger().info("Legacy partial application startup active.");
+            getLogger().warning("Full Legacy gameplay startup remains intentionally disabled.");
         } catch (RuntimeException exception) {
             getLogger().severe("Unsupported or failed Legacy platform: " + exception.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);

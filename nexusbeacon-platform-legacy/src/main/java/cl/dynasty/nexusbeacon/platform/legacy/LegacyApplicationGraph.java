@@ -94,6 +94,16 @@ public final class LegacyApplicationGraph {
                 available ? LegacyCapabilityStatus.AVAILABLE : LegacyCapabilityStatus.UNAVAILABLE);
     }
 
+    public void setListenersAvailable(boolean available) {
+        capabilityStates.put(LegacyApplicationCapability.LISTENERS,
+                available ? LegacyCapabilityStatus.AVAILABLE : LegacyCapabilityStatus.UNAVAILABLE);
+    }
+
+    public void setCommandsAvailable(boolean available) {
+        capabilityStates.put(LegacyApplicationCapability.COMMANDS,
+                available ? LegacyCapabilityStatus.AVAILABLE : LegacyCapabilityStatus.UNAVAILABLE);
+    }
+
     private static void available(EnumMap<LegacyApplicationCapability, LegacyCapabilityStatus> states,
             LegacyApplicationCapability... capabilities) {
         for (LegacyApplicationCapability capability : capabilities) {

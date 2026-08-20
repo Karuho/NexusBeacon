@@ -1,11 +1,16 @@
 name: NexusBeaconLegacy
 version: '${project.version}'
 main: cl.dynasty.nexusbeacon.legacy.LegacyNexusBeaconPlugin
-description: NexusBeacon Legacy transactional block subset; effects, recipes, commands and GUI remain deferred.
+description: NexusBeacon Legacy partial application with productive commands, state, effects and recipes.
 author: DynaDev
 website: https://github.com/Karuho/NexusBeacon
 prefix: NexusBeaconLegacy
 load: POSTWORLD
+commands:
+  NexusBeacon:
+    description: Main NexusBeacon command.
+    usage: /NexusBeacon
+    aliases: [nbeacon, beacon, nb, nbe]
 permissions:
   NexusBeacon.use:
     description: Allows transactional NexusBeacon placement.

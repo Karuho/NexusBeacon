@@ -56,6 +56,12 @@ public final class LegacyBeaconState {
     public boolean isRangeParticlesEnabled() { return rangeParticlesEnabled; }
     public String getRangeParticleType() { return rangeParticleType; }
 
+    public LegacyBeaconState withTrustedPlayers(Set<UUID> trusted) {
+        return new LegacyBeaconState(location, uniqueId, owner, range, level, effectLevels,
+                activeEffects, trusted, protectBaseBlocks, beamStyle, rangeParticlesEnabled,
+                rangeParticleType);
+    }
+
     @Override public boolean equals(Object other) {
         if (this == other) return true;
         if (!(other instanceof LegacyBeaconState)) return false;
