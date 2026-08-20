@@ -57,6 +57,8 @@ import cl.dynasty.nexusbeacon.platform.legacy.LegacyRecipeRegistrationStatus;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyEffectRuntime;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyBukkitCommandEnvironment;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyNexusBeaconCommand;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyGuiController;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamRuntime;
 
 public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     private LegacyNbtBridge bridge;
@@ -67,6 +69,8 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     private LegacyBeaconItemFactory beaconItems;
     private LegacyRecipeManager recipes;
     private LegacyEffectRuntime effectRuntime;
+    private LegacyGuiController guiController;
+    private LegacyBeamRuntime beamRuntime;
 
     @Override
     public void onEnable() {
@@ -217,6 +221,11 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
                         + effectRuntime.getExecutorCount() + " executors");
             }
             effectRuntime.start();
+            beamRuntime = new LegacyBeamRuntime(this, applicationState, beamRenderer,
+                    platformServices.getScheduler(), materials,
+                    Math.max(1L, beaconConfig.getLong("beacon.visual-beam.interval-ticks", 4L)));
+            beamRuntime.start();
+            guiController = new LegacyGuiController(applicationGraph, effectRuntime);
             applicationGraph.setCropEffectsAvailable(true);
             applicationGraph.requireAvailable(LegacyApplicationCapability.CROP_EFFECTS);
             LegacyBeaconListenerMessages listenerMessages = new LegacyBeaconListenerMessages(
@@ -233,7 +242,7 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
                     prefix + "&cThis NexusBeacon item has invalid identity data.");
             listenerGraph = new LegacyListenerGraph(this, applicationGraph,
                     beaconConfig.getBoolean("vanilla-beacon.disable-vanilla", false),
-                    vanillaDisabledMessage, gameplaySettings, beaconItems, listenerMessages);
+                    vanillaDisabledMessage, gameplaySettings, beaconItems, listenerMessages, guiController);
             if (!listenerGraph.register() || listenerGraph.register()) {
                 throw new IllegalStateException("Legacy listener registration lifecycle self-check failed");
             }
@@ -289,7 +298,7 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             getLogger().info("Loaded beacons: " + applicationState.size());
             getLogger().info("Legacy listener graph registered: " + listenerGraph.getPortedListenerCount()
                     + " safe, " + listenerGraph.getDeferredListenerCount() + " deferred.");
-            getLogger().info("Transactional marked beacon placement/removal active; interaction GUI deferred.");
+            getLogger().info("Transactional marked beacon placement/removal and holder-based interaction GUI active.");
             getLogger().info("Legacy effect runtime active: " + effectRuntime.getDefinitionCount()
                     + " definitions, " + effectRuntime.getExecutorCount() + " executors, "
                     + effectRuntime.getSupportedDefinitionCount() + " definitions supported.");
@@ -305,6 +314,8 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (guiController != null) guiController.close();
+        if (beamRuntime != null) beamRuntime.close();
         if (effectRuntime != null) effectRuntime.close();
         if (recipes != null) {
             int removed = recipes.unregister();

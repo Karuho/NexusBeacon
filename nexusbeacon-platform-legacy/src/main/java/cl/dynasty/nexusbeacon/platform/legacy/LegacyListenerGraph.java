@@ -6,17 +6,18 @@ import org.bukkit.plugin.Plugin;
 
 /** The safe registered subset is separate from state/effect-dependent deferred listeners. */
 public final class LegacyListenerGraph {
-    public static final int DEFERRED_PRODUCTION_LISTENERS = 3;
+    public static final int DEFERRED_PRODUCTION_LISTENERS = 2;
 
     private final LegacyPluginLifecycleListener lifecycleListener;
     private final LegacyVanillaBeaconListener vanillaBeaconListener;
     private final LegacyTransactionalBeaconListener transactionalBeaconListener;
+    private final LegacyGuiInteractionListener guiInteractionListener;
     private final LegacyListenerRegistry registry;
 
     public LegacyListenerGraph(Plugin plugin, LegacyApplicationGraph application,
             boolean vanillaDisabled, String vanillaDisabledMessage,
             LegacyBeaconGameplaySettings gameplaySettings, LegacyBeaconItemFactory itemFactory,
-            LegacyBeaconListenerMessages listenerMessages) {
+            LegacyBeaconListenerMessages listenerMessages, LegacyGuiController guiController) {
         if (plugin == null) throw new NullPointerException("plugin");
         if (application == null) throw new NullPointerException("application");
         application.requireAvailable(LegacyApplicationCapability.IDENTITY);
@@ -28,8 +29,10 @@ public final class LegacyListenerGraph {
                 application.getMaterials(), application.getMessages(), vanillaDisabled, vanillaDisabledMessage);
         transactionalBeaconListener = new LegacyTransactionalBeaconListener(plugin, application,
                 gameplaySettings, itemFactory, listenerMessages);
+        guiInteractionListener = new LegacyGuiInteractionListener(application.getState(), guiController);
         registry = new LegacyListenerRegistry(plugin,
-                Arrays.asList(lifecycleListener, vanillaBeaconListener, transactionalBeaconListener));
+                Arrays.asList(lifecycleListener, vanillaBeaconListener, transactionalBeaconListener,
+                        guiInteractionListener));
     }
 
     public boolean register() { return registry.register(); }

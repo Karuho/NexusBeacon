@@ -70,6 +70,8 @@ public final class LegacyEffectRuntime implements Runnable {
         task = scheduler.runSyncTimer(this, intervalTicks, intervalTicks);
     }
 
+    public LegacyEffectDefinition getDefinition(String id) { return definitions.get(id); }
+
     @Override
     public void run() {
         if (!running || !state.getStatus().isReady()) return;

@@ -62,6 +62,24 @@ public final class LegacyBeaconState {
                 rangeParticleType);
     }
 
+    public LegacyBeaconState withActiveEffect(String effectId, boolean active) {
+        String normalized = requiredIdentifier(effectId, "effect id").toLowerCase(java.util.Locale.ROOT);
+        if (!effectLevels.containsKey(normalized)) {
+            throw new IllegalArgumentException("Effect was not acquired: " + normalized);
+        }
+        TreeSet<String> replacement = new TreeSet<String>(activeEffects);
+        if (active) replacement.add(normalized); else replacement.remove(normalized);
+        return new LegacyBeaconState(location, uniqueId, owner, range, level, effectLevels,
+                replacement, trustedPlayers, protectBaseBlocks, beamStyle, rangeParticlesEnabled,
+                rangeParticleType);
+    }
+
+    public LegacyBeaconState withBeamStyle(String style) {
+        return new LegacyBeaconState(location, uniqueId, owner, range, level, effectLevels,
+                activeEffects, trustedPlayers, protectBaseBlocks, style, rangeParticlesEnabled,
+                rangeParticleType);
+    }
+
     @Override public boolean equals(Object other) {
         if (this == other) return true;
         if (!(other instanceof LegacyBeaconState)) return false;
