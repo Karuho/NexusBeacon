@@ -50,6 +50,14 @@ class LegacyGuiItemFactoryTest {
     }
 
     @Test
+    void legacyPaymentIconsAreExplicitVisualFallbacksRatherThanStrictMaterials() {
+        assertTrue(factory.planItem("EXPERIENCE_BOTTLE", MaterialContext.GUI_ICON, "EXP",
+                Collections.<String>emptyList(), null).isVisualFallback());
+        assertTrue(factory.planItem("SUNFLOWER", MaterialContext.GUI_ICON, "Money",
+                Collections.<String>emptyList(), null).isVisualFallback());
+    }
+
+    @Test
     void rawCreationCannotHideVisualFallback() {
         assertThrows(IllegalArgumentException.class, () -> factory.createItem(
                 "REINFORCED_DEEPSLATE", MaterialContext.GUI_ICON, "visual",

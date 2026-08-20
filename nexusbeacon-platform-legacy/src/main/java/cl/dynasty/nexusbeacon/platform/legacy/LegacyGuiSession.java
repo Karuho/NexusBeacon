@@ -9,9 +9,16 @@ public final class LegacyGuiSession {
     private final LegacyBeaconLocation location;
     private final LegacyGuiMenu menu;
     private final long generation;
+    private final String effectId;
+    private final String paymentAction;
 
     LegacyGuiSession(UUID playerId, UUID beaconId, LegacyBeaconLocation location,
             LegacyGuiMenu menu, long generation) {
+        this(playerId, beaconId, location, menu, generation, null, null);
+    }
+
+    LegacyGuiSession(UUID playerId, UUID beaconId, LegacyBeaconLocation location,
+            LegacyGuiMenu menu, long generation, String effectId, String paymentAction) {
         if (playerId == null || beaconId == null || location == null || menu == null) {
             throw new NullPointerException();
         }
@@ -20,6 +27,8 @@ public final class LegacyGuiSession {
         this.location = location;
         this.menu = menu;
         this.generation = generation;
+        this.effectId = effectId;
+        this.paymentAction = paymentAction;
     }
 
     public UUID getPlayerId() { return playerId; }
@@ -27,4 +36,6 @@ public final class LegacyGuiSession {
     public LegacyBeaconLocation getLocation() { return location; }
     public LegacyGuiMenu getMenu() { return menu; }
     public long getGeneration() { return generation; }
+    public String getEffectId() { return effectId; }
+    public String getPaymentAction() { return paymentAction; }
 }

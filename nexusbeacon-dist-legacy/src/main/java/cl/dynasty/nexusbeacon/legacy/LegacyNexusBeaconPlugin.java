@@ -59,6 +59,8 @@ import cl.dynasty.nexusbeacon.platform.legacy.LegacyBukkitCommandEnvironment;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyNexusBeaconCommand;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyGuiController;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamRuntime;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyEconomyService;
+import cl.dynasty.nexusbeacon.platform.legacy.ReflectiveLegacyVaultEconomyService;
 
 public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     private LegacyNbtBridge bridge;
@@ -71,6 +73,7 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     private LegacyEffectRuntime effectRuntime;
     private LegacyGuiController guiController;
     private LegacyBeamRuntime beamRuntime;
+    private LegacyEconomyService economy;
 
     @Override
     public void onEnable() {
@@ -227,7 +230,9 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
                     platformServices.getScheduler(), materials,
                     Math.max(1L, beaconConfig.getLong("beacon.visual-beam.interval-ticks", 4L)));
             beamRuntime.start();
-            guiController = new LegacyGuiController(applicationGraph, effectRuntime);
+            economy = new ReflectiveLegacyVaultEconomyService(this);
+            guiController = new LegacyGuiController(applicationGraph, effectRuntime, effectsConfig, materials,
+                    economy, getLogger());
             applicationGraph.setCropEffectsAvailable(true);
             applicationGraph.requireAvailable(LegacyApplicationCapability.CROP_EFFECTS);
             LegacyBeaconListenerMessages listenerMessages = new LegacyBeaconListenerMessages(
@@ -304,13 +309,15 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
                     + " safe, " + listenerGraph.getDeferredListenerCount() + " deferred.");
             getLogger().info("Transactional marked beacon placement/removal and holder-based interaction GUI active.");
             getLogger().info("Legacy FurnaceBoost events and authoritative base protection active.");
+            getLogger().info("Legacy effect purchase/upgrade active; Vault money status: "
+                    + (economy.isAvailable() ? "available" : economy.getDiagnostic()) + ".");
             getLogger().info("Legacy effect runtime active: " + effectRuntime.getDefinitionCount()
                     + " definitions, " + effectRuntime.getExecutorCount() + " executors, "
                     + effectRuntime.getSupportedDefinitionCount() + " definitions supported.");
             getLogger().info("Legacy recipe status: " + recipeResult.getStatus()
                     + "; productive command subset registered.");
-            getLogger().info("Legacy partial application startup active.");
-            getLogger().warning("Full Legacy gameplay startup remains intentionally disabled.");
+            getLogger().info("Full Legacy application startup active for the supported Legacy feature set.");
+            getLogger().info("Full Legacy player gameplay active; optional, maintenance and visual parity gaps remain.");
         } catch (RuntimeException exception) {
             getLogger().severe("Unsupported or failed Legacy platform: " + exception.getMessage());
             Bukkit.getPluginManager().disablePlugin(this);

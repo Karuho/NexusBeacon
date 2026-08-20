@@ -77,6 +77,21 @@ public final class LegacyGuiInteractionListener implements Listener {
             else if (rawSlot == 49) player.closeInventory();
             return;
         }
+        if (session.getMenu() == LegacyGuiMenu.PAYMENT) {
+            if (rawSlot == 22) {
+                controller.open(player, current, LegacyGuiMenu.EFFECTS);
+                return;
+            }
+            String option = rawSlot == 11 ? "diamond" : rawSlot == 13 ? "exp" : rawSlot == 15 ? "money" : null;
+            if (option == null || !"LEFT".equals(click)) return;
+            LegacyPurchaseResult result = controller.purchase(player, session, option);
+            purchaseFeedback(player, result);
+            LegacyBeaconState refreshed = state.findByUniqueId(session.getBeaconId());
+            if (result == LegacyPurchaseResult.COMMITTED && refreshed != null) {
+                controller.open(player, refreshed, LegacyGuiMenu.EFFECTS);
+            } else if (refreshed == null) player.closeInventory();
+            return;
+        }
         if (rawSlot == 49) {
             controller.open(player, current, LegacyGuiMenu.MAIN);
             return;
@@ -85,7 +100,18 @@ public final class LegacyGuiInteractionListener implements Listener {
             String effectId = controller.effectAt(rawSlot);
             if (effectId == null) return;
             if ("RIGHT".equals(click)) {
-                player.sendMessage("\u00a7ePaid acquisition and upgrades are unavailable on Legacy.");
+                LegacyEffectDefinition definition = controller.effectDefinition(effectId);
+                if (definition == null || !definition.isSupported()) {
+                    player.sendMessage("\u00a7cThis effect is unavailable on this Legacy server.");
+                    return;
+                }
+                Integer acquired = current.getEffectLevels().get(effectId);
+                int level = acquired == null ? 0 : acquired.intValue();
+                if (level >= definition.getMaxLevel()) {
+                    player.sendMessage("\u00a7eThis effect is already at max level.");
+                    return;
+                }
+                controller.openPayment(player, current, effectId, level == 0 ? "acquire" : "upgrade");
                 return;
             }
             LegacyGuiMutationResult result = controller.toggleEffect(player, session, effectId);
@@ -131,6 +157,19 @@ public final class LegacyGuiInteractionListener implements Listener {
         } else if (result == LegacyGuiMutationResult.UNSUPPORTED) {
             player.sendMessage("\u00a7cThis option is unavailable on this Legacy server.");
         } else player.sendMessage("\u00a7cThe GUI action failed safely: " + result.name().toLowerCase());
+    }
+
+    private static void purchaseFeedback(Player player, LegacyPurchaseResult result) {
+        if (result == LegacyPurchaseResult.COMMITTED) player.sendMessage("\u00a7aEffect purchase committed.");
+        else if (result == LegacyPurchaseResult.ECONOMY_UNAVAILABLE) {
+            player.sendMessage("\u00a7cVault or its economy provider is unavailable.");
+        } else if (result == LegacyPurchaseResult.INSUFFICIENT_FUNDS) {
+            player.sendMessage("\u00a7cYou cannot afford this payment option.");
+        } else if (result == LegacyPurchaseResult.PERSISTENCE_FAILED_REFUND_FAILED) {
+            player.sendMessage("\u00a7cPurchase failed and refund failed; contact an administrator.");
+        } else if (result == LegacyPurchaseResult.PERSISTENCE_FAILED_REFUNDED) {
+            player.sendMessage("\u00a7cPurchase failed safely; payment was refunded.");
+        } else player.sendMessage("\u00a7cPurchase rejected safely: " + result.name().toLowerCase());
     }
 
     static boolean isSemanticClick(String click) {

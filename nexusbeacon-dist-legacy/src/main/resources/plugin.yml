@@ -1,11 +1,12 @@
 name: NexusBeaconLegacy
 version: '${project.version}'
 main: cl.dynasty.nexusbeacon.legacy.LegacyNexusBeaconPlugin
-description: NexusBeacon Legacy partial application with productive commands, state, effects and recipes.
+description: NexusBeacon Legacy application for the supported Legacy feature set.
 author: DynaDev
 website: https://github.com/Karuho/NexusBeacon
 prefix: NexusBeaconLegacy
 load: POSTWORLD
+softdepend: [Vault]
 commands:
   NexusBeacon:
     description: Main NexusBeacon command.

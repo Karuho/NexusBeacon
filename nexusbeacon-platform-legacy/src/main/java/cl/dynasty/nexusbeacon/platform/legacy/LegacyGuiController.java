@@ -28,15 +28,21 @@ public final class LegacyGuiController {
     private final LegacyEffectRuntime effects;
     private final LegacyGuiSessionRegistry sessions;
     private final LegacyGuiMutationService mutations;
+    private final LegacyEffectPurchaseService purchases;
+    private final LegacyPaymentOptionResolver prices;
     private final List<LegacyBeamStylePlan> beamStyles;
 
-    public LegacyGuiController(LegacyApplicationGraph application, final LegacyEffectRuntime effects) {
+    public LegacyGuiController(LegacyApplicationGraph application, final LegacyEffectRuntime effects,
+            org.bukkit.configuration.file.FileConfiguration effectsConfig, LegacyMaterialResolver materials,
+            LegacyEconomyService economy, java.util.logging.Logger logger) {
         if (application == null || effects == null) throw new NullPointerException();
         this.state = application.getState();
         this.inventories = application.getInventories();
         this.items = application.getGuiItems();
         this.messages = application.getMessages();
         this.effects = effects;
+        this.prices = new LegacyPaymentOptionResolver(effectsConfig, materials);
+        this.purchases = new LegacyEffectPurchaseService(state, effects, effectsConfig, materials, economy, logger);
         this.sessions = new LegacyGuiSessionRegistry();
         this.beamStyles = LegacyBeamStylePlan.currentDefaults();
         this.mutations = new LegacyGuiMutationService(state, new LegacyGuiMutationService.RuntimeReadiness() {
@@ -56,11 +62,11 @@ public final class LegacyGuiController {
     void open(Player player, LegacyBeaconState beacon, LegacyGuiMenu menu) {
         LegacyGuiSession session = sessions.replace(player.getUniqueId(), beacon, menu);
         LegacyGuiHolder holder = new LegacyGuiHolder(identity, session);
-        Inventory inventory = inventories.create(holder, menu == LegacyGuiMenu.MAIN ? 54 : 54, title(menu));
+        Inventory inventory = inventories.create(holder, menu == LegacyGuiMenu.PAYMENT ? 27 : 54, title(menu));
         holder.setInventory(inventory);
         if (menu == LegacyGuiMenu.MAIN) populateMain(inventory, beacon);
         else if (menu == LegacyGuiMenu.EFFECTS) populateEffects(inventory, beacon);
-        else populateBeamStyles(inventory, beacon);
+        else if (menu == LegacyGuiMenu.BEAM_STYLES) populateBeamStyles(inventory, beacon);
         player.openInventory(inventory);
     }
 
@@ -84,12 +90,33 @@ public final class LegacyGuiController {
                 styleId);
     }
 
+    void openPayment(Player player, LegacyBeaconState beacon, String effectId, String action) {
+        LegacyGuiSession session = sessions.replacePayment(player.getUniqueId(), beacon, effectId, action);
+        LegacyGuiHolder holder = new LegacyGuiHolder(identity, session);
+        Inventory inventory = inventories.create(holder, 27, title(LegacyGuiMenu.PAYMENT));
+        holder.setInventory(inventory);
+        int nextLevel = value(beacon.getEffectLevels().get(effectId)) + 1;
+        inventory.setItem(11, paymentItem(effectId, action, "diamond", nextLevel, "DIAMOND", "Items"));
+        inventory.setItem(13, paymentItem(effectId, action, "exp", nextLevel, "EXPERIENCE_BOTTLE", "EXP levels"));
+        inventory.setItem(15, paymentItem(effectId, action, "money", nextLevel, "SUNFLOWER", "Vault money"));
+        inventory.setItem(22, item("ARROW", "\u00a7eBack", "\u00a77Return to effects"));
+        player.openInventory(inventory);
+    }
+
+    LegacyPurchaseResult purchase(Player player, LegacyGuiSession session, String optionKey) {
+        if (!sessions.isCurrent(session)) return LegacyPurchaseResult.STALE;
+        return purchases.purchase(player, session.getBeaconId(), session.getEffectId(),
+                session.getPaymentAction(), optionKey);
+    }
+
     String effectAt(int slot) {
         int index = indexOfSlot(slot);
         if (index < 0) return null;
         List<LegacyEffectDefinition> definitions = definitions();
         return index < definitions.size() ? definitions.get(index).getId() : null;
     }
+
+    LegacyEffectDefinition effectDefinition(String effectId) { return effects.getDefinition(effectId); }
 
     String beamStyleAt(int slot) {
         int index = indexOfSlot(slot);
@@ -116,11 +143,15 @@ public final class LegacyGuiController {
             boolean acquired = beacon.getEffectLevels().containsKey(definition.getId());
             boolean active = beacon.getActiveEffects().contains(definition.getId());
             String status = !definition.isSupported() ? "\u00a7cUnavailable: " + definition.getDiagnostic()
-                    : !acquired ? "\u00a7eNot acquired; payment is unavailable on Legacy"
+                    : !acquired ? "\u00a7eNot acquired"
                     : active ? "\u00a7aActive" : "\u00a77Inactive";
             inventory.setItem(CONTENT_SLOTS[index], item(definition.isSupported() ? "NETHER_STAR" : "BARRIER",
                     "\u00a7b" + definition.getId(), status,
-                    acquired && definition.isSupported() ? "\u00a77Left click to toggle" : "\u00a77Fail closed"));
+                    !definition.isSupported() ? "\u00a77Fail closed"
+                            : acquired && beacon.getEffectLevels().get(definition.getId()).intValue()
+                                    >= definition.getMaxLevel() ? "\u00a77Left click to toggle; max level"
+                            : acquired ? "\u00a77Left toggle; right upgrade"
+                            : "\u00a77Right click to acquire"));
         }
         inventory.setItem(49, item("ARROW", "\u00a7eBack", "\u00a77Return to NexusBeacon"));
     }
@@ -141,6 +172,16 @@ public final class LegacyGuiController {
         return items.createItem(material, MaterialContext.GUI_ICON, name, lines, null);
     }
 
+    private ItemStack paymentItem(String effectId, String action, String optionKey, int level,
+            String icon, String label) {
+        LegacyPaymentOption option = prices.resolve(effectId, action, optionKey, level);
+        String cost = option == null ? "\u00a7cUnavailable / invalid configuration"
+                : option.getType() == LegacyPaymentOption.Type.NONE ? "\u00a7aFree"
+                : "\u00a77Cost: \u00a7f" + option.getAmount() + " " + label;
+        return items.createVisualItemWithFallback(icon, "\u00a7b" + label,
+                java.util.Arrays.asList(cost, "\u00a77Click to confirm"), null);
+    }
+
     private List<LegacyEffectDefinition> definitions() {
         Collection<LegacyEffectDefinition> source = effects.getDefinitions().all();
         return new ArrayList<LegacyEffectDefinition>(source);
@@ -153,11 +194,13 @@ public final class LegacyGuiController {
 
     private static String title(LegacyGuiMenu menu) {
         if (menu == LegacyGuiMenu.EFFECTS) return "\u00a78NexusBeacon Effects";
+        if (menu == LegacyGuiMenu.PAYMENT) return "\u00a78NexusBeacon Payment";
         if (menu == LegacyGuiMenu.BEAM_STYLES) return "\u00a78NexusBeacon Beam";
         return "\u00a78NexusBeacon";
     }
 
     private static String value(String value) { return value == null ? "global" : value; }
+    private static int value(Integer value) { return value == null ? 0 : value.intValue(); }
 
     private static boolean isAuthorized(Player player, LegacyBeaconState beacon) {
         UUID playerId = player.getUniqueId();

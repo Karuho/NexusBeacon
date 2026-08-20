@@ -1,0 +1,16 @@
+package cl.dynasty.nexusbeacon.platform.legacy;
+
+public enum LegacyPurchaseResult {
+    COMMITTED,
+    UNAUTHORIZED,
+    STALE,
+    REMOVED,
+    UNSUPPORTED,
+    INVALID_LEVEL,
+    INVALID_PRICE,
+    ECONOMY_UNAVAILABLE,
+    INSUFFICIENT_FUNDS,
+    DEBIT_FAILED,
+    PERSISTENCE_FAILED_REFUNDED,
+    PERSISTENCE_FAILED_REFUND_FAILED
+}

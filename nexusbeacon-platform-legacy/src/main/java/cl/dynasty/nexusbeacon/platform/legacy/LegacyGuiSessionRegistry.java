@@ -16,6 +16,14 @@ public final class LegacyGuiSessionRegistry {
         return session;
     }
 
+    public synchronized LegacyGuiSession replacePayment(UUID playerId, LegacyBeaconState beacon,
+            String effectId, String action) {
+        LegacyGuiSession session = new LegacyGuiSession(playerId, beacon.getUniqueId(), beacon.getLocation(),
+                LegacyGuiMenu.PAYMENT, ++generation, effectId, action);
+        sessions.put(playerId, session);
+        return session;
+    }
+
     public synchronized LegacyGuiSession get(UUID playerId) { return sessions.get(playerId); }
 
     public synchronized boolean isCurrent(LegacyGuiSession session) {
