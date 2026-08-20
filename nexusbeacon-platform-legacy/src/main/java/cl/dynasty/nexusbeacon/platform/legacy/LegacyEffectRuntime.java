@@ -41,6 +41,7 @@ public final class LegacyEffectRuntime implements Runnable {
     private final LegacyEffectDefinitionRegistry definitions;
     private final LegacyEffectExecutorRegistry executors;
     private final SchedulerService scheduler;
+    private final FileConfiguration effectsConfig;
     private final Material beaconMaterial;
     private final long intervalTicks;
     private ScheduledTaskHandle task;
@@ -55,6 +56,7 @@ public final class LegacyEffectRuntime implements Runnable {
         this.plugin = plugin;
         this.state = state;
         this.scheduler = scheduler;
+        this.effectsConfig = effectsConfig;
         this.definitions = new LegacyEffectDefinitionRegistry(effectsConfig, materials, potions);
         this.executors = new LegacyEffectExecutorRegistry(plugin, beaconConfig, effectsConfig, materials);
         LegacyMaterialResolution beacon = materials.resolveLegacyMaterial("BEACON", MaterialContext.BLOCK_MATCH);
@@ -71,6 +73,36 @@ public final class LegacyEffectRuntime implements Runnable {
     }
 
     public LegacyEffectDefinition getDefinition(String id) { return definitions.get(id); }
+
+    /** Reuses the authoritative definition registry for Modern-equivalent furnace event selection. */
+    public LegacyFurnaceBoost findBestFurnaceBoost(Block block) {
+        if (block == null || !running || !state.getStatus().isReady()) return null;
+        LegacyFurnaceBoost best = null;
+        for (LegacyBeaconState beacon : state.snapshot()) {
+            LegacyBeaconLocation location = beacon.getLocation();
+            if (!location.getWorldName().equals(block.getWorld().getName())) continue;
+            double dx = location.getX() - (block.getX() + 0.5D);
+            double dz = location.getZ() - (block.getZ() + 0.5D);
+            if (dx * dx + dz * dz > beacon.getRange() * beacon.getRange()) continue;
+            for (String effectId : beacon.getActiveEffects()) {
+                LegacyEffectDefinition definition = definitions.get(effectId);
+                Integer acquired = beacon.getEffectLevels().get(effectId.toLowerCase(Locale.ROOT));
+                if (definition == null || acquired == null || !definition.isSupported()
+                        || !"BLOCK_PROCESS_BOOST".equals(definition.getType())
+                        || !definition.getTargetBlocks().contains(block.getType())) continue;
+                int level = Math.min(definition.getMaxLevel(), Math.max(1, acquired.intValue()));
+                double cook = levelDouble(effectsConfig, definition.getId(), level, "speed-up-time",
+                        effectsConfig.getDouble("effects." + definition.getId()
+                                + ".speed-up-time-per-level", 15.0D) * level);
+                double fuel = levelDouble(effectsConfig, definition.getId(), level, "fuel-speed-up-time",
+                        effectsConfig.getDouble("effects." + definition.getId()
+                                + ".fuel-speed-up-time-per-level", cook) * level);
+                LegacyFurnaceBoost candidate = new LegacyFurnaceBoost(cook, fuel);
+                if (best == null || candidate.getCookPercent() > best.getCookPercent()) best = candidate;
+            }
+        }
+        return best;
+    }
 
     @Override
     public void run() {

@@ -189,6 +189,8 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             String prefix = language.getString("prefix", "&b[NexusBeacon]&r ");
             String vanillaDisabledMessage = prefixed(language, prefix, "messages.beacon.vanilla-disabled",
                     "&cVanilla beacons are disabled.");
+            String baseProtectedMessage = prefixed(language, prefix, "messages.beacon.base-block-protected",
+                    "&cThis NexusBeacon base block is protected.");
             LegacyBeaconGameplaySettings gameplaySettings = new LegacyBeaconGameplaySettings(
                     beaconConfig.getInt("beacon.default-range", 48),
                     beaconConfig.getBoolean("protection.protect-base-blocks", true),
@@ -242,7 +244,9 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
                     prefix + "&cThis NexusBeacon item has invalid identity data.");
             listenerGraph = new LegacyListenerGraph(this, applicationGraph,
                     beaconConfig.getBoolean("vanilla-beacon.disable-vanilla", false),
-                    vanillaDisabledMessage, gameplaySettings, beaconItems, listenerMessages, guiController);
+                    vanillaDisabledMessage, gameplaySettings, beaconItems, listenerMessages, guiController,
+                    effectRuntime, Math.max(1, beaconConfig.getInt("beacon.power.max-layers", 4)),
+                    baseProtectedMessage);
             if (!listenerGraph.register() || listenerGraph.register()) {
                 throw new IllegalStateException("Legacy listener registration lifecycle self-check failed");
             }
@@ -299,6 +303,7 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             getLogger().info("Legacy listener graph registered: " + listenerGraph.getPortedListenerCount()
                     + " safe, " + listenerGraph.getDeferredListenerCount() + " deferred.");
             getLogger().info("Transactional marked beacon placement/removal and holder-based interaction GUI active.");
+            getLogger().info("Legacy FurnaceBoost events and authoritative base protection active.");
             getLogger().info("Legacy effect runtime active: " + effectRuntime.getDefinitionCount()
                     + " definitions, " + effectRuntime.getExecutorCount() + " executors, "
                     + effectRuntime.getSupportedDefinitionCount() + " definitions supported.");

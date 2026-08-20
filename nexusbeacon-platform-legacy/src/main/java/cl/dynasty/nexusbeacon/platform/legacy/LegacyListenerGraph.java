@@ -6,18 +6,21 @@ import org.bukkit.plugin.Plugin;
 
 /** The safe registered subset is separate from state/effect-dependent deferred listeners. */
 public final class LegacyListenerGraph {
-    public static final int DEFERRED_PRODUCTION_LISTENERS = 2;
+    public static final int DEFERRED_PRODUCTION_LISTENERS = 0;
 
     private final LegacyPluginLifecycleListener lifecycleListener;
     private final LegacyVanillaBeaconListener vanillaBeaconListener;
     private final LegacyTransactionalBeaconListener transactionalBeaconListener;
     private final LegacyGuiInteractionListener guiInteractionListener;
+    private final LegacyFurnaceBoostListener furnaceBoostListener;
+    private final LegacyBaseProtectionListener baseProtectionListener;
     private final LegacyListenerRegistry registry;
 
     public LegacyListenerGraph(Plugin plugin, LegacyApplicationGraph application,
             boolean vanillaDisabled, String vanillaDisabledMessage,
             LegacyBeaconGameplaySettings gameplaySettings, LegacyBeaconItemFactory itemFactory,
-            LegacyBeaconListenerMessages listenerMessages, LegacyGuiController guiController) {
+            LegacyBeaconListenerMessages listenerMessages, LegacyGuiController guiController,
+            LegacyEffectRuntime effectRuntime, int maxPowerLayers, String baseProtectedMessage) {
         if (plugin == null) throw new NullPointerException("plugin");
         if (application == null) throw new NullPointerException("application");
         application.requireAvailable(LegacyApplicationCapability.IDENTITY);
@@ -30,9 +33,13 @@ public final class LegacyListenerGraph {
         transactionalBeaconListener = new LegacyTransactionalBeaconListener(plugin, application,
                 gameplaySettings, itemFactory, listenerMessages);
         guiInteractionListener = new LegacyGuiInteractionListener(application.getState(), guiController);
+        furnaceBoostListener = new LegacyFurnaceBoostListener(effectRuntime,
+                application.getPlatformServices().getScheduler());
+        baseProtectionListener = new LegacyBaseProtectionListener(application.getState(), application.getMessages(),
+                gameplaySettings.isProtectBaseBlocks(), maxPowerLayers, baseProtectedMessage);
         registry = new LegacyListenerRegistry(plugin,
                 Arrays.asList(lifecycleListener, vanillaBeaconListener, transactionalBeaconListener,
-                        guiInteractionListener));
+                        guiInteractionListener, furnaceBoostListener, baseProtectionListener));
     }
 
     public boolean register() { return registry.register(); }
@@ -45,4 +52,6 @@ public final class LegacyListenerGraph {
     public LegacyTransactionalBeaconListener getTransactionalBeaconListener() {
         return transactionalBeaconListener;
     }
+    public LegacyFurnaceBoostListener getFurnaceBoostListener() { return furnaceBoostListener; }
+    public LegacyBaseProtectionListener getBaseProtectionListener() { return baseProtectionListener; }
 }
