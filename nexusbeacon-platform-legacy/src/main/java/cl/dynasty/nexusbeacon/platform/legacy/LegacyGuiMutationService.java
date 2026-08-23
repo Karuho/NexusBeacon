@@ -47,6 +47,36 @@ public final class LegacyGuiMutationService {
                 : LegacyGuiMutationResult.MISSING_BEACON;
     }
 
+    public LegacyGuiMutationResult toggleRangeParticles(LegacyGuiSession session, UUID actor,
+            boolean administrator) {
+        LegacyBeaconState current = current(session);
+        LegacyGuiMutationResult precondition = validate(current, session, actor, administrator);
+        if (precondition != null) return precondition;
+        LegacyBeaconState replacement = current.withRangeParticles(!current.isRangeParticlesEnabled(),
+                current.getRangeParticleType());
+        return state.update(replacement) ? LegacyGuiMutationResult.COMMITTED
+                : LegacyGuiMutationResult.MISSING_BEACON;
+    }
+
+    public LegacyGuiMutationResult cycleRangeParticle(LegacyGuiSession session, UUID actor,
+            boolean administrator) {
+        LegacyBeaconState current = current(session);
+        LegacyGuiMutationResult precondition = validate(current, session, actor, administrator);
+        if (precondition != null) return precondition;
+        String[] particles = { "VILLAGER_HAPPY", "FLAME", "CRIT", "CLOUD", "PORTAL" };
+        int next = 0;
+        for (int index = 0; index < particles.length; index++) {
+            if (particles[index].equalsIgnoreCase(current.getRangeParticleType())) {
+                next = (index + 1) % particles.length;
+                break;
+            }
+        }
+        LegacyBeaconState replacement = current.withRangeParticles(current.isRangeParticlesEnabled(),
+                particles[next]);
+        return state.update(replacement) ? LegacyGuiMutationResult.COMMITTED
+                : LegacyGuiMutationResult.MISSING_BEACON;
+    }
+
     public LegacyBeaconState currentAuthorized(LegacyGuiSession session, UUID actor, boolean administrator) {
         LegacyBeaconState current = current(session);
         return validate(current, session, actor, administrator) == null ? current : null;

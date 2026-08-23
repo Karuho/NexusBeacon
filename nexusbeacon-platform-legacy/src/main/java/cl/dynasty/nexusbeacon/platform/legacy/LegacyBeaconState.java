@@ -80,6 +80,11 @@ public final class LegacyBeaconState {
                 rangeParticleType);
     }
 
+    public LegacyBeaconState withRangeParticles(boolean enabled, String particleType) {
+        return new LegacyBeaconState(location, uniqueId, owner, range, level, effectLevels,
+                activeEffects, trustedPlayers, protectBaseBlocks, beamStyle, enabled, particleType);
+    }
+
     public LegacyBeaconState withEffectLevel(String effectId, int effectLevel, boolean activate) {
         String normalized = requiredIdentifier(effectId, "effect id").toLowerCase(java.util.Locale.ROOT);
         if (effectLevel <= 0) throw new IllegalArgumentException("Effect level must be positive");

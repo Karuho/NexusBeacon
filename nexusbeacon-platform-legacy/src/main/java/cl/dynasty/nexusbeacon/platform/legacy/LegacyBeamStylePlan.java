@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class LegacyBeamStylePlan {
+    public static final String DEFAULT_STYLE_ID = "aqua";
     private final String id;
     private final String particleName;
     private final LegacyParticleColor color;
@@ -34,5 +35,12 @@ public final class LegacyBeamStylePlan {
                 new LegacyBeamStylePlan("green", "DUST", new LegacyParticleColor(0, 255, 0), 1.2F),
                 new LegacyBeamStylePlan("purple", "DUST", new LegacyParticleColor(255, 0, 255), 1.2F),
                 new LegacyBeamStylePlan("end_rod", "END_ROD", null, 1.0F)));
+    }
+
+    public static LegacyBeamStylePlan defaultStyle() {
+        for (LegacyBeamStylePlan style : currentDefaults()) {
+            if (DEFAULT_STYLE_ID.equals(style.getId())) return style;
+        }
+        throw new IllegalStateException("Default Legacy beam style is not configured");
     }
 }

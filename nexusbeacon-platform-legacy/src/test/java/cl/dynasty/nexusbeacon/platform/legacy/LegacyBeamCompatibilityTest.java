@@ -17,8 +17,8 @@ class LegacyBeamCompatibilityTest {
         Map<LegacyBeamCompatibilityStatus, Integer> counts = classify(LegacyParticleRuntime.SPIGOT_1_8);
 
         assertEquals(5, LegacyBeamStylePlan.currentDefaults().size());
-        assertEquals(5, count(counts, LegacyBeamCompatibilityStatus.VISUAL_DEGRADATION));
-        assertEquals(0, count(counts, LegacyBeamCompatibilityStatus.UNSUPPORTED));
+        assertEquals(4, count(counts, LegacyBeamCompatibilityStatus.VISUAL_DEGRADATION));
+        assertEquals(1, count(counts, LegacyBeamCompatibilityStatus.UNSUPPORTED));
     }
 
     @Test void classifiesFourFixedSizeDustStylesAndExactEndRodOn112() {

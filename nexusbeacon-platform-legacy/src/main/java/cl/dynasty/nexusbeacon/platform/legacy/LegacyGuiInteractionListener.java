@@ -73,6 +73,15 @@ public final class LegacyGuiInteractionListener implements Listener {
         LegacyBeaconState current = controller.currentAuthorized(player, session);
         if (session.getMenu() == LegacyGuiMenu.MAIN) {
             if (rawSlot == 20) controller.open(player, current, LegacyGuiMenu.EFFECTS);
+            else if (rawSlot == 22) {
+                LegacyGuiMutationResult result = "RIGHT".equals(click)
+                        ? controller.cycleRangeParticle(player, session)
+                        : controller.toggleRangeParticles(player, session);
+                feedback(player, result);
+                if (result == LegacyGuiMutationResult.COMMITTED) {
+                    controller.open(player, state.findByUniqueId(session.getBeaconId()), LegacyGuiMenu.MAIN);
+                }
+            }
             else if (rawSlot == 24) controller.open(player, current, LegacyGuiMenu.BEAM_STYLES);
             else if (rawSlot == 49) player.closeInventory();
             return;

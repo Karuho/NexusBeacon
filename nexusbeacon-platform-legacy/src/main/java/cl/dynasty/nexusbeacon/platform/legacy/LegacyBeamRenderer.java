@@ -1,5 +1,7 @@
 package cl.dynasty.nexusbeacon.platform.legacy;
 
+import java.util.function.BooleanSupplier;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -19,11 +21,19 @@ public final class LegacyBeamRenderer {
         this.scheduler = scheduler;
     }
 
-    public LegacyBeamRenderResult render(final Location base, int configuredHeight,
+    LegacyBeamRenderResult render(final Location base, int configuredHeight,
             double configuredStep, int configuredCount, final LegacyBeamStylePlan style) {
+        return render(base, configuredHeight, configuredStep, configuredCount, style,
+                new BooleanSupplier() { @Override public boolean getAsBoolean() { return true; } });
+    }
+
+    LegacyBeamRenderResult render(final Location base, int configuredHeight,
+            double configuredStep, int configuredCount, final LegacyBeamStylePlan style,
+            final BooleanSupplier authority) {
         if (base == null || base.getWorld() == null) {
             throw new IllegalArgumentException("beam base must have a world");
         }
+        if (authority == null) throw new NullPointerException("authority");
         final int height = Math.max(1, configuredHeight);
         final double step = Math.max(0.25D, configuredStep);
         final int count = Math.max(1, configuredCount);
@@ -35,6 +45,7 @@ public final class LegacyBeamRenderer {
 
         scheduler.runSync(base, new Runnable() {
             @Override public void run() {
+                if (!authority.getAsBoolean()) return;
                 final World world = base.getWorld();
                 final LegacyParticleResolution resolution = styleCompatibility.getParticle();
                 VerticalBeamGeometry.forEachPoint(base, height, step, point -> {

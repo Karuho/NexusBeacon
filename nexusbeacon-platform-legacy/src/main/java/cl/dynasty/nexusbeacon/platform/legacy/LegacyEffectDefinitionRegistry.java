@@ -60,10 +60,13 @@ public final class LegacyEffectDefinitionRegistry {
                     }
                 }
             }
+            String icon = section.getString("icon", "NETHER_STAR");
+            LegacyMaterialResolution iconResolution = materials.resolveLegacyMaterial(icon,
+                    MaterialContext.GUI_ICON);
             LegacyEffectDefinition previous = parsed.put(id, new LegacyEffectDefinition(id, type, maxLevel,
                     section.getString("target", "PLAYERS"), potion,
                     section.getInt("duration-ticks", 100), section.getInt("amplifier-per-level", 1),
-                    targetBlocks, supported, diagnostic));
+                    targetBlocks, supported, diagnostic, icon, iconResolution.getMappingKind()));
             if (previous != null) throw new IllegalArgumentException("Duplicate effect id: " + id);
         }
         definitions = Collections.unmodifiableMap(parsed);
@@ -73,6 +76,13 @@ public final class LegacyEffectDefinitionRegistry {
         return id == null ? null : definitions.get(id.toLowerCase(Locale.ROOT));
     }
     public Collection<LegacyEffectDefinition> all() { return definitions.values(); }
+    public Collection<LegacyEffectDefinition> supported() {
+        List<LegacyEffectDefinition> result = new ArrayList<LegacyEffectDefinition>();
+        for (LegacyEffectDefinition definition : definitions.values()) {
+            if (definition.isSupported()) result.add(definition);
+        }
+        return Collections.unmodifiableList(result);
+    }
     public int size() { return definitions.size(); }
     public int supportedCount() {
         int count = 0;

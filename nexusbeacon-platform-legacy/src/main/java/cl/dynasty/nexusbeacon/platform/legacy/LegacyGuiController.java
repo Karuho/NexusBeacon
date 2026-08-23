@@ -44,7 +44,7 @@ public final class LegacyGuiController {
         this.prices = new LegacyPaymentOptionResolver(effectsConfig, materials);
         this.purchases = new LegacyEffectPurchaseService(state, effects, effectsConfig, materials, economy, logger);
         this.sessions = new LegacyGuiSessionRegistry();
-        this.beamStyles = LegacyBeamStylePlan.currentDefaults();
+        this.beamStyles = application.getBeams().selectable(LegacyBeamStylePlan.currentDefaults());
         this.mutations = new LegacyGuiMutationService(state, new LegacyGuiMutationService.RuntimeReadiness() {
             @Override public boolean isReady() { return effects.isRunning(); }
         }, beamStyles);
@@ -90,6 +90,16 @@ public final class LegacyGuiController {
                 styleId);
     }
 
+    LegacyGuiMutationResult toggleRangeParticles(Player player, LegacyGuiSession session) {
+        return mutations.toggleRangeParticles(session, player.getUniqueId(),
+                player.hasPermission("NexusBeacon.admin"));
+    }
+
+    LegacyGuiMutationResult cycleRangeParticle(Player player, LegacyGuiSession session) {
+        return mutations.cycleRangeParticle(session, player.getUniqueId(),
+                player.hasPermission("NexusBeacon.admin"));
+    }
+
     void openPayment(Player player, LegacyBeaconState beacon, String effectId, String action) {
         LegacyGuiSession session = sessions.replacePayment(player.getUniqueId(), beacon, effectId, action);
         LegacyGuiHolder holder = new LegacyGuiHolder(identity, session);
@@ -131,6 +141,10 @@ public final class LegacyGuiController {
     private void populateMain(Inventory inventory, LegacyBeaconState beacon) {
         inventory.setItem(20, item("NETHER_STAR", "\u00a7bEffects",
                 "\u00a77Select acquired effects", "\u00a77Active: " + beacon.getActiveEffects().size()));
+        inventory.setItem(22, item("ENDER_EYE", "\u00a7bRange visualization",
+                beacon.isRangeParticlesEnabled() ? "\u00a7aEnabled" : "\u00a7cDisabled",
+                "\u00a77Particle: " + beacon.getRangeParticleType(),
+                "\u00a77Left click to toggle; right click to cycle"));
         inventory.setItem(24, item("BEACON", "\u00a7bBeam styles",
                 "\u00a77Current: " + value(beacon.getBeamStyle())));
         inventory.setItem(49, item("BARRIER", "\u00a7cClose", "\u00a77Close this menu"));
@@ -142,13 +156,11 @@ public final class LegacyGuiController {
             LegacyEffectDefinition definition = definitions.get(index);
             boolean acquired = beacon.getEffectLevels().containsKey(definition.getId());
             boolean active = beacon.getActiveEffects().contains(definition.getId());
-            String status = !definition.isSupported() ? "\u00a7cUnavailable: " + definition.getDiagnostic()
-                    : !acquired ? "\u00a7eNot acquired"
+            String status = !acquired ? "\u00a7eNot acquired"
                     : active ? "\u00a7aActive" : "\u00a77Inactive";
-            inventory.setItem(CONTENT_SLOTS[index], item(definition.isSupported() ? "NETHER_STAR" : "BARRIER",
+            inventory.setItem(CONTENT_SLOTS[index], visualItem(definition.getPresentationIcon(),
                     "\u00a7b" + definition.getId(), status,
-                    !definition.isSupported() ? "\u00a77Fail closed"
-                            : acquired && beacon.getEffectLevels().get(definition.getId()).intValue()
+                    acquired && beacon.getEffectLevels().get(definition.getId()).intValue()
                                     >= definition.getMaxLevel() ? "\u00a77Left click to toggle; max level"
                             : acquired ? "\u00a77Left toggle; right upgrade"
                             : "\u00a77Right click to acquire"));
@@ -172,6 +184,12 @@ public final class LegacyGuiController {
         return items.createItem(material, MaterialContext.GUI_ICON, name, lines, null);
     }
 
+    private ItemStack visualItem(String material, String name, String... lore) {
+        List<String> lines = new ArrayList<String>();
+        Collections.addAll(lines, lore);
+        return items.createVisualItemWithFallback(material, name, lines, null);
+    }
+
     private ItemStack paymentItem(String effectId, String action, String optionKey, int level,
             String icon, String label) {
         LegacyPaymentOption option = prices.resolve(effectId, action, optionKey, level);
@@ -183,7 +201,7 @@ public final class LegacyGuiController {
     }
 
     private List<LegacyEffectDefinition> definitions() {
-        Collection<LegacyEffectDefinition> source = effects.getDefinitions().all();
+        Collection<LegacyEffectDefinition> source = effects.getDefinitions().supported();
         return new ArrayList<LegacyEffectDefinition>(source);
     }
 

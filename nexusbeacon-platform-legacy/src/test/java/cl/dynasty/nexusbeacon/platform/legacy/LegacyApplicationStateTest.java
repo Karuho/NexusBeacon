@@ -82,6 +82,38 @@ class LegacyApplicationStateTest {
         assertSame(beacon, state.find(beacon.getLocation()));
     }
 
+    @Test void visualAuthorityTracksManagedEntriesAcrossUpdateRemovalAndRestart() {
+        RecordingStorage storage = new RecordingStorage();
+        LegacyApplicationState state = ready(storage);
+        LegacyBeaconState managedA = beacon("world", 1, "11111111-1111-4111-8111-111111111111", 48);
+        LegacyBeaconState managedB = beacon("world", 12, "44444444-4444-4444-8444-444444444444", 32);
+        LegacyBeaconState unmanaged = beacon("world", 9, "55555555-5555-4555-8555-555555555555", 48);
+        state.insert(managedA);
+        state.insert(managedB);
+
+        assertTrue(state.isAuthoritative(managedA));
+        assertTrue(state.isAuthoritative(managedB));
+        assertFalse(state.isAuthoritative(unmanaged));
+
+        LegacyBeaconState changedA = managedA.withBeamStyle("purple");
+        state.update(changedA);
+        assertFalse(state.isAuthoritative(managedA));
+        assertTrue(state.isAuthoritative(changedA));
+        assertTrue(state.isAuthoritative(managedB));
+
+        state.delete(changedA.getLocation());
+        assertFalse(state.isAuthoritative(changedA));
+        assertTrue(state.isAuthoritative(managedB));
+
+        RecordingStorage restartStorage = new RecordingStorage();
+        restartStorage.loadResult = LegacyStorageLoadResult.success(storage.lastStored);
+        LegacyApplicationState restarted = ready(restartStorage);
+        assertFalse(restarted.isAuthoritative(changedA));
+        assertTrue(restarted.isAuthoritative(managedB));
+        assertFalse(restarted.isAuthoritative(unmanaged));
+        assertEquals(1, restarted.size());
+    }
+
     @Test void failedLoadNeverBecomesAnEmptyReadyRegistry() {
         RecordingStorage storage = new RecordingStorage();
         storage.loadResult = LegacyStorageLoadResult.failure(LegacyStorageLoadStatus.CORRUPT, "invalid");

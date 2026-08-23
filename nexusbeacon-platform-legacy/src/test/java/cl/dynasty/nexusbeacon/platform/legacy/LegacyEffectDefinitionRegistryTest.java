@@ -13,6 +13,7 @@ import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.potion.PotionEffectType;
 import org.junit.jupiter.api.Test;
 
 class LegacyEffectDefinitionRegistryTest {
@@ -41,6 +42,45 @@ class LegacyEffectDefinitionRegistryTest {
         assertTrue(modernFurnace.getTargetBlocks().isEmpty());
     }
 
+    @Test void supportedViewOmitsImpossibleDefinitionsAndRetainsFurnaceBoost() {
+        LegacyEffectDefinitionRegistry registry = registry();
+        Set<String> visible = new HashSet<String>();
+        for (LegacyEffectDefinition definition : registry.supported()) visible.add(definition.getId());
+
+        assertFalse(visible.contains("luck"));
+        assertFalse(visible.contains("modern_furnace_boost"));
+        assertTrue(visible.contains("furnace_boost"));
+        assertEquals(17, visible.size());
+    }
+
+    @Test void luckIsRetainedWhenTheRuntimePotionExistsButSmokerDefinitionStillIsNot() {
+        FileConfiguration config = effectsConfig();
+        LegacyPotionEffectResolver potions = testPotions(true);
+        LegacyEffectDefinitionRegistry registry = new LegacyEffectDefinitionRegistry(config,
+                new LegacyMaterialResolver(), potions);
+        Set<String> visible = new HashSet<String>();
+        for (LegacyEffectDefinition definition : registry.supported()) visible.add(definition.getId());
+
+        assertTrue(visible.contains("luck"));
+        assertFalse(visible.contains("modern_furnace_boost"));
+        assertTrue(visible.contains("furnace_boost"));
+        assertEquals(18, visible.size());
+    }
+
+    @Test void resolvesConfiguredIconsBeforeUsingExplicitVisualFallback() {
+        LegacyEffectDefinitionRegistry registry = registry();
+
+        assertEquals(LegacyMaterialMappingKind.EXACT, registry.get("speed").getIconMappingKind());
+        assertEquals(LegacyMaterialMappingKind.COMPATIBLE_ALIAS,
+                registry.get("night_vision").getIconMappingKind());
+        assertEquals(LegacyMaterialMappingKind.COMPATIBLE_ALIAS,
+                registry.get("water_breathing").getIconMappingKind());
+        assertEquals("TURTLE_HELMET", registry.get("water_breathing").getPresentationIcon());
+        assertEquals(LegacyMaterialMappingKind.COMPATIBLE_ALIAS,
+                registry.get("damage_field").getIconMappingKind());
+        assertEquals("GOLDEN_CARROT", registry.get("luck").getIcon());
+    }
+
     @Test void retainsConfiguredPotionDurationAmplifierAndTargets() {
         LegacyEffectDefinitionRegistry registry = registry();
 
@@ -63,11 +103,20 @@ class LegacyEffectDefinitionRegistryTest {
     }
 
     private static LegacyEffectDefinitionRegistry registry() {
+        return new LegacyEffectDefinitionRegistry(effectsConfig(),
+                new LegacyMaterialResolver(), testPotions(false));
+    }
+
+    private static LegacyPotionEffectResolver testPotions(final boolean luckAvailable) {
+        return new LegacyPotionEffectResolver(name ->
+                "LUCK".equals(name) && !luckAvailable ? null : PotionEffectType.SPEED);
+    }
+
+    private static FileConfiguration effectsConfig() {
         File file = new File("../src/main/resources/effects.yml");
         if (!file.isFile()) file = new File("src/main/resources/effects.yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         assertFalse(config.getKeys(false).isEmpty(), file.getAbsolutePath());
-        return new LegacyEffectDefinitionRegistry(config,
-                new LegacyMaterialResolver(), new LegacyPotionEffectResolver());
+        return config;
     }
 }

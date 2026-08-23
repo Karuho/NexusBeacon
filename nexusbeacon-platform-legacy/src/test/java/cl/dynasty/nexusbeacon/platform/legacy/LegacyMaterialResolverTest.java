@@ -67,6 +67,19 @@ class LegacyMaterialResolverTest {
         assertFalse(resolver.resolveMaterial("BLAST_FURNACE", MaterialContext.EFFECT_ICON).getMaterial().isPresent());
     }
 
+    @Test void usesRequestedVersionAwareGuiIconsAndExactWheatItem() {
+        assertEquals(Material.WATER_BUCKET,
+                resolver.resolveMaterial("TURTLE_HELMET", MaterialContext.GUI_ICON).getMaterial().get());
+        assertEquals(Material.DIAMOND_CHESTPLATE,
+                resolver.resolveMaterial("SHIELD", MaterialContext.GUI_ICON).getMaterial().get());
+        assertEquals(Material.CACTUS,
+                resolver.resolveMaterial("NETHERITE_SWORD", MaterialContext.GUI_ICON).getMaterial().get());
+        assertEquals(Material.WHEAT,
+                resolver.resolveMaterial("WHEAT", MaterialContext.GUI_ICON).getMaterial().get());
+        assertEquals(Material.CROPS,
+                resolver.resolveMaterial("WHEAT", MaterialContext.BLOCK_MATCH).getMaterial().get());
+    }
+
     @Test void distinguishesMalformedIdentifier() {
         assertEquals(MaterialResolutionStatus.INVALID_IDENTIFIER,
                 resolver.resolveMaterial("bad/id", MaterialContext.GUI_ICON).getStatus());

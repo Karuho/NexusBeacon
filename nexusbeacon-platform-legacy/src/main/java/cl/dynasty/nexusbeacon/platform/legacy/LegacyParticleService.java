@@ -58,9 +58,7 @@ public final class LegacyParticleService {
             if (runtime.hasBukkitParticles()) {
                 return resolution(name, name, LegacyParticleCompatibility.EXACT, null, false, true);
             }
-            return resolution(name, "FIREWORKS_SPARK",
-                    LegacyParticleCompatibility.VISUAL_APPROXIMATION,
-                    Effect.FIREWORKS_SPARK, false, true);
+            return resolution(name, null, LegacyParticleCompatibility.UNSUPPORTED, null, false, false);
         }
         if (KNOWN_MODERN_ONLY.contains(name)) {
             return resolution(name, null, LegacyParticleCompatibility.UNSUPPORTED, null, false, false);
@@ -88,6 +86,10 @@ public final class LegacyParticleService {
 
     void emitToWorldNow(World world, LegacyParticleResolution resolution, LegacyParticleRequest request) {
         transport.emit(world, resolution, request, WORLD_RADIUS);
+    }
+
+    void emitToPlayerNow(Player player, LegacyParticleResolution resolution, LegacyParticleRequest request) {
+        transport.emit(player, resolution, request, PLAYER_RADIUS);
     }
 
     private LegacyParticleResolution effect(String name, Effect effect) {

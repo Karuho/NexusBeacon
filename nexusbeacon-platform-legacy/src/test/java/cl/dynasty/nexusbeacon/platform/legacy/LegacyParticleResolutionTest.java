@@ -38,12 +38,12 @@ class LegacyParticleResolutionTest {
         assertEquals(LegacyParticleCompatibility.INVALID, service.resolve(null).getCompatibility());
     }
 
-    @Test void endRodIsExactOn112AndExplicitlyApproximateOn18() {
+    @Test void endRodIsExactOn112AndUnavailableAfterRejected18Fallback() {
         LegacyParticleResolution old = service(LegacyParticleRuntime.SPIGOT_1_8).resolve("END_ROD");
         LegacyParticleResolution newer = service(LegacyParticleRuntime.SPIGOT_1_12).resolve("END_ROD");
 
-        assertEquals(LegacyParticleCompatibility.VISUAL_APPROXIMATION, old.getCompatibility());
-        assertEquals("FIREWORKS_SPARK", old.getPhysicalName());
+        assertEquals(LegacyParticleCompatibility.UNSUPPORTED, old.getCompatibility());
+        assertFalse(old.isSupported());
         assertEquals(LegacyParticleCompatibility.EXACT, newer.getCompatibility());
         assertEquals("END_ROD", newer.getPhysicalName());
     }

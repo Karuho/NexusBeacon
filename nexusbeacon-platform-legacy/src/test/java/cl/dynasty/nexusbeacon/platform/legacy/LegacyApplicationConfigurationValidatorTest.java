@@ -37,6 +37,25 @@ class LegacyApplicationConfigurationValidatorTest {
                 files.config, files.beacon, files.effects, files.gui));
     }
 
+    @Test void omitsUnsupportedVisualBeamStyleWhenAnotherStyleRemainsAvailable() {
+        ConfigSet files = validFiles();
+        files.beacon.set("beam-styles.end_rod.particle", "END_ROD");
+
+        LegacyApplicationConfiguration configuration = validator().validate(
+                files.config, files.beacon, files.effects, files.gui);
+
+        assertEquals(1, configuration.getBeamStyles());
+    }
+
+    @Test void stillRejectsConfigurationWithNoSupportedBeamStyle() {
+        ConfigSet files = validFiles();
+        files.beacon.set("beam-styles.aqua", null);
+        files.beacon.set("beam-styles.end_rod.particle", "END_ROD");
+
+        assertThrows(IllegalArgumentException.class, () -> validator().validate(
+                files.config, files.beacon, files.effects, files.gui));
+    }
+
     @Test void parsesRecipeMetadataButNeverMakesRecipeCapabilityAvailable() {
         ConfigSet files = validFiles();
         LegacyApplicationConfiguration configuration = validator().validate(

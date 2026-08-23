@@ -1,5 +1,9 @@
 package cl.dynasty.nexusbeacon.platform.legacy;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public final class LegacyBeamCompatibility {
     private final LegacyParticleService particles;
 
@@ -36,5 +40,18 @@ public final class LegacyBeamCompatibility {
         return new LegacyBeamStyleCompatibility(style, particle,
                 LegacyBeamCompatibilityStatus.FULL_WITH_PARTICLE_ALIAS,
                 "stable Legacy particle alias/effect equivalent");
+    }
+
+    public List<LegacyBeamStylePlan> selectable(List<LegacyBeamStylePlan> styles) {
+        List<LegacyBeamStylePlan> result = new ArrayList<LegacyBeamStylePlan>();
+        for (LegacyBeamStylePlan style : styles) {
+            LegacyBeamStyleCompatibility classification = classify(style);
+            if (classification.getStatus() != LegacyBeamCompatibilityStatus.UNSUPPORTED
+                    && classification.getParticle().getCompatibility()
+                            != LegacyParticleCompatibility.VISUAL_APPROXIMATION) {
+                result.add(style);
+            }
+        }
+        return Collections.unmodifiableList(result);
     }
 }

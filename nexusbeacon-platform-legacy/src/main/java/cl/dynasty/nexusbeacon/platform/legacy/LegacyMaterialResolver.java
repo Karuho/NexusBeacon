@@ -14,6 +14,7 @@ import cl.dynasty.nexusbeacon.platform.api.MaterialResolver;
 
 public final class LegacyMaterialResolver implements MaterialResolver {
     private static final Map<String, LegacyMaterial> ALIASES = aliases();
+    private static final Map<String, LegacyMaterial> GUI_ALIASES = guiAliases();
 
     @Override
     public MaterialResolution resolveMaterial(String identifier, MaterialContext context) {
@@ -31,7 +32,14 @@ public final class LegacyMaterialResolver implements MaterialResolver {
             return failed(identifier, context, MaterialResolutionStatus.INVALID_IDENTIFIER);
         }
 
-        LegacyMaterial alias = ALIASES.get(normalized);
+        Material exact = Material.getMaterial(normalized);
+        if (context == MaterialContext.GUI_ICON && exact != null) {
+            return new LegacyMaterialResolution(MaterialResolution.resolved(identifier, context, exact),
+                    (short) 0, LegacyMaterialMappingKind.EXACT);
+        }
+
+        LegacyMaterial alias = context == MaterialContext.GUI_ICON ? GUI_ALIASES.get(normalized) : null;
+        if (alias == null) alias = ALIASES.get(normalized);
         if (alias != null) {
             Material material = Material.getMaterial(alias.name);
             if (material != null) {
@@ -40,7 +48,7 @@ public final class LegacyMaterialResolver implements MaterialResolver {
             }
         }
 
-        Material exact = Material.getMaterial(normalized);
+        exact = Material.getMaterial(normalized);
         if (exact != null) {
             return new LegacyMaterialResolution(MaterialResolution.resolved(identifier, context, exact),
                     (short) 0, LegacyMaterialMappingKind.EXACT);
@@ -80,6 +88,14 @@ public final class LegacyMaterialResolver implements MaterialResolver {
         aliases.put("POTATOES", new LegacyMaterial("POTATO", 0));
         aliases.put("NETHER_WART", new LegacyMaterial("NETHER_WARTS", 0));
         aliases.put("BEETROOTS", new LegacyMaterial("BEETROOT_BLOCK", 0));
+        return Collections.unmodifiableMap(aliases);
+    }
+
+    private static Map<String, LegacyMaterial> guiAliases() {
+        Map<String, LegacyMaterial> aliases = new HashMap<String, LegacyMaterial>();
+        aliases.put("TURTLE_HELMET", new LegacyMaterial("WATER_BUCKET", 0));
+        aliases.put("SHIELD", new LegacyMaterial("DIAMOND_CHESTPLATE", 0));
+        aliases.put("NETHERITE_SWORD", new LegacyMaterial("CACTUS", 0));
         return Collections.unmodifiableMap(aliases);
     }
 

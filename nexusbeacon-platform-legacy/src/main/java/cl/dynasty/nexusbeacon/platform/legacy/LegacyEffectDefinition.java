@@ -17,10 +17,19 @@ public final class LegacyEffectDefinition {
     private final List<Material> targetBlocks;
     private final boolean supported;
     private final String diagnostic;
+    private final String icon;
+    private final LegacyMaterialMappingKind iconMappingKind;
 
     LegacyEffectDefinition(String id, String type, int maxLevel, String target, PotionEffectType potion,
             int potionDurationTicks, int amplifierPerLevel, List<Material> targetBlocks,
             boolean supported, String diagnostic) {
+        this(id, type, maxLevel, target, potion, potionDurationTicks, amplifierPerLevel, targetBlocks,
+                supported, diagnostic, "NETHER_STAR", LegacyMaterialMappingKind.EXACT);
+    }
+
+    LegacyEffectDefinition(String id, String type, int maxLevel, String target, PotionEffectType potion,
+            int potionDurationTicks, int amplifierPerLevel, List<Material> targetBlocks,
+            boolean supported, String diagnostic, String icon, LegacyMaterialMappingKind iconMappingKind) {
         this.id = id;
         this.type = type;
         this.maxLevel = maxLevel;
@@ -31,6 +40,8 @@ public final class LegacyEffectDefinition {
         this.targetBlocks = Collections.unmodifiableList(targetBlocks);
         this.supported = supported;
         this.diagnostic = diagnostic;
+        this.icon = icon;
+        this.iconMappingKind = iconMappingKind;
     }
 
     public String getId() { return id; }
@@ -43,4 +54,9 @@ public final class LegacyEffectDefinition {
     public List<Material> getTargetBlocks() { return targetBlocks; }
     public boolean isSupported() { return supported; }
     public String getDiagnostic() { return diagnostic; }
+    public String getIcon() { return icon; }
+    public LegacyMaterialMappingKind getIconMappingKind() { return iconMappingKind; }
+    public String getPresentationIcon() {
+        return iconMappingKind == LegacyMaterialMappingKind.VISUAL_FALLBACK ? "NETHER_STAR" : icon;
+    }
 }

@@ -6,8 +6,6 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +34,6 @@ import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamCompatibilityStatus;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamRenderer;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamStyleCompatibility;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamStylePlan;
-import cl.dynasty.nexusbeacon.platform.legacy.LegacyParticleRequest;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyParticleRuntime;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyParticleService;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyApplicationBootstrap;
@@ -59,6 +56,8 @@ import cl.dynasty.nexusbeacon.platform.legacy.LegacyBukkitCommandEnvironment;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyNexusBeaconCommand;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyGuiController;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamRuntime;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyBeamRenderPolicy;
+import cl.dynasty.nexusbeacon.platform.legacy.LegacyRangeParticleRuntime;
 import cl.dynasty.nexusbeacon.platform.legacy.LegacyEconomyService;
 import cl.dynasty.nexusbeacon.platform.legacy.ReflectiveLegacyVaultEconomyService;
 
@@ -73,6 +72,7 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     private LegacyEffectRuntime effectRuntime;
     private LegacyGuiController guiController;
     private LegacyBeamRuntime beamRuntime;
+    private LegacyRangeParticleRuntime rangeParticleRuntime;
     private LegacyEconomyService economy;
 
     @Override
@@ -140,31 +140,22 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             LegacyBeamRenderer beamRenderer = new LegacyBeamRenderer(particles, platformServices.getScheduler());
             int fullBeamStyles = 0;
             int degradedBeamStyles = 0;
+            int unavailableBeamStyles = 0;
             for (LegacyBeamStylePlan style : LegacyBeamStylePlan.currentDefaults()) {
                 LegacyBeamStyleCompatibility compatibility = beamCompatibility.classify(style);
                 if (compatibility.getStatus() == LegacyBeamCompatibilityStatus.UNSUPPORTED) {
-                    throw new IllegalStateException("Legacy beam style is unsupported: " + style.getId());
-                }
-                if (compatibility.getStatus() == LegacyBeamCompatibilityStatus.VISUAL_DEGRADATION) {
+                    unavailableBeamStyles++;
+                } else if (compatibility.getStatus() == LegacyBeamCompatibilityStatus.VISUAL_DEGRADATION) {
                     degradedBeamStyles++;
                 } else {
                     fullBeamStyles++;
                 }
             }
-            if (fullBeamStyles + degradedBeamStyles != 5
+            if (fullBeamStyles + degradedBeamStyles == 0
+                    || fullBeamStyles + degradedBeamStyles + unavailableBeamStyles != 5
                     || particles.resolve("SONIC_BOOM").isSupported()
                     || particles.resolve("not-a-particle").isSupported()) {
                 throw new IllegalStateException("Legacy particle/beam compatibility self-check failed");
-            }
-            if (!Bukkit.getWorlds().isEmpty()) {
-                World world = Bukkit.getWorlds().get(0);
-                Location probe = world.getSpawnLocation().clone().add(0.5D, 1.0D, 0.5D);
-                particles.emitToWorld(world, new LegacyParticleRequest(
-                        "VILLAGER_HAPPY", probe, 1, 0.0D, 0.0D, 0.0D, 0.0D, null, 1.0F));
-                particles.emitToWorld(world, new LegacyParticleRequest(
-                        "DUST", probe, 1, 0.0D, 0.0D, 0.0D, 0.0D, null, 1.0F));
-                beamRenderer.render(
-                        probe, 1, 1.0D, 1, LegacyBeamStylePlan.currentDefaults().get(4));
             }
             saveApplicationResources();
             FileConfiguration mainConfig = loadConfiguration("config.yml");
@@ -228,8 +219,14 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             effectRuntime.start();
             beamRuntime = new LegacyBeamRuntime(this, applicationState, beamRenderer,
                     platformServices.getScheduler(), materials,
-                    Math.max(1L, beaconConfig.getLong("beacon.visual-beam.interval-ticks", 4L)));
+                    new LegacyBeamRenderPolicy(beaconConfig, materials),
+                    Math.max(1L, beaconConfig.getLong("visual-beam.interval-ticks", 4L)));
             beamRuntime.start();
+            rangeParticleRuntime = new LegacyRangeParticleRuntime(this, applicationState, particles,
+                    platformServices.getScheduler(), materials,
+                    beaconConfig.getInt("beacon.particles.radius-points", 96),
+                    Math.max(1L, beaconConfig.getLong("beacon.particles.interval-ticks", 20L)));
+            rangeParticleRuntime.start();
             economy = new ReflectiveLegacyVaultEconomyService(this);
             guiController = new LegacyGuiController(applicationGraph, effectRuntime, effectsConfig, materials,
                     economy, getLogger());
@@ -292,8 +289,9 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
             getLogger().info("Legacy particle backend: Spigot Effect + "
                     + (particleRuntime.hasBukkitParticles() ? "Bukkit Particle" : "explicit visual fallback")
                     + " (" + particleRuntime.getRevision() + ")");
-            getLogger().info("Legacy beam compatibility: 5 styles (" + fullBeamStyles
-                    + " full, " + degradedBeamStyles + " visually degraded).");
+            getLogger().info("Legacy beam compatibility: 5 configured styles (" + fullBeamStyles
+                    + " full, " + degradedBeamStyles + " visually degraded, "
+                    + unavailableBeamStyles + " unavailable).");
             getLogger().info("Legacy scheduler active: Bukkit");
             getLogger().info("Legacy teleporter active: Bukkit sync");
             getLogger().info("Legacy application configuration validated: "
@@ -327,6 +325,7 @@ public final class LegacyNexusBeaconPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (guiController != null) guiController.close();
+        if (rangeParticleRuntime != null) rangeParticleRuntime.close();
         if (beamRuntime != null) beamRuntime.close();
         if (effectRuntime != null) effectRuntime.close();
         if (recipes != null) {

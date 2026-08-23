@@ -29,6 +29,8 @@ class LegacyBeaconTransactionServiceTest {
         assertTrue(result.isCommitted());
         assertSame(result.getBeacon(), fixture.state.find(fixture.location));
         assertEquals(1, fixture.storage.lastStored.size());
+        assertNull(result.getBeacon().getBeamStyle());
+        assertEquals("aqua", LegacyBeamStylePlan.defaultStyle().getId());
     }
 
     @Test void vanillaBeaconIsRejectedWithoutWrite() {

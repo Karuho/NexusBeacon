@@ -78,10 +78,11 @@ public final class LegacyApplicationConfigurationValidator {
                     beamColor(section.getString(id + ".color")),
                     (float) section.getDouble(id + ".size", 1.0D));
             if (beams.classify(plan).getStatus() == LegacyBeamCompatibilityStatus.UNSUPPORTED) {
-                throw new IllegalArgumentException("Unsupported Legacy beam style: " + id);
+                continue;
             }
             count++;
         }
+        if (count == 0) throw new IllegalArgumentException("No supported Legacy beam styles are configured");
         return count;
     }
 

@@ -110,6 +110,13 @@ public final class LegacyApplicationState {
         return Collections.unmodifiableList(new ArrayList<LegacyBeaconState>(byLocation.values()));
     }
 
+    /** True only while this exact persisted beacon identity owns its stored location. */
+    public synchronized boolean isAuthoritative(LegacyBeaconState beacon) {
+        if (!status.isReady() || beacon == null) return false;
+        LegacyBeaconState current = byLocation.get(beacon.getLocation());
+        return beacon.equals(current);
+    }
+
     public synchronized int size() {
         requireReady();
         return byLocation.size();

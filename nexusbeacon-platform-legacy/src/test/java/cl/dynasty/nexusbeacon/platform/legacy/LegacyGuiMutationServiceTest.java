@@ -79,6 +79,18 @@ class LegacyGuiMutationServiceTest {
         assertEquals(0, fixture.storage.storeCalls);
     }
 
+    @Test void rangeVisualizationCanBeToggledAndCycledDurably() {
+        Fixture fixture = new Fixture();
+
+        assertEquals(LegacyGuiMutationResult.COMMITTED,
+                fixture.service.toggleRangeParticles(fixture.session, fixture.owner, false));
+        assertFalse(fixture.state.find(fixture.location).isRangeParticlesEnabled());
+        assertEquals(LegacyGuiMutationResult.COMMITTED,
+                fixture.service.cycleRangeParticle(fixture.session, fixture.owner, false));
+        assertEquals("FLAME", fixture.state.find(fixture.location).getRangeParticleType());
+        assertEquals(2, fixture.storage.storeCalls);
+    }
+
     private static final class Fixture {
         private final UUID owner = UUID.randomUUID();
         private final UUID trusted = UUID.randomUUID();
