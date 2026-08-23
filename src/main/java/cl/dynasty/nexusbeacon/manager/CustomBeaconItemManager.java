@@ -16,33 +16,46 @@ import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.model.BeaconData;
 import cl.dynasty.nexusbeacon.util.ColorUtil;
+import cl.dynasty.nexusbeacon.platform.api.MaterialContext;
+import cl.dynasty.nexusbeacon.platform.api.MaterialResolution;
+import cl.dynasty.nexusbeacon.platform.api.ItemIdentity;
+import cl.dynasty.nexusbeacon.platform.api.ItemIdentityService;
+import cl.dynasty.nexusbeacon.platform.modern.ModernItemIdentityService;
 
 public class CustomBeaconItemManager {
 
     private final NexusBeaconPlugin plugin;
+    private final ItemIdentityService identityService;
 
     public CustomBeaconItemManager(NexusBeaconPlugin plugin) {
         this.plugin = plugin;
+        this.identityService = new ModernItemIdentityService(
+                item -> plugin.getItemDataAdapter().readBaseMarker(item),
+                item -> plugin.getItemDataAdapter().writeBaseMarker(item),
+                this::matchesLegacyDisplayIdentity);
     }
 
     public ItemStack createBeaconItem(int amount) {
         ItemStack item = createBaseItem(amount, null);
-        return plugin.getItemDataAdapter().writeBaseMarker(item);
+        return identityService.mark(item, ItemIdentity.NEXUS_BEACON);
     }
 
     public ItemStack createBeaconItemFromData(BeaconData beacon) {
         ItemStack item = createBaseItem(1, beacon);
 
         if (beacon.getEffectLevels().isEmpty()) {
-            return plugin.getItemDataAdapter().writeBaseMarker(item);
+            return identityService.mark(item, ItemIdentity.NEXUS_BEACON);
         }
 
         return plugin.getItemDataAdapter().writeBeaconData(item, beacon);
     }
 
     private ItemStack createBaseItem(int amount, BeaconData beacon) {
-        Material material = plugin.getVersionAdapter().material(
-                plugin.getConfigManager().getBeaconConfig().getString("item.material", "BEACON"));
+        String identifier = plugin.getConfigManager().getBeaconConfig().getString("item.material", "BEACON");
+        MaterialResolution resolution = plugin.getVersionAdapter()
+                .resolveMaterial(identifier, MaterialContext.REQUIRED_ITEM);
+        Material material = resolution.getMaterial().orElseThrow(() ->
+                new IllegalStateException("Invalid or unsupported required beacon item material: " + identifier));
 
         ItemStack item = new ItemStack(material, amount);
         ItemMeta meta = item.getItemMeta();
@@ -140,10 +153,10 @@ public class CustomBeaconItemManager {
     }
 
     public boolean isCustomBeacon(ItemStack item) {
-        if (plugin.getItemDataAdapter().isCustomBeacon(item)) {
-            return true;
-        }
+        return identityService.identify(item).isRecognized();
+    }
 
+    private boolean matchesLegacyDisplayIdentity(ItemStack item) {
         if (item == null || item.getType() != Material.BEACON || !item.hasItemMeta()) {
             return false;
         }

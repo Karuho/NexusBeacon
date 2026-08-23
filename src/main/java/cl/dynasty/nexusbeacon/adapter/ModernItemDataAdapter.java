@@ -51,6 +51,11 @@ public class ModernItemDataAdapter implements ItemDataAdapter {
     }
 
     @Override
+    public String readBaseMarker(ItemStack item) {
+        return get(item, "nexusbeacon");
+    }
+
+    @Override
     public String readUniqueId(ItemStack item) {
         String value = get(item, "uid");
         return value != null && !value.isEmpty() ? value : UUID.randomUUID().toString();

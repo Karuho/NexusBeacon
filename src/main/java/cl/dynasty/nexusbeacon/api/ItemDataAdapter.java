@@ -14,6 +14,8 @@ public interface ItemDataAdapter {
 
     boolean isCustomBeacon(ItemStack item);
 
+    String readBaseMarker(ItemStack item);
+
     String readUniqueId(ItemStack item);
 
     Map<String, Integer> readEffects(ItemStack item);

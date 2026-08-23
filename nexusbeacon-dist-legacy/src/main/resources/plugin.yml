@@ -1,0 +1,21 @@
+name: NexusBeaconLegacy
+version: '${project.version}'
+main: cl.dynasty.nexusbeacon.legacy.LegacyNexusBeaconPlugin
+description: NexusBeacon Legacy application for the supported Legacy feature set.
+author: DynaDev
+website: https://github.com/Karuho/NexusBeacon
+prefix: NexusBeaconLegacy
+load: POSTWORLD
+softdepend: [Vault]
+commands:
+  NexusBeacon:
+    description: Main NexusBeacon command.
+    usage: /NexusBeacon
+    aliases: [nbeacon, beacon, nb, nbe]
+permissions:
+  NexusBeacon.use:
+    description: Allows transactional NexusBeacon placement.
+    default: true
+  NexusBeacon.admin:
+    description: Allows administrative NexusBeacon removal.
+    default: op

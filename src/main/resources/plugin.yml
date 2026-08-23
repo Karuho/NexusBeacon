@@ -1,5 +1,5 @@
 name: NexusBeacon
-version: 1.2.5
+version: '${project.version}'
 main: cl.dynasty.nexusbeacon.NexusBeaconPlugin
 description: Advanced configurable beacon system for modern Paper servers.
 author: DynaDev

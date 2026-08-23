@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cl.dynasty.nexusbeacon.platform.api.MaterialContext;
+import cl.dynasty.nexusbeacon.platform.api.MaterialResolution;
+import cl.dynasty.nexusbeacon.platform.api.PotionEffectResolution;
+
 public class EffectRegistry {
 
     private final NexusBeaconPlugin plugin;
@@ -39,7 +43,13 @@ public class EffectRegistry {
                     section.getStringList(id + ".description"));
 
             String iconName = section.getString(id + ".icon", "BEACON");
-            Material icon = plugin.getVersionAdapter().material(iconName);
+            MaterialResolution iconResolution = plugin.getVersionAdapter()
+                    .resolveMaterial(iconName, MaterialContext.EFFECT_ICON);
+            if (!iconResolution.isResolved()) {
+                plugin.getLogger().warning("Invalid or unsupported effect icon '" + iconName + "' for effect " + id);
+                continue;
+            }
+            Material icon = iconResolution.getMaterial().orElseThrow();
 
             int durationTicks = section.getInt(id + ".duration-ticks", 100);
             int maxLevel = section.getInt(id + ".max-level", 1);
@@ -47,7 +57,8 @@ public class EffectRegistry {
 
             if (type.equalsIgnoreCase("POTION")) {
                 String potionName = section.getString(id + ".potion", "");
-                PotionEffectType potionType = plugin.getVersionAdapter().potion(potionName);
+                PotionEffectResolution potionResolution = plugin.getVersionAdapter().resolvePotionEffect(potionName);
+                PotionEffectType potionType = potionResolution.getEffectType().orElse(null);
 
                 if (potionType == null) {
                     plugin.getLogger().warning(plugin.getLanguageManager().get(

@@ -15,6 +15,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import cl.dynasty.nexusbeacon.NexusBeaconPlugin;
+import cl.dynasty.nexusbeacon.platform.api.MaterialContext;
+import cl.dynasty.nexusbeacon.platform.api.MaterialResolution;
 import cl.dynasty.nexusbeacon.effects.BeaconEffect;
 import cl.dynasty.nexusbeacon.model.BeaconData;
 import cl.dynasty.nexusbeacon.util.DebugLogger;
@@ -214,20 +216,14 @@ public final class NexusGuiLoader {
     }
 
     private Material parseMaterial(String materialName) {
-        if (materialName == null || materialName.isBlank()) {
-            return Material.STONE;
-        }
-
-        Material material = Material.matchMaterial(materialName.toUpperCase());
-
-        if (material == null) {
+        MaterialResolution resolution = plugin.getVersionAdapter()
+                .resolveMaterial(materialName, MaterialContext.GUI_ICON);
+        if (!resolution.isResolved()) {
             plugin.getLogger().warning(plugin.getLanguageManager().get(
                     "console.gui-material-invalid",
-                    Map.of("material", materialName)));
-            return Material.STONE;
+                    Map.of("material", String.valueOf(materialName))));
         }
-
-        return material;
+        return resolution.getMaterial().orElseThrow();
     }
 
     private NexusGuiAction createAction(String actionText) {
