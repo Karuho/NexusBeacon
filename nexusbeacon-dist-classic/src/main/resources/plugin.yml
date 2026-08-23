@@ -1,0 +1,20 @@
+name: NexusBeacon
+version: '${project.version}'
+main: cl.dynasty.nexusbeacon.classic.ClassicNexusBeaconPlugin
+description: NexusBeacon compatibility foundation for Classic Bukkit servers.
+author: DynaDev
+website: https://github.com/Karuho/NexusBeacon
+prefix: NexusBeacon
+api-version: '1.13'
+load: POSTWORLD
+softdepend: [Vault, PlaceholderAPI, SpawnerMeta]
+commands:
+  NexusBeacon:
+    description: Main NexusBeacon command.
+    usage: /NexusBeacon
+    aliases: [nbeacon, beacon, nb, nbe]
+permissions:
+  NexusBeacon.admin:
+    default: op
+  NexusBeacon.use:
+    default: true

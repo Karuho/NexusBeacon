@@ -12,14 +12,17 @@
         <module>nexusbeacon-platform-api</module>
         <module>nexusbeacon-platform-modern</module>
         <module>nexusbeacon-platform-legacy</module>
+        <module>nexusbeacon-platform-classic</module>
         <module>nexusbeacon-dist-modern</module>
         <module>nexusbeacon-dist-legacy</module>
+        <module>nexusbeacon-dist-classic</module>
     </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <paper.version>1.21.1-R0.1-SNAPSHOT</paper.version>
         <spigot.legacy.version>1.8.8-R0.1-SNAPSHOT</spigot.legacy.version>
+        <spigot.classic.version>1.13.2-R0.1-SNAPSHOT</spigot.classic.version>
         <junit.version>5.11.4</junit.version>
     </properties>
 
@@ -36,6 +39,7 @@
             <dependency><groupId>cl.dynasty</groupId><artifactId>nexusbeacon-platform-api</artifactId><version>${project.version}</version></dependency>
             <dependency><groupId>cl.dynasty</groupId><artifactId>nexusbeacon-platform-modern</artifactId><version>${project.version}</version></dependency>
             <dependency><groupId>cl.dynasty</groupId><artifactId>nexusbeacon-platform-legacy</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>cl.dynasty</groupId><artifactId>nexusbeacon-platform-classic</artifactId><version>${project.version}</version></dependency>
             <dependency><groupId>io.papermc.paper</groupId><artifactId>paper-api</artifactId><version>${paper.version}</version></dependency>
             <dependency><groupId>org.spigotmc</groupId><artifactId>spigot-api</artifactId><version>${spigot.legacy.version}</version></dependency>
             <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>${junit.version}</version></dependency>
