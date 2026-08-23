@@ -1,9 +1,8 @@
 ## Compatibility
 
-* Java: 21+ for Minecraft 1.21.x; Java 25+ for Minecraft 26.2
-* Server software: Paper/Purpur
-* Supported Minecraft versions: 1.21.x and newer (validated through 26.2)
-* Experimental: newer versions may work, but are not officially tested.
+* Legacy distribution: Spigot 1.8.8–1.12.2 on Java 8.
+* Modern distribution: Paper 1.21.1 on Java 21; Paper 26.2 builds use Java 25.
+* Other server versions may work, but are not part of the verified support contract.
 
 ## Building
 
@@ -23,9 +22,17 @@ nexusbeacon-dist-legacy/target/NexusBeacon-Legacy.jar
 ```
 
 The Modern distribution targets Java 21 and retains current Paper behavior.
-The Legacy distribution targets Java 8 and currently provides only the proven
-platform detection and custom-NBT item-identity foundation; full Legacy
-NexusBeacon gameplay is not implemented yet.
+The Legacy distribution targets Java 8 and includes the validated supported
+gameplay set: custom item identity, crafting, transactional placement/removal,
+storage and restart persistence, effects, GUI, purchases/upgrades,
+FurnaceBoost, base protection, trust, beam styles, and range visualization.
+
+Legacy administrative hot reload is not supported, and no storage migration is
+required for the unchanged release format. PlaceholderAPI remains an optional
+Modern-only integration. A documented Legacy visual limitation remains: a
+managed mixed-layer pyramid can show both native and custom vertical beams when
+its first vanilla-compatible 3x3 layer still activates Minecraft's native beam.
+This has no gameplay or storage impact.
 
 Validate Modern sources against Paper 26.2 using JDK 25:
 
