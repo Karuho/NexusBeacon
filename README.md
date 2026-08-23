@@ -3,7 +3,7 @@
 * Legacy distribution: Spigot 1.8.8–1.12.2 on Java 8.
 * Modern distribution: Paper 1.21.1–26.2 on Java 21 or the newer JVM required
   by the corresponding Paper release.
-* Minecraft/Paper 1.13.2–1.20.x is not supported by this release.
+* Minecraft/Paper 1.13.2–1.20.x is not supported by release 1.3.0.
 
 For the next release, the required generation split is a planned
 `NexusBeacon-Classic.jar` for Minecraft 1.13.2–1.20.4 and the existing
