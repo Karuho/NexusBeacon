@@ -1,0 +1,3 @@
+package cl.dynasty.nexusbeacon.platform.classic;
+import static org.junit.jupiter.api.Assertions.*;import java.util.Arrays;import org.junit.jupiter.api.Test;
+class ClassicCommandCompletionTest {@Test void coreCommandsAreDiscoverableCaseInsensitively(){assertEquals(Arrays.asList("help"),ClassicNexusBeaconCommand.matches(Arrays.asList("help","give","trust","trusted","untrust"),"HE"));assertEquals(Arrays.asList("trust","trusted"),ClassicNexusBeaconCommand.matches(Arrays.asList("help","give","trust","trusted","untrust"),"tru"));assertTrue(ClassicNexusBeaconCommand.matches(Arrays.asList("help","give","trust","trusted","untrust"),"x").isEmpty());}}

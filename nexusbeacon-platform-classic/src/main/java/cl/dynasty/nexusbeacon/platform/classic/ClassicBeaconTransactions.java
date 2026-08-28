@@ -1,0 +1,10 @@
+package cl.dynasty.nexusbeacon.platform.classic;
+import java.util.Collections; import java.util.UUID; import org.bukkit.inventory.ItemStack; import cl.dynasty.nexusbeacon.platform.api.ItemIdentityService;
+public final class ClassicBeaconTransactions {
+    public enum Status { COMMITTED, UNMARKED, CANCELLED, DUPLICATE, UNMANAGED, STORAGE_FAILURE }
+    public static final class Result { private final Status status;private final ClassicBeaconRecord record;Result(Status s,ClassicBeaconRecord r){status=s;record=r;}public Status getStatus(){return status;}public ClassicBeaconRecord getRecord(){return record;}public boolean isCommitted(){return status==Status.COMMITTED;} }
+    private final ClassicApplicationState state;private final ItemIdentityService identities;private final int range;private final boolean protect;private final boolean particles;private final String particle;
+    public ClassicBeaconTransactions(ClassicApplicationState state,ItemIdentityService identities,int range,boolean protect,boolean particles,String particle){this.state=state;this.identities=identities;this.range=range;this.protect=protect;this.particles=particles;this.particle=particle;}
+    public Result place(ItemStack item,ClassicBeaconLocation location,UUID owner,boolean cancelled){if(cancelled)return new Result(Status.CANCELLED,null);if(!identities.identify(item).isRecognized())return new Result(Status.UNMARKED,null);ClassicBeaconRecord r=new ClassicBeaconRecord(location,UUID.randomUUID(),owner,range,1,Collections.<String,Integer>emptyMap(),Collections.<String>emptySet(),Collections.<UUID>emptySet(),protect,null,particles,particle);try{return state.insert(r)?new Result(Status.COMMITTED,r):new Result(Status.DUPLICATE,null);}catch(ClassicStorageException e){return new Result(Status.STORAGE_FAILURE,null);}}
+    public Result remove(ClassicBeaconLocation location,boolean cancelled){if(cancelled)return new Result(Status.CANCELLED,null);try{ClassicBeaconRecord r=state.remove(location);return r==null?new Result(Status.UNMANAGED,null):new Result(Status.COMMITTED,r);}catch(ClassicStorageException e){return new Result(Status.STORAGE_FAILURE,null);}}
+}
