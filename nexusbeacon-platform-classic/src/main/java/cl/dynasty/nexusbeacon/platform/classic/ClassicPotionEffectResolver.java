@@ -14,7 +14,9 @@ public final class ClassicPotionEffectResolver implements PotionEffectResolver {
         if (identifier == null || identifier.trim().isEmpty()) {
             return PotionEffectResolution.failed(identifier, PotionEffectResolution.Status.INVALID_IDENTIFIER);
         }
-        PotionEffectType type = lookup.apply(identifier.trim().toUpperCase(Locale.ROOT));
+        String name = identifier.trim().toUpperCase(Locale.ROOT);
+        PotionEffectType type = lookup.apply(name);
+        if (type == null && "STRENGTH".equals(name)) type = lookup.apply("INCREASE_DAMAGE");
         return type == null ? PotionEffectResolution.failed(identifier, PotionEffectResolution.Status.UNSUPPORTED)
                 : PotionEffectResolution.resolved(identifier, type);
     }
