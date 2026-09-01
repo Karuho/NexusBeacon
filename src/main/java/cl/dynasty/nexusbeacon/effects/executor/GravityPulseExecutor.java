@@ -12,7 +12,7 @@ import cl.dynasty.nexusbeacon.effects.EffectLevelUtil;
 import cl.dynasty.nexusbeacon.model.BeaconData;
 import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
-import cl.dynasty.nexusbeacon.util.RangeUtil;
+import cl.dynasty.nexusbeacon.util.ModernEntityRangeQuery;
 
 public class GravityPulseExecutor implements EffectExecutor {
 
@@ -62,30 +62,32 @@ public class GravityPulseExecutor implements EffectExecutor {
         Location target = center.clone().add(0.5D, 1.0D, 0.5D);
 
         int range = beacon.getRange();
-        double searchRange = range;
-
-        for (Entity entity : center.getWorld().getNearbyEntities(
-                center,
-                searchRange,
-                searchRange,
-                searchRange)) {
+        for (Entity entity : ModernEntityRangeQuery.nearby(center, range)) {
             if (entity instanceof LivingEntity
                     && MobUtil.isHostile(entity)
-                    && RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange())) {
+                    && ModernEntityRangeQuery.isInsideHorizontal(entity.getLocation(), center, range)) {
 
-                Vector direction = target.toVector().subtract(entity.getLocation().toVector());
-                if (direction.lengthSquared() > 0.01D) {
-                    direction.normalize().multiply(strength);
-                    direction.setY(verticalBoost);
-
-                    Vector velocity = entity.getVelocity().add(direction);
-                    if (velocity.length() > maxVelocity) {
-                        velocity.normalize().multiply(maxVelocity);
-                    }
-
-                    entity.setVelocity(velocity);
-                }
+                entity.setVelocity(attractionVelocity(
+                        entity.getVelocity(), entity.getLocation().toVector(), target.toVector(),
+                        strength, verticalBoost, maxVelocity));
             }
         }
+    }
+
+    static Vector attractionVelocity(Vector currentVelocity, Vector entityPosition, Vector targetPosition,
+            double strength, double verticalBoost, double maxVelocity) {
+        Vector horizontal = targetPosition.clone().subtract(entityPosition).setY(0.0D);
+        if (horizontal.lengthSquared() > 0.01D) {
+            horizontal.normalize().multiply(strength);
+        } else {
+            horizontal.zero();
+        }
+        horizontal.setY(verticalBoost);
+
+        Vector velocity = currentVelocity.clone().add(horizontal);
+        if (velocity.length() > maxVelocity) {
+            velocity.normalize().multiply(maxVelocity);
+        }
+        return velocity;
     }
 }

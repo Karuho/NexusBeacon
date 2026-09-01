@@ -11,7 +11,7 @@ import cl.dynasty.nexusbeacon.effects.EffectLevelUtil;
 import cl.dynasty.nexusbeacon.model.BeaconData;
 import cl.dynasty.nexusbeacon.util.DebugLogger;
 import cl.dynasty.nexusbeacon.util.MobUtil;
-import cl.dynasty.nexusbeacon.util.RangeUtil;
+import cl.dynasty.nexusbeacon.util.ModernEntityRangeQuery;
 
 public class IgnitionExecutor implements EffectExecutor {
 
@@ -46,18 +46,12 @@ public class IgnitionExecutor implements EffectExecutor {
                 + " fireTicks=" + fireTicks
                 + " range=" + beacon.getRange());
         int range = beacon.getRange();
-        double searchRange = range;
-
-        for (Entity entity : center.getWorld().getNearbyEntities(
-                center,
-                searchRange,
-                searchRange,
-                searchRange)) {
+        for (Entity entity : ModernEntityRangeQuery.nearby(center, range)) {
             if (!(entity instanceof LivingEntity))
                 continue;
             if (!MobUtil.isHostile(entity))
                 continue;
-            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, beacon.getRange()))
+            if (!ModernEntityRangeQuery.isInsideHorizontal(entity.getLocation(), center, range))
                 continue;
 
             entity.setFireTicks(fireTicks);

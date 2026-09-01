@@ -5,6 +5,8 @@ import cl.dynasty.nexusbeacon.platform.MinecraftVersion;
 public final class ModernVersionSelector {
     private static final ModernPlatformProfile PROFILE_1_13 =
             new ModernPlatformProfile(ModernVersionFamily.MODERN_1_13, 8);
+    private static final ModernPlatformProfile PROFILE_1_20_5 =
+            new ModernPlatformProfile(ModernVersionFamily.MODERN_1_20_5, 21);
     private static final ModernPlatformProfile PROFILE_1_21 =
             new ModernPlatformProfile(ModernVersionFamily.MODERN_1_21, 21);
     private static final ModernPlatformProfile PROFILE_26_2 =
@@ -26,6 +28,8 @@ public final class ModernVersionSelector {
 
     private static ModernPlatformProfile profileFor(MinecraftVersion minecraft) {
         if (minecraft.getMajor() == 1 && minecraft.getMinor() == 13) return PROFILE_1_13;
+        if (minecraft.getMajor() == 1 && minecraft.getMinor() == 20
+                && minecraft.getPatch() >= 5) return PROFILE_1_20_5;
         if (minecraft.getMajor() == 1 && minecraft.getMinor() == 21) return PROFILE_1_21;
         if (minecraft.getMajor() == 26 && minecraft.getMinor() == 2) return PROFILE_26_2;
         return null;

@@ -30,11 +30,11 @@ public class BeaconGuiListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player))
             return;
 
-        if (!(event.getView().getTopInventory().getHolder() instanceof NexusBeaconGuiHolder)) {
+        if (!(event.getInventory().getHolder() instanceof NexusBeaconGuiHolder)) {
             return;
         }
 
-        NexusBeaconGuiHolder holder = (NexusBeaconGuiHolder) event.getView().getTopInventory().getHolder();
+        NexusBeaconGuiHolder holder = (NexusBeaconGuiHolder) event.getInventory().getHolder();
         String menuId = holder.getMenuId();
 
         event.setCancelled(true);
@@ -272,7 +272,7 @@ public class BeaconGuiListener implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (event.getView().getTopInventory().getHolder() instanceof NexusBeaconGuiHolder) {
+        if (event.getInventory().getHolder() instanceof NexusBeaconGuiHolder) {
             event.setCancelled(true);
         }
     }

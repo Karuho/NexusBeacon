@@ -52,7 +52,7 @@ public final class BeamRenderer {
         Location base = beacon.getLocation().clone().add(0.5, 1.0, 0.5);
         World world = base.getWorld();
 
-        int height = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.height", 96));
+        int height = renderHeight(beacon);
         double step = Math.max(0.25D, plugin.getConfigManager().getBeaconConfig().getDouble("visual-beam.step", 0.45));
         int count = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1));
 
@@ -82,7 +82,7 @@ public final class BeamRenderer {
 
         Location base = beacon.getLocation().clone().add(0.5, 1.0, 0.5);
 
-        int height = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.height", 96));
+        int height = renderHeight(beacon);
         double step = Math.max(0.25D, plugin.getConfigManager().getBeaconConfig().getDouble("visual-beam.step", 0.45));
         int count = Math.max(1, plugin.getConfigManager().getBeaconConfig().getInt("visual-beam.count", 1));
         Particle particle = style.getParticle();
@@ -118,5 +118,14 @@ public final class BeamRenderer {
         }
 
         return plugin.getBeamStyleManager().getGlobalStyle();
+    }
+
+    private int renderHeight(BeaconData beacon) {
+        var config = plugin.getConfigManager().getBeaconConfig();
+        return ModernBeamHeight.height(
+                ModernBeamHeight.mode(config),
+                config.getInt("visual-beam.height", 96),
+                beacon.getLocation().getBlockY(),
+                beacon.getLocation().getWorld().getMaxHeight());
     }
 }

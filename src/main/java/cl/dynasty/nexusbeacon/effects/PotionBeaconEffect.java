@@ -13,7 +13,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import cl.dynasty.nexusbeacon.model.BeaconData;
-import cl.dynasty.nexusbeacon.util.RangeUtil;
+import cl.dynasty.nexusbeacon.util.ModernEntityRangeQuery;
 
 public class PotionBeaconEffect implements BeaconEffect {
 
@@ -100,19 +100,13 @@ public class PotionBeaconEffect implements BeaconEffect {
 
         Location center = beacon.getLocation();
         int range = beacon.getRange();
-        double searchRange = range;
-
-        for (Entity entity : center.getWorld().getNearbyEntities(
-                center,
-                searchRange,
-                searchRange,
-                searchRange)) {
+        for (Entity entity : ModernEntityRangeQuery.nearby(center, range)) {
 
             if (!(entity instanceof LivingEntity)) {
                 continue;
             }
 
-            if (!RangeUtil.isInsideHorizontalRange(entity.getLocation(), center, range)) {
+            if (!ModernEntityRangeQuery.isInsideHorizontal(entity.getLocation(), center, range)) {
                 continue;
             }
 

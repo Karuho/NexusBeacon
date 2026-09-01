@@ -12,7 +12,7 @@ public final class NexusGuiListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClick(InventoryClickEvent event) {
-        Inventory topInventory = event.getView().getTopInventory();
+        Inventory topInventory = event.getInventory();
 
         if (!(topInventory.getHolder() instanceof NexusGuiHolder holder)) {
             return;
@@ -40,7 +40,7 @@ public final class NexusGuiListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onDrag(InventoryDragEvent event) {
-        Inventory topInventory = event.getView().getTopInventory();
+        Inventory topInventory = event.getInventory();
 
         if (topInventory.getHolder() instanceof NexusGuiHolder) {
             event.setCancelled(true);

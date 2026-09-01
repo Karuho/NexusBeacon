@@ -5,7 +5,7 @@ description: Advanced configurable beacon system for modern Paper servers.
 author: DynaDev
 website: https://github.com/Karuho/NexusBeacon
 prefix: NexusBeacon
-api-version: '1.21'
+api-version: '1.20.5'
 load: POSTWORLD
 softdepend: [Vault, PlaceholderAPI, SpawnerMeta]
 folia-supported: true
