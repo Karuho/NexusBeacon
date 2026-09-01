@@ -95,6 +95,7 @@ visual-beam:
   render-mode: AUTO
 
   interval-ticks: 4
+  height-mode: WORLD_MAX
   height: 96
   step: 0.45
   count: 1

@@ -71,8 +71,39 @@ class ClassicBeamRuntimeTest {
         assertEquals(1, catalog.size());
     }
 
+    @Test void missingAndInvalidHeightModesPreserveLegacyFixedBehaviorWithoutRewritingConfig() {
+        YamlConfiguration legacy = config();
+        assertFalse(legacy.contains("visual-beam.height-mode"));
+        assertEquals(ClassicBeamHeight.FIXED, ClassicBeamHeight.mode(legacy));
+        assertEquals(96, ClassicBeamHeight.height(ClassicBeamHeight.mode(legacy), 96, -53, 320));
+        assertFalse(legacy.contains("visual-beam.height-mode"));
+        legacy.set("visual-beam.height-mode", "INVALID");
+        assertEquals(ClassicBeamHeight.FIXED, ClassicBeamHeight.mode(legacy));
+    }
+
+    @Test void explicitFixedAndWorldMaximumModesResolveAcrossWorldGenerations() {
+        YamlConfiguration fixed = config(); fixed.set("visual-beam.height-mode", "FIXED");
+        YamlConfiguration world = config(); world.set("visual-beam.height-mode", "WORLD_MAX");
+        assertEquals(ClassicBeamHeight.FIXED, ClassicBeamHeight.mode(fixed));
+        assertEquals(96, ClassicBeamHeight.height(ClassicBeamHeight.mode(fixed), 96, -53, 320));
+        assertEquals(ClassicBeamHeight.WORLD_MAX, ClassicBeamHeight.mode(world));
+        assertEquals(372, ClassicBeamHeight.height(ClassicBeamHeight.mode(world), 96, -53, 320));
+        assertEquals(185, ClassicBeamHeight.height(ClassicBeamHeight.mode(world), 96, 70, 256));
+    }
+
+    @Test void worldMaximumRuntimePreservesConfiguredStepCountAndSchedulingModel() {
+        Fixture f = new Fixture(recordAtY("aqua", true, -53), ClassicBeamHeight.WORLD_MAX);
+        f.world.customBase = true; f.world.maximum = 320;
+        f.runtime.start(); f.scheduler.tick();
+        assertEquals(372, f.emitter.height); assertEquals(.5D, f.emitter.step, .001D); assertEquals(1, f.emitter.count);
+        assertEquals(1, f.scheduler.schedules);
+    }
+
     private static ClassicBeaconRecord record(String style, boolean range) {
-        return new ClassicBeaconRecord(LOCATION, UUID.randomUUID(), UUID.randomUUID(), 48, 1,
+        return recordAtY(style, range, LOCATION.getY());
+    }
+    private static ClassicBeaconRecord recordAtY(String style, boolean range, int y) {
+        return new ClassicBeaconRecord(new ClassicBeaconLocation("world", 4, y, 8), UUID.randomUUID(), UUID.randomUUID(), 48, 1,
                 Collections.<String,Integer>emptyMap(), Collections.<String>emptySet(), Collections.<UUID>emptySet(),
                 true, style, range, "FLAME");
     }
@@ -86,12 +117,13 @@ class ClassicBeamRuntimeTest {
     private static final class Fixture {
         final ClassicBeaconRecord record; final FakeRecords records; final FakeWorld world = new FakeWorld();
         final FakeEmitter emitter = new FakeEmitter(); final FakeScheduler scheduler = new FakeScheduler(); final ClassicBeamRuntime runtime;
-        Fixture(ClassicBeaconRecord record) {
+        Fixture(ClassicBeaconRecord record) { this(record, ClassicBeamHeight.FIXED); }
+        Fixture(ClassicBeaconRecord record, String heightMode) {
             this.record = record; records = new FakeRecords(record);
             Set<Material> power = new HashSet<Material>(); power.add(Material.IRON_BLOCK); power.add(Material.REDSTONE_BLOCK);
             runtime = new ClassicBeamRuntime(records, world, emitter, scheduler,
                     new ClassicBeamRenderPolicy(true, "AUTO", 4, power),
-                    new ClassicBeamStyleCatalog(config(), new ClassicParticleResolver()), "PLAYER_OR_GLOBAL", 8, .5D, 1, 4L);
+                    new ClassicBeamStyleCatalog(config(), new ClassicParticleResolver()), "PLAYER_OR_GLOBAL", heightMode, 8, .5D, 1, 4L);
         }
     }
     private static final class FakeRecords implements ClassicBeamRuntime.Records {
@@ -101,15 +133,16 @@ class ClassicBeamRuntimeTest {
         public boolean authoritative(ClassicBeaconRecord candidate){return authoritative && candidate == record;}
     }
     private static final class FakeWorld implements ClassicBeamRuntime.WorldView {
-        boolean available=true, loaded=true, beacon=true, customBase;
+        boolean available=true, loaded=true, beacon=true, customBase; int maximum=256;
         public boolean available(ClassicBeaconRecord r){return available;}
         public boolean chunkLoaded(ClassicBeaconRecord r){return loaded;}
         public boolean beaconPresent(ClassicBeaconRecord r){return beacon;}
+        public int maximumHeight(ClassicBeaconRecord r){return maximum;}
         public Material materialAt(ClassicBeaconRecord r,int x,int y,int z){return customBase ? Material.REDSTONE_BLOCK : Material.IRON_BLOCK;}
     }
     private static final class FakeEmitter implements ClassicBeamRuntime.Emitter {
-        int emissions; ClassicBeamStyle style; BooleanSupplier lastAuthority; FakeRecords revokeDuringEmission;
-        public void emit(ClassicBeaconRecord r,ClassicBeamStyle s,int h,double step,int count,BooleanSupplier authority){emissions++;style=s;lastAuthority=authority;if(revokeDuringEmission!=null)revokeDuringEmission.authoritative=false;}
+        int emissions,height,count; double step; ClassicBeamStyle style; BooleanSupplier lastAuthority; FakeRecords revokeDuringEmission;
+        public void emit(ClassicBeaconRecord r,ClassicBeamStyle s,int h,double step,int count,BooleanSupplier authority){emissions++;style=s;height=h;this.step=step;this.count=count;lastAuthority=authority;if(revokeDuringEmission!=null)revokeDuringEmission.authoritative=false;}
     }
     private static final class FakeScheduler implements SchedulerService {
         int schedules,cancels; Runnable timer;
